@@ -22,13 +22,12 @@ This repo is an Antigravity plugin: Vex's working mode for agents, built on psta
 ```bash
 python3 -m unittest discover -s checks/tests \
   && python3 -m unittest discover -s scripts/tests \
+  && python3 -m unittest discover -s hooks/tests \
   && python3 checks/run.py \
   && python3 scripts/validate_plugin.py
 ```
 
 `scripts/validate_plugin.py` is `agy plugin validate --strict` with one documented exception: agy warns that this root `AGENTS.md` is never loaded by the plugin. That is intended; this file is for agents working in the repo, not for plugin users.
-
-Once `hooks/tests/` exists, also run `python3 -m unittest discover -s hooks/tests`.
 
 ## How to bring in something that already exists
 
@@ -49,5 +48,9 @@ A new file that has no upstream goes under `original` in `vendor.lock`.
 | Size budgets (SKILL ≤ 16 KB, rule ≤ 24 KB) | `checks/check_skills.py` |
 | Every rule has an enforcer | `checks/check_rules.py` |
 | Plugin manifest, skills, agents and rules load in agy | `scripts/validate_plugin.py` |
+| Full mode activates only via /vex-mode, reading list injected once | `hooks/activate.py` `hooks/tests/test_activate.py` |
+| Pause before irreversible actions (force_ask, never allow) | `hooks/irreversible.py` `hooks/tests/test_irreversible.py` |
+| No finishing without evidence in vex-mode | `hooks/stop_gate.py` `hooks/tests/test_stop_gate.py` |
+| A PreToolUse hook with no opinion prints nothing (`{}` denies the tool) | `hooks/tests/test_irreversible.py` `docs/decisions/2026-11-18-hook-probe.md` |
 
 When you are corrected for a mistake, add a row here together with its enforcer in the same change. A rule that nothing enforces is a repeat waiting to happen.

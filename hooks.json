@@ -1,0 +1,17 @@
+{
+  "vex-activate": {
+    "PreInvocation": [
+      {"type": "command", "command": "python3 ./hooks/activate.py", "timeout": 10}
+    ]
+  },
+  "vex-irreversible": {
+    "PreToolUse": [
+      {"matcher": "run_command", "hooks": [{"type": "command", "command": "python3 ./hooks/irreversible.py", "timeout": 10}]}
+    ]
+  },
+  "vex-stop-gate": {
+    "Stop": [
+      {"type": "command", "command": "python3 ./hooks/stop_gate.py", "timeout": 10}
+    ]
+  }
+}
