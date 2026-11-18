@@ -23,8 +23,10 @@ This repo is an Antigravity plugin: Vex's working mode for agents, built on psta
 python3 -m unittest discover -s checks/tests \
   && python3 -m unittest discover -s scripts/tests \
   && python3 checks/run.py \
-  && agy plugin validate . --strict
+  && python3 scripts/validate_plugin.py
 ```
+
+`scripts/validate_plugin.py` is `agy plugin validate --strict` with one documented exception: agy warns that this root `AGENTS.md` is never loaded by the plugin. That is intended; this file is for agents working in the repo, not for plugin users.
 
 Once `hooks/tests/` exists, also run `python3 -m unittest discover -s hooks/tests`.
 
@@ -46,5 +48,6 @@ A new file that has no upstream goes under `original` in `vendor.lock`.
 | No dangling skill, playbook or link references | `checks/check_skills.py` |
 | Size budgets (SKILL ≤ 16 KB, rule ≤ 24 KB) | `checks/check_skills.py` |
 | Every rule has an enforcer | `checks/check_rules.py` |
+| Plugin manifest, skills, agents and rules load in agy | `scripts/validate_plugin.py` |
 
 When you are corrected for a mistake, add a row here together with its enforcer in the same change. A rule that nothing enforces is a repeat waiting to happen.
