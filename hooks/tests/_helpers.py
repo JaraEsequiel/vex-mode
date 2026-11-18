@@ -19,5 +19,5 @@ def run_command(cmd, conv="c1"):
     return {"hookEventName": "PreToolUse", "conversationId": conv, "toolCall": {"id": "t1", "name": "run_command", "args": {"CommandLine": cmd}}}
 
 
-def stop(conv="c1", reason="NO_TOOL_CALL", continuation=False):
-    return {"hookEventName": "Stop", "conversationId": conv, "terminationReason": reason, "continuationActive": continuation, "executionNum": 1}
+def stop(conv="c1", reason="NO_TOOL_CALL", continuation=False, execution=0):
+    return {"hookEventName": "Stop", "conversationId": conv, "terminationReason": reason, "continuationActive": continuation, "executionNum": execution}

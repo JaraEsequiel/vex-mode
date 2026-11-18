@@ -24,6 +24,10 @@ class StopGateTest(unittest.TestCase):
     def test_no_loop(self):
         self.assertEqual(stop_gate.handle(stop(continuation=True), active_state()), {})
 
+    def test_no_loop_when_agy_reports_later_execution(self):
+        # agy 1.5.11 keeps continuationActive=False after a Stop hook continues; executionNum counts up instead.
+        self.assertEqual(stop_gate.handle(stop(continuation=False, execution=1), active_state()), {})
+
     def test_other_termination_allows(self):
         self.assertEqual(stop_gate.handle(stop(reason="USER_CANCELED"), active_state()), {})
 

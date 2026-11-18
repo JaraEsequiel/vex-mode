@@ -12,7 +12,8 @@ REASON = (
 def handle(payload: dict, state: Path) -> dict:
     if not is_active(state, payload.get("conversationId") or ""):
         return {}
-    if payload.get("continuationActive") or payload.get("terminationReason") != "NO_TOOL_CALL":
+    already_continued = payload.get("continuationActive") or (payload.get("executionNum") or 0) > 0
+    if already_continued or payload.get("terminationReason") != "NO_TOOL_CALL":
         return {}
     return {"decision": "continue", "reason": REASON}
 
