@@ -47,7 +47,8 @@ A new file that has no upstream goes under `original` in `vendor.lock`.
 | No dangling skill, playbook or link references | `checks/check_skills.py` |
 | Size budgets (SKILL ≤ 16 KB, rule ≤ 24 KB) | `checks/check_skills.py` |
 | Every rule has an enforcer | `checks/check_rules.py` |
-| Plugin manifest, skills, agents and rules load in agy | `scripts/validate_plugin.py` |
+| Plugin manifest, skills, agents and rules load in agy | `scripts/validate_plugin.py` `.github/workflows/ci.yml` |
+| Every check and test runs on every push and PR | `.github/workflows/ci.yml` |
 | Full mode activates only via /vex-mode, reading list injected once | `hooks/activate.py` `hooks/tests/test_activate.py` |
 | Pause before irreversible actions (force_ask, never allow) | `hooks/irreversible.py` `hooks/tests/test_irreversible.py` |
 | No finishing without evidence in vex-mode | `hooks/stop_gate.py` `hooks/tests/test_stop_gate.py` |
