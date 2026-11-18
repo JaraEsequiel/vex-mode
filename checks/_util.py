@@ -16,3 +16,18 @@ def load_lock(root: Path) -> dict | None:
     if not path.is_file():
         return None
     return json.loads(path.read_text())
+
+
+def parse_frontmatter(text: str) -> dict[str, str]:
+    """Flat `key: value` YAML between leading '---' fences. Returns {} if absent."""
+    lines = text.splitlines()
+    if not lines or lines[0].strip() != "---":
+        return {}
+    result = {}
+    for line in lines[1:]:
+        if line.strip() == "---":
+            return result
+        if ":" in line and not line.startswith((" ", "\t", "-")):
+            key, _, value = line.partition(":")
+            result[key.strip()] = value.strip().strip('"').strip("'")
+    return {}
