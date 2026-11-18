@@ -34,7 +34,7 @@ python3 -m unittest discover -s checks/tests \
 Never rewrite what pstack (or another source) already has.
 
 1. `python3 scripts/vendor.py <upstream_root> <upstream_path> <dest>` for each file. Commit only that, as `vendor: copy <thing> from pstack@<sha>`.
-2. In a separate commit `adapt: <thing> for antigravity`, make only the edits Antigravity needs: paths, model slugs, tool names, renames, removing references to skills not vendored yet (list each in that file's `pending_refs` in `vendor.lock`).
+2. In a separate commit `adapt: <thing> for antigravity`, make only the edits Antigravity needs: paths, model slugs, tool names, renames, removing references to skills not vendored yet. In `vendor.lock`, set `"adapted": true` on that file (unadapted files must stay byte-identical to upstream), list removed references in `removed_refs` (what to restore when that skill is vendored), and keep in `pending_refs` only references still in the text that point to skills not vendored yet.
 
 A new file that has no upstream goes under `original` in `vendor.lock`.
 

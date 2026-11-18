@@ -42,6 +42,15 @@ class ActivateTest(unittest.TestCase):
         out = activate.handle(pre_invocation("c3", "/vex-modest thing"), REPO, tmpdir())
         self.assertEqual(out, {})
 
+    def test_unsafe_conversation_id_is_ignored(self):
+        state = tmpdir() / "a" / "state"
+        outside = tmpdir() / "pwned"
+        for conv in (str(outside), "../../escape", "a/b", ""):
+            with self.subTest(conv=conv):
+                self.assertEqual(activate.handle(pre_invocation(conv), REPO, state), {})
+        self.assertFalse(outside.exists())
+        self.assertFalse((state.parent / "escape").exists())
+
     def test_malformed_payload(self):
         self.assertEqual(activate.handle({}, REPO, tmpdir()), {})
 

@@ -79,6 +79,22 @@ class ReferenceTest(unittest.TestCase):
         )
         self.assertEqual(check_skills.run(root), [])
 
+    def test_stale_pending_ref_is_error(self):
+        root = make_repo(
+            {"skills/foo/SKILL.md": skill(body="nothing referenced here")},
+            lock(files=[entry("skills/foo/SKILL.md", pending_refs=["ghost"])]),
+        )
+        errors = check_skills.run(root)
+        self.assertTrue(any("stale pending_ref" in e and "ghost" in e for e in errors), errors)
+
+    def test_pending_ref_must_match_whole_token(self):
+        root = make_repo(
+            {"skills/foo/SKILL.md": skill(body="unslopped prose")},
+            lock(files=[entry("skills/foo/SKILL.md", pending_refs=["unslop"])]),
+        )
+        errors = check_skills.run(root)
+        self.assertTrue(any("stale pending_ref 'unslop'" in e for e in errors), errors)
+
     def test_relative_link_must_resolve(self):
         root = make_repo({"skills/foo/SKILL.md": skill(body="[x](../missing/SKILL.md)")}, lock())
         errors = check_skills.run(root)

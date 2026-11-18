@@ -23,6 +23,22 @@ FLAGGED = [
     "fly deploy",
     "vercel --prod",
     "cd repo && git push -f",
+    'bash -c "git push -f"',
+    "sh -lc 'git push --force origin main'",
+    "env FOO=1 git push -f",
+    "sudo -u deploy git push -f",
+    "(git push -f)",
+    "echo $(git push -f)",
+    "/usr/bin/git push -f",
+    "command git push -f",
+    "nohup git push --force &",
+    "time git push -f",
+    "xargs rm -rf /",
+    "git push origin :main",
+    "git push --prune origin",
+    "rm -rf $HOME",
+    'rm -fr "$HOME"/x',
+    "rm -rf ../..",
 ]
 
 ALLOWED = [
@@ -35,6 +51,9 @@ ALLOWED = [
     "rm -f /tmp/x.log",
     "grep -r force .",
     "echo 'git push -f is dangerous'",
+    'bash -c "ls -la"',
+    "env FOO=1 git push",
+    "rm -rf ./dist",
 ]
 
 

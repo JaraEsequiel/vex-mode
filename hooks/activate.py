@@ -2,7 +2,7 @@
 import re
 from pathlib import Path
 
-from vexio import plugin_root, read_payload, safe_main, state_dir
+from vexio import plugin_root, read_payload, safe_id, safe_main, state_dir
 
 COMMAND = re.compile(r"^/vex-mode(\s|$)")
 PATH = re.compile(r"^- `([^`]+)`\s*$")
@@ -22,8 +22,8 @@ def reading_list(root: Path) -> list[Path]:
 
 
 def handle(payload: dict, root: Path, state: Path) -> dict:
-    conv = payload.get("conversationId") or ""
-    if not conv:
+    conv = safe_id(payload.get("conversationId"))
+    if conv is None:
         return {}
     active = state / "active" / conv
     injected = state / "injected" / conv

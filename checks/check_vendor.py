@@ -1,4 +1,5 @@
 """Every file under skills/, rules/ and agents/ is either vendored (with provenance) or declared original."""
+import hashlib
 import re
 from pathlib import Path
 
@@ -22,6 +23,9 @@ def run(root: Path) -> list[str]:
             errors.append(f"vendor.lock: {path}: upstream_sha256 is not 64 hex chars")
         if not item.get("upstream_path"):
             errors.append(f"vendor.lock: {path}: upstream_path missing")
+        local = root / path
+        if not item.get("adapted") and local.is_file() and hashlib.sha256(local.read_bytes()).hexdigest() != item.get("upstream_sha256"):
+            errors.append(f"{path}: differs from upstream but is not marked \"adapted\": true in vendor.lock")
     original = set(lock.get("original", []))
     for f in iter_files(root):
         rel = f.relative_to(root).as_posix()
