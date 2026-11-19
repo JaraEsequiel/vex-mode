@@ -1,0 +1,160 @@
+{
+  "upstream": {
+    "repo": "https://github.com/cursor/plugins",
+    "commit": "35a90942a7f02e1ebbc2443643179815f2147954"
+  },
+  "files": [
+    {
+      "path": "skills/principle-encode-lessons-in-structure/SKILL.md",
+      "upstream_path": "pstack/skills/principle-encode-lessons-in-structure/SKILL.md",
+      "upstream_sha256": "228963799189f481827d6f28065f278bc2008ffa37030b1234cbd5814d36b9e9",
+      "pending_refs": []
+    },
+    {
+      "path": "skills/principle-fix-root-causes/SKILL.md",
+      "upstream_path": "pstack/skills/principle-fix-root-causes/SKILL.md",
+      "upstream_sha256": "79afd7e67d8951203231f6f1ccfc7b4a1f30d8d6cdb68e92755c80012414dbeb",
+      "pending_refs": []
+    },
+    {
+      "path": "skills/principle-laziness-protocol/SKILL.md",
+      "upstream_path": "pstack/skills/principle-laziness-protocol/SKILL.md",
+      "upstream_sha256": "1be6e7a435f26a75a76eb848b9c3d611b9977d0f5822361753244da25ca3ca45",
+      "pending_refs": []
+    },
+    {
+      "path": "skills/principle-model-the-domain/SKILL.md",
+      "upstream_path": "pstack/skills/principle-model-the-domain/SKILL.md",
+      "upstream_sha256": "97c6214dc6a18b93177dda6429185a8640878b36ddee6ec9400c23a0eb9be2d8",
+      "pending_refs": []
+    },
+    {
+      "path": "skills/principle-never-block-on-the-human/SKILL.md",
+      "upstream_path": "pstack/skills/principle-never-block-on-the-human/SKILL.md",
+      "upstream_sha256": "05030a7a083c337676f793881b4e93cd218e8f1dd676529f56e6ac1d3efb8d1f",
+      "pending_refs": []
+    },
+    {
+      "path": "skills/principle-prove-it-works/SKILL.md",
+      "upstream_path": "pstack/skills/principle-prove-it-works/SKILL.md",
+      "upstream_sha256": "3d6c482e341974cfcb8d19ebf66fb1d4274d8673af35e36d3c231a6aa9e03f25",
+      "pending_refs": []
+    },
+    {
+      "path": "skills/principle-separate-before-serializing-shared-state/SKILL.md",
+      "upstream_path": "pstack/skills/principle-separate-before-serializing-shared-state/SKILL.md",
+      "upstream_sha256": "2e5625d686b657e0b607c329fd8043bf50261b808239308fe4c6776e2817e95a",
+      "pending_refs": []
+    },
+    {
+      "path": "skills/principle-sequence-verifiable-units/SKILL.md",
+      "upstream_path": "pstack/skills/principle-sequence-verifiable-units/SKILL.md",
+      "upstream_sha256": "ab0cc331cf317c07bb0ed6dd13ee9f618338b36e4e851521977bc5c4a8d429e1",
+      "pending_refs": []
+    },
+    {
+      "path": "skills/principle-subtract-before-you-add/SKILL.md",
+      "upstream_path": "pstack/skills/principle-subtract-before-you-add/SKILL.md",
+      "upstream_sha256": "8c93bb9d1a7f38e2ef37655d93f0e790fa59903105af3d500cc8a663ebe45f3f",
+      "pending_refs": []
+    },
+    {
+      "path": "skills/vex-mode/SKILL.md",
+      "upstream_path": "pstack/skills/poteto-mode/SKILL.md",
+      "upstream_sha256": "67fd2c54fd25ebfae1e46db62c4b2e54f806a7ea9dfb6c83922de37e9b9635ea",
+      "pending_refs": [],
+      "removed_refs": [
+        "architect",
+        "arena",
+        "benchmark-checklist",
+        "figure-it-out",
+        "interrogate",
+        "no-comments",
+        "playbooks/authoring-a-skill.md",
+        "playbooks/autonomous-run.md",
+        "playbooks/autopilot-full.md",
+        "playbooks/autopilot-stack.md",
+        "playbooks/babysit.md",
+        "playbooks/eval.md",
+        "playbooks/hillclimb.md",
+        "playbooks/investigation.md",
+        "playbooks/multi-phase-plan.md",
+        "playbooks/pause-safely.md",
+        "playbooks/perf-issue.md",
+        "playbooks/prototype.md",
+        "playbooks/refactoring.md",
+        "playbooks/runtime-forensics.md",
+        "playbooks/session-pickup.md",
+        "playbooks/shipping.md",
+        "playbooks/trace-forensics.md",
+        "playbooks/visual-parity.md",
+        "playbooks/worktree-cleanup.md",
+        "principle-attack-the-premise",
+        "principle-boundary-discipline",
+        "principle-build-the-lever",
+        "principle-exhaust-the-design-space",
+        "principle-experience-first",
+        "principle-explain-the-number",
+        "principle-foundational-thinking",
+        "principle-guard-the-context-window",
+        "principle-make-operations-idempotent",
+        "principle-migrate-callers-then-delete-legacy-apis",
+        "principle-minimize-reader-load",
+        "principle-outcome-oriented-execution",
+        "principle-redesign-from-first-principles",
+        "principle-test-behavior-not-implementation",
+        "principle-type-system-discipline",
+        "show-me-your-work",
+        "swarm",
+        "technical-writing",
+        "unslop"
+      ],
+      "adapted": true
+    },
+    {
+      "path": "skills/vex-mode/playbooks/bug-fix.md",
+      "upstream_path": "pstack/skills/poteto-mode/playbooks/bug-fix.md",
+      "upstream_sha256": "eef68686ea0128d36979c39ce88f5cd5c248eb4e58f1ca3229692b9902961170",
+      "pending_refs": [],
+      "removed_refs": [
+        "why",
+        "tdd",
+        "architect",
+        "interrogate"
+      ],
+      "adapted": true
+    },
+    {
+      "path": "skills/vex-mode/playbooks/feature.md",
+      "upstream_path": "pstack/skills/poteto-mode/playbooks/feature.md",
+      "upstream_sha256": "beb7b527049eab12052deac8a32e6ee7f6cf26e7ebffb3c3f5d6cead1ec7df7e",
+      "pending_refs": [],
+      "removed_refs": [
+        "architect",
+        "arena",
+        "interrogate"
+      ],
+      "adapted": true
+    },
+    {
+      "path": "skills/vex-mode/playbooks/opening-a-pr.md",
+      "upstream_path": "pstack/skills/poteto-mode/playbooks/opening-a-pr.md",
+      "upstream_sha256": "a14cf04833cd6a3eb899fb8814759c937294d0faa3da1ef09d568f45002026b4",
+      "pending_refs": [],
+      "removed_refs": [
+        "playbooks/babysit.md"
+      ],
+      "adapted": true
+    },
+    {
+      "path": "skills/vex-mode/worker.md",
+      "upstream_path": "pstack/skills/poteto-mode/worker.md",
+      "upstream_sha256": "d051060527ab1649fb1e69d1e7d416950264f9955c3de3635c0d63569f1b90d8",
+      "pending_refs": []
+    }
+  ],
+  "original": [
+    "agents/vex-agent.md",
+    "rules/AGENTS.md"
+  ]
+}

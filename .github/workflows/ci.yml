@@ -1,0 +1,30 @@
+name: ci
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  checks:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Unit tests
+        run: |
+          python3 -m unittest discover -s checks/tests -v
+          python3 -m unittest discover -s scripts/tests -v
+          python3 -m unittest discover -s hooks/tests -v
+      - name: Structural checks
+        run: python3 checks/run.py
+      - name: Install agy
+        uses: jdx/mise-action@v2
+        with:
+          install_args: antigravity-cli
+          mise_toml: |
+            [tools]
+            antigravity-cli = "latest"
+      - name: Plugin validation
+        run: python3 scripts/validate_plugin.py
