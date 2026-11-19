@@ -1,5 +1,6 @@
 """Parse `agy -p --output-format stream-json` output (shapes probed on agy 1.5.11, design §8.2)."""
 import json
+import re
 from dataclasses import dataclass, field
 
 
@@ -9,6 +10,7 @@ class Transcript:
     model: str | None = None
     reads: list[str] = field(default_factory=list)
     commands: list[str] = field(default_factory=list)
+    steps: list[str] = field(default_factory=list)
     status: str = "UNFINISHED"
     total_tokens: int = 0
     duration_s: float = 0.0
@@ -32,9 +34,18 @@ def parse(text: str) -> Transcript:
                 continue
             info = step.get("tool_info") or {}
             params = info.get("parameters") or {}
-            if info.get("name") == "read_file" and "Path" in params:
+            name = info.get("name") or "?"
+            if name == "read_file" and "Path" in params:
+                t.steps.append(f"read_file: {params['Path']}")
+            elif name == "run_command" and "CommandLine" in params:
+                code = re.search(r"exited with code (-?\d+)", str(info.get("output") or ""))
+                suffix = f" (exit {code.group(1)})" if code else ""
+                t.steps.append(f"run_command: {params['CommandLine']}{suffix}")
+            else:
+                t.steps.append(f"{name}: {json.dumps(params)[:300]}")
+            if name == "read_file" and "Path" in params:
                 t.reads.append(params["Path"])
-            elif info.get("name") == "run_command" and "CommandLine" in params:
+            elif name == "run_command" and "CommandLine" in params:
                 t.commands.append(params["CommandLine"])
         elif kind == "result":
             result = event["result"]

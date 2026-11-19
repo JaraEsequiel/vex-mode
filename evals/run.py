@@ -72,10 +72,9 @@ def _diff(work: Path) -> str:
 
 
 def _material(t: transcript.Transcript, diff: str) -> str:
-    reads = "\n".join(f"- {r}" for r in t.reads) or "- (none)"
-    cmds = "\n".join(f"{i}. `{c}`" for i, c in enumerate(t.commands, 1)) or "(none)"
-    return (f"### Final reply\n\n{t.response.strip()}\n\n### Files read, in order\n\n{reads}\n\n"
-            f"### Commands run, in order\n\n{cmds}\n\n### Diff\n\n```diff\n{diff}\n```")
+    steps = "\n".join(f"{i}. {s}" for i, s in enumerate(t.steps, 1)) or "(none)"
+    return (f"### Final reply\n\n{t.response.strip()}\n\n### Tool calls, in order\n\n{steps}\n\n"
+            f"### Diff\n\n```diff\n{diff}\n```")
 
 
 def _run_candidate(arm, prompt: str, timeout_s: int, work: Path, log: Path) -> transcript.Transcript:

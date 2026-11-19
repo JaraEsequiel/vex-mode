@@ -26,6 +26,12 @@ class TranscriptTest(unittest.TestCase):
         self.assertEqual(t.response, "lantern\n")
         self.assertGreater(t.duration_s, 0)
 
+    def test_parse_keeps_every_tool_in_order(self):
+        t = transcript.parse((FIX / "run_ok.ndjson").read_text())
+        self.assertEqual(t.steps, ['run_command: find . -name "notes.txt" (exit 0)', "read_file: /work/proj/notes.txt"])
+        edit = '{"event": "step_update", "step_update": {"step_type": "tool", "state": "DONE", "tool_info": {"name": "edit_file", "parameters": {"TargetFile": "/w/a.py", "Instruction": "x"}}}}'
+        self.assertEqual(transcript.parse(edit).steps, ['edit_file: {"TargetFile": "/w/a.py", "Instruction": "x"}'])
+
     def test_unfinished_run_counts_as_failure(self):
         t = transcript.parse((FIX / "run_unfinished.ndjson").read_text())
         self.assertEqual(t.status, "UNFINISHED")
