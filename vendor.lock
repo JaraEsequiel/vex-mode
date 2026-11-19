@@ -9,7 +9,11 @@
       "upstream_path": "pstack/skills/architect/SKILL.md",
       "upstream_sha256": "aea83d7aa109eb73402182701b14c289844663ad9c8f959fedbef2df66787ce0",
       "pending_refs": [],
-      "upstream_commit": "e58dd043600587dbaf58ba315e7f2b38373eeb43"
+      "upstream_commit": "e58dd043600587dbaf58ba315e7f2b38373eeb43",
+      "adapted": true,
+      "removed_refs": [
+        "arena"
+      ]
     },
     {
       "path": "skills/correct/SKILL.md",
@@ -193,7 +197,6 @@
       "upstream_sha256": "9c09f6ab6661975a5be108f925afe203e10966ee426e3d786f4d338c5b05bd9f",
       "pending_refs": [],
       "removed_refs": [
-        "architect",
         "arena",
         "benchmark-checklist",
         "figure-it-out",
@@ -231,9 +234,7 @@
         "principle-redesign-from-first-principles",
         "principle-test-behavior-not-implementation",
         "principle-type-system-discipline",
-        "swarm",
-        "technical-writing",
-        "unslop"
+        "swarm"
       ],
       "adapted": true,
       "upstream_commit": "e58dd043600587dbaf58ba315e7f2b38373eeb43"
@@ -244,9 +245,6 @@
       "upstream_sha256": "eef68686ea0128d36979c39ce88f5cd5c248eb4e58f1ca3229692b9902961170",
       "pending_refs": [],
       "removed_refs": [
-        "why",
-        "tdd",
-        "architect",
         "interrogate"
       ],
       "adapted": true,
@@ -269,7 +267,6 @@
       "upstream_sha256": "beb7b527049eab12052deac8a32e6ee7f6cf26e7ebffb3c3f5d6cead1ec7df7e",
       "pending_refs": [],
       "removed_refs": [
-        "architect",
         "arena",
         "interrogate"
       ],
