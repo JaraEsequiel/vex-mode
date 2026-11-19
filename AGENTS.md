@@ -68,6 +68,7 @@ If an eval was killed before it restored the user's plugin, the next eval refuse
 | Plugin manifest, skills, agents and rules load in agy | `scripts/validate_plugin.py` `.github/workflows/ci.yml` |
 | Every check and test runs on every push and PR | `.github/workflows/ci.yml` |
 | Full mode activates only via /vex-mode, reading list injected once | `hooks/activate.py` `hooks/tests/test_activate.py` |
+| Any other `/<skill>` of the plugin gets that skill's text and folder injected (in `agy -p` a plugin slash command does not expand) | `hooks/activate.py` `hooks/tests/test_activate.py` |
 | Pause before irreversible actions (force_ask, never allow) | `hooks/irreversible.py` `hooks/tests/test_irreversible.py` |
 | No finishing without evidence in vex-mode | `hooks/stop_gate.py` `hooks/tests/test_stop_gate.py` |
 | A PR that changes a skill carries an eval result or waiver for that skill's tree hash | `checks/check_evals.py` `checks/tests/test_check_evals.py` |

@@ -56,17 +56,43 @@ def violations(t: Transcript, *, plugin_root: Path, forbidden: list[Path], workd
         if problem := _path_problem(_norm(raw, workdir, home), **ctx):
             found.append(f"read {problem}: {raw}")
     for cmd in t.commands:
-        if any(m in cmd for m in SHELL_MARKERS):
+        own = cmd.replace(str(workdir), ".") if workdir is not None else cmd  # the run's own copy is allowed
+        if any(m in own for m in SHELL_MARKERS):
             found.append(f"command touches eval files: {cmd}")
             continue
-        try:
-            tokens = shlex.split(cmd)
-        except ValueError:
-            tokens = cmd.split()
-        for token in tokens:
+        if problem := _command_problem(cmd, workdir, home, ctx):
+            found.append(f"command reaches {problem}: {cmd}")
+    return found
+
+
+def _segments(cmd: str) -> list[list[str]]:
+    try:
+        lexer = shlex.shlex(cmd, posix=True, punctuation_chars=True)
+        lexer.whitespace_split = True
+        tokens = list(lexer)
+    except ValueError:
+        tokens = cmd.split()
+    segments, current = [], []
+    for tok in tokens:
+        if tok and all(c in "&|;()" for c in tok):
+            segments.append(current)
+            current = []
+        else:
+            current.append(tok)
+    return [*segments, current]
+
+
+def _command_problem(cmd: str, workdir: Path | None, home: Path | None, ctx: dict) -> str | None:
+    """Resolve path-like tokens against the directory a simple `cd X &&` chain leaves the shell in."""
+    cwd = workdir
+    for seg in _segments(cmd):
+        for token in seg:
+            if "$" in token or "`" in token:  # a shell expansion is not a path we can resolve
+                continue
             if "/" not in token and token not in ("..", "~"):
                 continue
-            if problem := _path_problem(_norm(token, workdir, home), **ctx):
-                found.append(f"command reaches {problem}: {cmd}")
-                break
-    return found
+            if problem := _path_problem(_norm(token, cwd, home), **ctx):
+                return problem
+        if len(seg) == 2 and seg[0] == "cd" and "$" not in seg[1]:
+            cwd = Path(str(_norm(seg[1], cwd, home)))
+    return None

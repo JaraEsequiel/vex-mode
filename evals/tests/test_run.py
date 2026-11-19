@@ -136,6 +136,7 @@ class RunTest(unittest.TestCase):
         result = json.loads(self.run_eval().read_text())
         self.assertIsNone(result["judge"]["error"])
         self.assertGreater(len((Path(result["run_dir"]) / "judge-prompt.md").read_text().encode()), run.JUDGE_INLINE_MAX)
+        self.assertTrue((Path(result["run_dir"]) / "review/judge-prompt.md").is_file())  # agy -p reads only its workspace
         sizes = [int(n) for n in (self.home / "judge-args.log").read_text().split()]
         self.assertTrue(all(n < 2000 for n in sizes), sizes)
 

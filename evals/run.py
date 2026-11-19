@@ -123,7 +123,8 @@ def _judge(records: dict, materials: dict[int, str], rubric: str, judge_model: s
     judge_dir = run_dir / "review"
     judge_dir.mkdir(exist_ok=True)
     if len(prompt.encode()) > JUDGE_INLINE_MAX:  # one argv string is capped at 128 KiB on Linux
-        prompt = (f"Read the file {run_dir / 'judge-prompt.md'} in full and do exactly what it asks. "
+        (judge_dir / "judge-prompt.md").write_text(prompt)  # agy -p denies reads outside its workspace (cwd)
+        prompt = (f"Read the file {judge_dir / 'judge-prompt.md'} in full and do exactly what it asks. "
                   "Your answer must follow the JSON schema you were given.")
     launch_error = None
     try:

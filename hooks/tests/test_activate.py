@@ -51,6 +51,24 @@ class ActivateTest(unittest.TestCase):
         self.assertFalse(outside.exists())
         self.assertFalse((state.parent / "escape").exists())
 
+    def test_plugin_skill_command_injects_its_text_and_folder(self):
+        state = tmpdir()
+        out = activate.handle(pre_invocation("c4", "/agent-ready set this repo up"), REPO, state)
+        text = message(out)
+        self.assertIn("# Agent-ready", text)
+        self.assertIn(str(REPO / "skills/agent-ready"), text)
+        self.assertFalse((state / "active" / "c4").exists())
+
+    def test_skill_text_injected_once_per_message(self):
+        state = tmpdir()
+        activate.handle(pre_invocation("c5", "/correct"), REPO, state)
+        self.assertEqual(activate.handle(pre_invocation("c5", "/correct"), REPO, state), {})
+        self.assertIn("# Correct", message(activate.handle(pre_invocation("c5", "/correct again"), REPO, state)))
+
+    def test_unknown_slash_command_is_ignored(self):
+        self.assertEqual(activate.handle(pre_invocation("c6", "/nope x"), REPO, tmpdir()), {})
+        self.assertEqual(activate.handle(pre_invocation("c6", "/../vex-mode x"), REPO, tmpdir()), {})
+
     def test_malformed_payload(self):
         self.assertEqual(activate.handle({}, REPO, tmpdir()), {})
 

@@ -109,6 +109,29 @@ class IsolationHardeningTest(unittest.TestCase):
         self.assertEqual(isolation.violations(ok, **self.roots(), home=Path("/home/u"), cache=Path("/cache")), [])
 
 
+class IsolationFalsePositiveTest(unittest.TestCase):
+    """Commands from the M4 agent-ready eval that only touched their own workdir."""
+    def check(self, cmd):
+        roots = dict(plugin_root=Path("/plug/vex-mode"), forbidden=[Path("/cache/vex-mode"), Path("/repo")],
+                     workdir=Path("/cache/vex-work/ab12/habit-tracker"), work_root=Path("/cache/vex-work"),
+                     home=Path("/home/u"), cache=Path("/cache"))
+        return isolation.violations(transcript.Transcript(commands=[cmd]), **roots)
+
+    def test_own_workdir_path_is_allowed(self):
+        self.assertEqual(self.check("cd .agents && printf '{\"cwd\":\"/cache/vex-work/ab12/habit-tracker\"}' | python3 hook.py"), [])
+
+    def test_cd_then_relative_path_is_resolved(self):
+        self.assertEqual(self.check("cd .agents && python3 ../scripts/stop_check.py"), [])
+        self.assertTrue(self.check("cd .. && cat ../cd34/habit-tracker/habits.py"))
+
+    def test_shell_expansions_are_not_resolved_as_paths(self):
+        self.assertEqual(self.check("printf '%s' \"$(pwd)/..\""), [])
+
+    def test_other_workdir_and_markers_still_flagged(self):
+        for cmd in ("cat /cache/vex-work/cd34/habit-tracker/habits.py", "ls ../../", "cat ~/.cache/vex-mode/runs/x"):
+            self.assertTrue(self.check(cmd), cmd)
+
+
 class StatsTest(unittest.TestCase):
     def test_summarize(self):
         self.assertEqual(stats.summarize([1.0, 0.0, 0.5]), {"mean": 0.5, "min": 0.0, "max": 1.0, "spread": 1.0})

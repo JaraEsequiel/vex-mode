@@ -312,6 +312,7 @@ Cada hito termina en un estado verificable antes de empezar el siguiente `[P-mod
 | Las fases B y C de `arena` las ejecuta un arnés determinista con `agy -p`, no subagentes | En agy el modelo de cada candidato se fija por flag, y el aislamiento exige instalar cada variante | `[P-eval:20-21]` `[I-877]` `[A-cli]` `[MÍA]` |
 | `create-verification-skill` exige que cada recorrido demuestre que puede fallar (pstack lo cerró como no planificado) | Una skill que solo se vio pasar parece probada y no lo está; sin esto no hay automerge posible | `[I-1271]` `[T-maily]` `[VEX]` |
 | El hook de los proyectos es `Stop`, no `PostToolUse` | agy ignora la salida de `PostToolUse` | `[A-hooks-doc]` `[A-probe-m4]` |
+| `hooks/activate.py` inyecta el texto y la carpeta de cualquier `/<skill>` del plugin | En `agy -p`, el `/<skill>` de un plugin no expande su texto: el modelo tiene que leer el `SKILL.md`, y en el eval de M4 los 3 candidatos con `agent-ready` leyeron otra skill en su lugar | `[A-probe-slash]` `[I-726]` |
 | Auto-mejora programada | pstack la dispara a mano | `[P-correct]` `[VEX]` |
 | `reflect` abre un PR cuando la skill es de vex-mode (pstack prohíbe PRs y edita una copia local) | Un cambio a vex-mode entra como PR con su eval (§9.4); una copia local nunca llegaría al repo | `[P-reflect:17]` `[VEX]` |
 | La ejecución programada corre el eval de lo que cambia | Sin resultado, el CI de su PR falla (§8.2); al estar desatendida, el tiempo no molesta | `[VEX]` |
@@ -369,6 +370,7 @@ Cada hito termina en un estado verificable antes de empezar el siguiente `[P-mod
 | `I-1245` | https://github.com/cursor/plugins/issues/1245 (abierto): usar la verificación solo donde los tests no alcanzan; candidato, no adoptado en M4 |
 | `A-hooks-doc` | agy 1.5.12, `~/.gemini/antigravity-cli/builtin/skills/agy-customizations/docs/hooks.md`: contrato de cada evento; `PostToolUse` espera `{}`; `Stop` acepta `{"decision":"continue","reason":…}` |
 | `A-probe-m4` | agy 1.5.12, probado el 2026-11-19: un `.agents/hooks.json` de workspace se carga en `agy -p`, el hook corre con cwd en `.agents/`, `PostToolUse` se dispara en cada herramienta y la razón de un `Stop` con `continue` llega al agente |
+| `A-probe-slash` | agy 1.5.12, probado el 2026-11-19: una skill de workspace se expande con `/<nombre>` (también con `disable-model-invocation`); la de un plugin no, el modelo lee su `SKILL.md` si lo decide |
 | `T-robson` | Barnaby Robson, "On pstack" (2026-10-05): https://barnabyrobson.org/on-pstack/ |
 | `AUD` | La auditoría de esta sesión: 3 auditores (diseño, evidencia, Claude Code) y 2 refutadores |
 | `VEX` | Decisiones tuyas en esta conversación |
