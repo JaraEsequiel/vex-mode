@@ -1,8 +1,8 @@
 # vex-mode — Documento de diseño
 
-- **Fecha:** 2026-11-18
-- **Estado:** borrador revisado por un revisor independiente, pendiente de tu aprobación
-- **Repo destino:** `~/Projects/VexOs/Code/Repos/vex-mode`, privado en GitHub (`JaraEsequiel/vex-mode`). Este documento se mueve a `docs/specs/` del repo cuando se cree.
+- **Fecha:** 2026-11-18 · actualizado 2026-11-19
+- **Estado:** aprobado e implementado: M1 a M4 (PRs #1 a #4). Cada hito corrigió este documento tras releer sus fuentes.
+- **Repo:** `~/Projects/VexOs/Code/Repos/vex-mode`, privado en GitHub (`JaraEsequiel/vex-mode`). Este archivo vive en `docs/specs/`; el HTML se genera con `python3 scripts/render_design.py`.
 
 **Cómo leer las fuentes.** Cada decisión lleva su fuente entre corchetes. La tabla del final (§13) define cada código. Las etiquetas son:
 - `[P-…]`: código de pstack (cursor/plugins, commit `35a9094`, con archivo y línea).
@@ -135,8 +135,8 @@ vex-mode/
   - Título `type(scope): subject`.
   - Cuerpo con Why, What changed, Scope, Tradeoffs, Blast Radius y Verification.
   - Fuente: `[P-worker:4-10]`.
-- **Refuerzo estructural (desviación):** el hook `SessionStart` (§7.1) inyecta `worker.md`, en vez de depender de que el kickoff lo pida `[I-864]` `[A-hooks]`.
-- **Respaldo:** las reglas de `worker.md` también van en el cuerpo de `agents/vex-agent.md`. Así llegan al subagente aunque `SessionStart` no se dispare en sesiones de subagente, cosa que hay que verificar al implementar `[MÍA]`.
+- **Refuerzo estructural (desviación):** el hook de activación `PreInvocation` (§7.1) inyecta la lista de lecturas, `worker.md` incluido, en vez de depender de que el kickoff lo pida `[I-864]` `[A-hooks]`.
+- **Respaldo:** las reglas de `worker.md` también van en el cuerpo de `agents/vex-agent.md`, así llegan al subagente, que es una conversación aparte `[MÍA]` (`docs/decisions/2026-11-18-hook-probe.md`).
 - **Subagentes nuevos por defecto:** cada reintento va a un agente nuevo con el brief original `[P-mode:100]`.
 - **Modelo fijo en `vex-agent.md`:** solo si agy lo acepta como campo válido. pstack falló justamente por usar un nombre de modelo inválido `[I-1270]` `[AUD]`.
 
@@ -178,11 +178,21 @@ Controlan **cómo trabaja el agente**, sea cual sea el proyecto `[VEX]` `[A-hook
 
 | Hook | Qué hace | Cuándo actúa | Fuente de la regla |
 |---|---|---|---|
-| `SessionStart` | Inyecta la lista de lecturas y `worker.md` | Solo con la marca de `/vex-mode` `[VEX]` | `[P-mode:20]` + el fallo documentado en `[I-726]` |
+| `PreInvocation` | Con `/vex-mode`: marca la sesión e inyecta una vez la lista de lecturas (con `worker.md`). Con cualquier otro `/<skill>` del plugin: inyecta su texto y su carpeta, una vez por mensaje | Con `/<skill>` del plugin `[VEX]` | `[P-mode:20]` + el fallo documentado en `[I-726]` + `[A-probe-slash]` |
 | `PreToolUse` | **Pausa y pide confirmación** ante lo irreversible (force-push a ramas compartidas, deploy, borrado de datos). No bloquea sin salida | **Siempre** | `[P-mode:78]` ("Always pause", no "prohibir") `[MÍA]` |
 | `Stop` | No deja cerrar una tarea sin evidencia de verificación | Solo con la marca de `/vex-mode` `[VEX]` | `[P-prove:9]` |
 
-El mecanismo exacto del hook `Stop` (qué cuenta como evidencia) se prototipa antes de fijarlo `[MÍA]`. Así lo indica `[P-mode]`: lo que se puede decidir ejecutando algo, se prototipa.
+El mecanismo del hook `Stop` se prototipó antes de fijarlo, como indica `[P-mode]`: lo que se puede decidir ejecutando algo, se prototipa. El resultado está en `docs/decisions/2026-11-18-hook-probe.md`. En agy, `{}` en `PreToolUse` deniega y `force_ask` en `agy -p` no ejecuta el comando y termina el turno `[A-hooks]`.
+
+```mermaid
+flowchart LR
+  P([Mensaje del usuario]) --> Q{¿Empieza con /skill del plugin?}
+  Q -- /vex-mode --> K[PreInvocation:<br/>marca + lista de lecturas]
+  Q -- otra skill --> I[PreInvocation:<br/>texto y carpeta de la skill]
+  Q -- no --> N[Sin inyección]
+  K --> ST[Stop:<br/>exige evidencia]
+  P --> PT[PreToolUse, siempre:<br/>pausa ante lo irreversible y ante merge o push a main]
+```
 
 ### 7.2 Hooks de cada proyecto (en cada repo, no en vex-mode)
 - Las reglas del código de un proyecto viven en **lint + CI de ese proyecto**, no en hooks. Un hook solo corre cuando usas Antigravity, mientras que CI aplica a cualquiera: humano, Claude Code u otro agente `[P-correct:26]` `[T-talk]`.
@@ -253,6 +263,21 @@ El mecanismo exacto del hook `Stop` (qué cuenta como evidencia) se prototipa an
 `agy plugin validate --strict` `[A-validate]` + `checks/` + la política de evals de §8.2.
 
 ## 9. Bucle de auto-mejora (lo que hace al repo AI-faced)
+
+```mermaid
+flowchart LR
+  T[⏱ Timer semanal] --> PF{Preflight:<br/>plugin con correct y guardián,<br/>sin eval en curso}
+  PF -- no --> X[Notifica y no corre]
+  PF -- sí --> C[correct en un worktree:<br/>mina commits, reverts, reviews]
+  W[Tarea larga terminada] --> R[reflect:<br/>edita una skill existente]
+  C --> F[Fix en el nivel más alto + eval si toca una skill]
+  F --> S[El script pushea la rama y abre el PR]
+  R --> PR[PR]
+  S --> PR
+  PR --> CI{CI}
+  CI -- verde --> H[👤 Tú haces el merge]
+  CI -- rojo --> F
+```
 
 1. **`correct`:** mina commits, reverts y reviews, y agrupa los errores en clases (una clase cuenta cuando ocurrió 2 veces). Cada clase se arregla en el nivel más alto que funcione: arquitectura, después tipos y lint, después test, y docs al final. Cada check nuevo tiene que demostrar que falla con un error real del pasado `[P-correct:15-26]`.
 2. **`reflect`:** al terminar una tarea larga, convierte lo aprendido en una edición concreta de una skill existente. Un hallazgo solo se guarda si seguirá siendo cierto en 6 meses `[P-reflect:13]`.

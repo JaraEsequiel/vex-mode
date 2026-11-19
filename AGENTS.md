@@ -18,6 +18,7 @@ This repo is an Antigravity plugin: Vex's working mode for agents, built on psta
 - `scripts/vendor.py`: copies pstack files verbatim and records provenance.
 - `scripts/build_plugin.py`: exports only the plugin's parts; install with `--install`, never `agy plugin install` on the repo.
 - `scripts/scheduled_correct.py`: the weekly unattended `/correct` run and its systemd timer (`install`, `run`, `uninstall`).
+- `scripts/render_design.py`: renders `docs/specs/*-design.html` from the design's Markdown (template: `scripts/design_template.html`). Edit the `.md`, then run it.
 - `vendor.lock`: provenance for every file under `skills/`, `rules/`, `agents/`.
 - `docs/specs/`, `docs/plans/`, `docs/decisions/`: design, plans, decision log.
 
@@ -81,6 +82,7 @@ If an eval was killed before it restored the user's plugin, the next eval refuse
 | Scheduled runs never overlap, refuse unless the installed plugin has `correct` and the merge guard and no eval holds it, keep any unfinished work, notify on every failure, and never leave an empty worktree. The agent only commits; the script pushes the branch and opens the PR | `scripts/scheduled_correct.py` `scripts/tests/test_scheduled_correct.py` |
 | `agy -p` is written last in skills and rules (it takes the next word as the prompt) | `checks/check_skills.py` `checks/tests/test_check_skills.py` |
 | The generated Stop hook never loops, never blocks a clean finish, a cancel or an error, and treats a check that can't run or hangs as a failure | `skills/agent-ready/templates/check_on_stop.py` `scripts/tests/test_check_on_stop.py` |
+| The design's HTML matches its Markdown | `scripts/render_design.py` `scripts/tests/test_render_design.py` |
 | A PreToolUse hook with no opinion prints nothing (`{}` denies the tool) | `hooks/tests/test_irreversible.py` `docs/decisions/2026-11-18-hook-probe.md` |
 
 When you are corrected for a mistake, add a row here together with its enforcer in the same change. A rule that nothing enforces is a repeat waiting to happen.
