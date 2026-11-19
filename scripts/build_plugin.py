@@ -6,6 +6,7 @@
 import argparse
 import io
 import os
+import shlex
 import shutil
 import subprocess
 import sys
@@ -57,10 +58,17 @@ def build(repo_root: Path, out: Path, ref: str | None = None) -> Path:
     return out
 
 
+def agy_command() -> list[str]:
+    return shlex.split(os.environ.get("VEX_AGY", "agy"))
+
+
+def uninstall() -> None:
+    subprocess.run([*agy_command(), "plugin", "uninstall", "vex-mode"], capture_output=True)
+
+
 def install(out: Path) -> None:
-    agy = os.environ.get("VEX_AGY", "agy")
-    subprocess.run([agy, "plugin", "uninstall", "vex-mode"], capture_output=True)
-    subprocess.run([agy, "plugin", "install", str(out)], check=True)
+    uninstall()
+    subprocess.run([*agy_command(), "plugin", "install", str(out)], check=True, capture_output=True)
 
 
 def main(argv: list[str]) -> int:
