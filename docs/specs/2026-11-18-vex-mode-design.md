@@ -168,7 +168,9 @@ vex-mode/
 - **Licencia:** pstack es MIT, *"Copyright (c) 2026 Lauren Tan"*. El aviso se conserva en `LICENSES/pstack-MIT.txt` `[P-license]`.
 - **Cómo se hace cumplir** `[P-encode]`:
   - Un check en CI exige que cada skill copiada tenga su entrada en `vendor.lock`.
-  - Un script compara contra pstack y lista las actualizaciones disponibles upstream `[MÍA]`.
+  - `scripts/upstream_drift.py` compara cada archivo de `vendor.lock` contra pstack upstream y lo clasifica: sin cambios, cambiado o borrado. Si el archivo está adaptado, muestra el diff de upstream desde el commit de ese archivo, para reaplicarlo sobre la adaptación en vez de pisarla `[MÍA]` `[VEX]`.
+  - `vendor.lock` guarda el commit de origen **por archivo** (`upstream_commit`); el commit global queda como valor por defecto de las entradas viejas `[MÍA]`.
+  - Un workflow semanal de GitHub Actions corre el script y mantiene un único issue, "pstack upstream drift": lo abre o actualiza si hay cambios y lo cierra cuando no queda ninguno. No hace fallar el CI de los PRs, porque un cambio upstream no es un error nuestro `[VEX]`.
   - La regla entra en la tabla del `AGENTS.md` raíz con ese check como mecanismo `[P-correct:28]`.
 
 ## 7. Hooks
