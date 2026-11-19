@@ -84,7 +84,8 @@ def check_verdict(verdict: dict, labels: list[str], n_criteria: int) -> str | No
     return "; ".join(parts) or None
 
 
-def parse_output(stdout: str) -> tuple[dict | None, str | None]:
+def parse_output(stdout: str, schema: dict = SCHEMA) -> tuple[dict | None, str | None]:
+    from .judges import conforms
     try:
         data = json.loads(stdout)
     except json.JSONDecodeError as e:
@@ -92,10 +93,8 @@ def parse_output(stdout: str) -> tuple[dict | None, str | None]:
     if not isinstance(data, dict):
         return None, "judge output is not a JSON object"
     verdict = data.get("structured_output")
-    if not isinstance(verdict, dict) or not isinstance(verdict.get("runs"), list):
+    if not isinstance(verdict, dict):
         return None, f"judge returned no structured_output (status {data.get('status')})"
-    for run in verdict["runs"]:
-        if not (isinstance(run, dict) and isinstance(run.get("criteria"), list)
-                and all(isinstance(c, dict) for c in run["criteria"])):
-            return None, "judge returned a malformed run entry"
+    if not conforms(verdict, schema):
+        return None, "judge returned a malformed run entry"
     return verdict, None

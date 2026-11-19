@@ -141,13 +141,30 @@ def _http_error(status: int, body) -> str:
     return f"judge API returned HTTP {status}: {str(msg)[:500]}"
 
 
-def _verdict(text: str) -> tuple[dict | None, str | None]:
+def conforms(data, schema: dict) -> bool:
+    """Whether data matches the subset of JSON schema the judges use: object, array, string (enum), boolean, number."""
+    kind = schema.get("type")
+    if kind == "object":
+        props = schema.get("properties", {})
+        return isinstance(data, dict) and all(k in data for k in schema.get("required", [])) and all(
+            conforms(data[k], sub) for k, sub in props.items() if k in data)
+    if kind == "array":
+        return isinstance(data, list) and all(conforms(item, schema.get("items", {})) for item in data)
+    if kind == "string":
+        return isinstance(data, str) and data in schema.get("enum", [data])
+    if kind == "boolean":
+        return isinstance(data, bool)
+    if kind == "number":
+        return isinstance(data, (int, float)) and not isinstance(data, bool)
+    return True
+
+
+def _verdict(text: str, schema: dict) -> tuple[dict | None, str | None]:
     try:
         data = json.loads(text)
     except (TypeError, ValueError) as e:
         return None, f"judge output is not JSON ({e})"
-    if not (isinstance(data, dict) and isinstance(data.get("runs"), list)
-            and all(isinstance(r, dict) and isinstance(r.get("criteria"), list) for r in data["runs"])):
+    if not conforms(data, schema):
         return None, "judge output does not match the verdict schema"
     return data, None
 
@@ -172,7 +189,7 @@ def _openai(prompt: str, schema: dict, cfg: dict, key: str) -> tuple[dict | None
         if p.get("type") == "refusal":
             return None, f"judge refused: {p.get('refusal')}", usage
     text = "".join(p.get("text", "") for p in parts if p.get("type") == "output_text")
-    return (*_verdict(text), usage)
+    return (*_verdict(text, schema), usage)
 
 
 def _anthropic(prompt: str, schema: dict, cfg: dict, key: str) -> tuple[dict | None, str | None, dict]:
@@ -190,7 +207,7 @@ def _anthropic(prompt: str, schema: dict, cfg: dict, key: str) -> tuple[dict | N
     if data.get("stop_reason") == "max_tokens":
         return None, "judge response hit max_tokens", usage
     text = "".join(b.get("text", "") for b in data.get("content", []) if b.get("type") == "text")
-    return (*_verdict(text), usage)
+    return (*_verdict(text, schema), usage)
 
 
 def _agy(prompt: str, schema: dict, cfg: dict, cwd: Path) -> tuple[dict | None, str | None, dict]:
@@ -212,7 +229,7 @@ def _agy(prompt: str, schema: dict, cfg: dict, cwd: Path) -> tuple[dict | None, 
     (cwd / "judge.json").write_text(out)
     if not out:
         return None, "judge printed nothing", {}
-    verdict, error = judge_mod.parse_output(out)
+    verdict, error = judge_mod.parse_output(out, schema)
     return verdict, error, {}
 
 

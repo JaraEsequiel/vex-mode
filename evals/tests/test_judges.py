@@ -225,5 +225,13 @@ class JudgesTest(unittest.TestCase):
         self.assertEqual(verdict, VERDICT)
 
 
+
+class ConformsTest(unittest.TestCase):
+    def test_conforms(self):
+        self.assertTrue(judges.conforms(VERDICT, judge_mod.SCHEMA))
+        self.assertFalse(judges.conforms({"runs": [{"label": "R1", "criteria": "x"}]}, judge_mod.SCHEMA))
+        self.assertFalse(judges.conforms([], judge_mod.SCHEMA))
+
+
 if __name__ == "__main__":
     unittest.main()
