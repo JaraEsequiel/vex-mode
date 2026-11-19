@@ -55,6 +55,18 @@ systemctl --user list-timers vex-correct.timer   # próxima ejecución
 - **Costo conocido:** el eval reemplaza el plugin instalado mientras corre (~70 min). Si abres agy en ese rato, ves la variante; el arnés restaura tu plugin al terminar.
 - El modelo se cambia con `VEX_CORRECT_MODEL` (por defecto `gemini-4-neon-high`).
 
+## Preparar otro repo para agentes
+
+Dentro del repo destino, en una sesión de agy, ejecuta `/agent-ready`. Genera:
+
+- `AGENTS.md` con la tabla regla → qué la hace cumplir.
+- `scripts/check`: un solo comando que corre igual en local, en el hook y en CI.
+- `.agents/hooks.json` + `.agents/check_on_stop.py`: antes de terminar con cambios, el agente corre el `check` y, si falla, recibe el error y lo arregla. Máximo 3 intentos por conversación.
+- `.agents/skills/verify-<app>/`: una skill que maneja la app como un usuario, con un mapa de features y, por cada recorrido, una rotura registrada que demuestra que puede fallar (`/maintain-verification-skill` la mantiene).
+- `.github/workflows/check.yml`, si el repo tiene remoto de GitHub.
+
+Antes de entregar, rompe algo a propósito y muestra que el `check` y el hook lo detectan.
+
 ## Documentación
 
 - Diseño: `docs/specs/2026-11-18-vex-mode-design.md`

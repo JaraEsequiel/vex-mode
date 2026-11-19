@@ -10,6 +10,7 @@ This repo is an Antigravity plugin: Vex's working mode for agents, built on psta
 - `rules/AGENTS.md`: always-on core loaded in Vex's sessions. Keep it minimal.
 - `skills/vex-mode/`: the router (`SKILL.md`), `worker.md` (rules every subagent inherits), `playbooks/`.
 - `skills/principle-*/`: one principle per skill.
+- `skills/agent-ready/`: prepares another repo for agents; `templates/` holds the files it copies there (the Stop hook is tested in `scripts/tests/test_check_on_stop.py`).
 - `agents/vex-agent.md`: the subagent definition.
 - `hooks.json` + `hooks/`: mode hooks (activation, irreversible pause, stop gate).
 - `checks/`: deterministic structural checks. `checks/run.py` runs all of them.
@@ -78,6 +79,7 @@ If an eval was killed before it restored the user's plugin, the next eval refuse
 | No AI PR merges itself: `gh pr merge` (any flags), `gh api` merges and main ref updates, a push to `main`/`master` (any refspec form, `--all`, `-c` push overrides) and tracking main pause (headless `agy -p`: blocked). A bare `git push` while on main is not caught | `hooks/irreversible.py` `hooks/tests/test_irreversible.py` |
 | Scheduled runs never overlap, refuse unless the installed plugin has `correct` and the merge guard and no eval holds it, keep any unfinished work, notify on every failure, and never leave an empty worktree. The agent only commits; the script pushes the branch and opens the PR | `scripts/scheduled_correct.py` `scripts/tests/test_scheduled_correct.py` |
 | `agy -p` is written last in skills and rules (it takes the next word as the prompt) | `checks/check_skills.py` `checks/tests/test_check_skills.py` |
+| The generated Stop hook never loops and never blocks a clean finish | `skills/agent-ready/templates/check_on_stop.py` `scripts/tests/test_check_on_stop.py` |
 | A PreToolUse hook with no opinion prints nothing (`{}` denies the tool) | `hooks/tests/test_irreversible.py` `docs/decisions/2026-11-18-hook-probe.md` |
 
 When you are corrected for a mistake, add a row here together with its enforcer in the same change. A rule that nothing enforces is a repeat waiting to happen.
