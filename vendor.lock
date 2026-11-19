@@ -162,7 +162,7 @@
     {
       "path": "skills/vex-mode/SKILL.md",
       "upstream_path": "pstack/skills/poteto-mode/SKILL.md",
-      "upstream_sha256": "67fd2c54fd25ebfae1e46db62c4b2e54f806a7ea9dfb6c83922de37e9b9635ea",
+      "upstream_sha256": "9c09f6ab6661975a5be108f925afe203e10966ee426e3d786f4d338c5b05bd9f",
       "pending_refs": [],
       "removed_refs": [
         "architect",
@@ -208,7 +208,7 @@
         "unslop"
       ],
       "adapted": true,
-      "upstream_commit": "35a90942a7f02e1ebbc2443643179815f2147954"
+      "upstream_commit": "e58dd043600587dbaf58ba315e7f2b38373eeb43"
     },
     {
       "path": "skills/vex-mode/playbooks/bug-fix.md",
