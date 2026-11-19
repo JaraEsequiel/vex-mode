@@ -7,7 +7,7 @@ from pathlib import Path
 from _helpers import make_repo
 
 import check_evals
-from _util import banned_hits, model_family, skill_tree_sha256
+from _util import QUALITY_ALL, banned_hits, model_family, skill_tree_sha256
 
 CASE_JSON = {
     "runs": 3,
@@ -175,6 +175,54 @@ class ResultTest(unittest.TestCase):
     def test_unparseable_result(self):
         files = {"skills/x/SKILL.md": "s", "evals/x/results/r.json": "{nope"}
         self.assertTrue(check_evals.layout_errors(make_repo(files)))
+
+
+class QualityResultTest(unittest.TestCase):
+    def errors(self, result, quality=True):
+        files = case_files(case_json={"quality": quality})
+        files.update({"skills/x/SKILL.md": "---\nname: x\ndescription: d\n---\n",
+                      "evals/x/results/r.json": json.dumps(result)})
+        return check_evals.layout_errors(make_repo(files))
+
+    def quality_result(self, **over):
+        r = eval_result(date="2026-11-20", quality={"enabled": True, "errors": [], "judge_usage": {}}, **over)
+        for arm in "ABC":
+            r["metrics"][arm].update({n: stats(0.0) for n in QUALITY_ALL})
+        r["signals"]["B_vs_A"].update({n: "noise" for n in QUALITY_ALL})
+        return r
+
+    def test_valid_quality_result(self):
+        self.assertEqual(self.errors(self.quality_result()), [])
+
+    def test_promote_with_worse_quality_fails(self):
+        r = self.quality_result()
+        r["signals"]["B_vs_A"]["verbosity"] = "worse"
+        self.assertTrue(any("promote refused" in e and "verbosity worse" in e for e in self.errors(r)))
+        self.assertEqual(self.errors(dict(r, verdict="reject")), [])
+
+    def test_promote_with_worse_outcome_fails_without_quality(self):
+        r = eval_result()
+        r["signals"]["B_vs_A"]["outcome"] = "worse"
+        self.assertTrue(any("promote refused" in e for e in self.errors(r, quality=False)))
+
+    def test_quality_case_result_needs_quality_from_2026_11_20(self):
+        r = eval_result(date="2026-11-20")
+        self.assertTrue(any("quality" in e for e in self.errors(r)))
+        self.assertEqual(self.errors(eval_result(date="2026-11-19")), [])
+        self.assertEqual(self.errors(eval_result(date="2026-11-21"), quality=False), [])
+
+    def test_quality_metric_may_be_null(self):
+        r = self.quality_result()
+        r["metrics"]["A"]["prod_lines"] = None
+        self.assertEqual(self.errors(r), [])
+
+    def test_quality_metric_must_be_present(self):
+        r = self.quality_result()
+        del r["metrics"]["A"]["prod_lines"]
+        self.assertTrue(any("metrics.A.prod_lines" in e for e in self.errors(r)))
+
+    def test_case_quality_must_be_bool(self):
+        self.assertTrue(any("quality" in e for e in self.errors(eval_result(), quality="yes")))
 
 
 class PolicyTest(unittest.TestCase):
