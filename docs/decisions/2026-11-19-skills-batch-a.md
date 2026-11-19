@@ -23,3 +23,13 @@ Se trajeron de pstack@e58dd04 las cinco skills que nuestros playbooks ya nombrab
 - Con 3 corridas por brazo, la diferencia de resultado sigue siendo ruido estadístico. Lo que sostiene el veredicto es el mecanismo, consistente en las 18 corridas, y que B no empeora.
 - El primer intento del último eval se cortó por falta de memoria (un bucle del generador del HTML del diseño, ya arreglado en `main`). La primera llamada al juez del intento siguiente agotó el timeout de 600 s; se volvió a calificar con `rejudge`, sin repetir las corridas.
 - Este eval es del 2026-11-19, anterior a la medida de calidad de código (M5), así que no la trae.
+
+## Seguimiento: la línea en el paso 3 y la primera medición de calidad
+
+- **Eval `67413f0d1cc4`** (es la primera corrida con la medida de calidad del M5). Además del cambio de paso, la línea ahora incluye el boceto de `architect` y dice "request" en vez de "ticket". Resultado: B 3/3, A 2/3, **promote**. Las 3 corridas de B testearon con `float`.
+- **Calidad (solo sobre las corridas que pasan):**
+  - B sale mejor que A en líneas removibles (0 contra 2), en simplicidad según el juez y en líneas de test.
+  - El resto de las medidas da ruido.
+  - Ninguna medida que bloquea empeora.
+- **Lo que vio el juez de contrato y el check no:** `judge_contract` da 0 en los tres brazos. Incluso los parches que pasan convierten solo el precio a `Decimal`, así que una cantidad fraccionaria (`invoice_total([(10.0, 1.5)])`) ahora lanza `TypeError`. Además, varios cambian el tipo de retorno de `line_total` o `read_lines`. El `check.py` oculto solo prueba cantidades enteras y acepta retornos `Decimal`, por eso no lo detecta.
+- **Pendiente:** reforzar `check.py` para que pruebe cantidades `float` y tipos de retorno. Con eso el resultado mediría el contrato completo, no solo el caso del redondeo.
