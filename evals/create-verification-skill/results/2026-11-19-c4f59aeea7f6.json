@@ -1,0 +1,7 @@
+{
+  "kind": "waiver",
+  "skill": "create-verification-skill",
+  "tree_sha256": "c4f59aeea7f690eeb61ba2b560bc4f2881882bf69f2f6673ceb3d4d850001344",
+  "date": "2026-11-19",
+  "reason": "Vendored from pstack; adapted for agy's workspace skill path (.agents/skills/) and #1271: each driven journey must be shown to fail on a deliberate break, recorded under ## Breaks. Manual-only (disable-model-invocation). Exercised by the agent-ready habit-tracker eval, whose B arm runs it through /agent-ready step 5; the hidden check there requires the generated verify skill and its feature map."
+}
