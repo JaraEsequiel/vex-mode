@@ -98,6 +98,25 @@ class HiddenCheckTest(unittest.TestCase):
             subprocess.run(["git", "-C", str(self.work), *args], check=True, capture_output=True, env=dict(os.environ, **ENV))
         code, out = self.run_check()
         self.assertNotEqual(code, 0, out)
+    def test_hook_with_absolute_workdir_path_is_rejected_with_reason(self):
+        self.reference_setup()
+        write(self.work / ".agents/hooks.json", '{"a": {"Stop": [{"type": "command", "command": "python3 %s/.agents/check_on_stop.py ../scripts/check"}]}}' % self.work)
+        code, out = self.run_check()
+        self.assertNotEqual(code, 0, out)
+        self.assertIn("Stop hook uses an absolute path to the workdir; hooks must use paths relative to .agents/", out)
+
+    def test_stray_pipe_line_before_the_table_is_accepted(self):
+        self.reference_setup()
+        write(self.work / "AGENTS.md", "# Agents\n\n| note |\n\nText.\n\n| Rule | Enforced by |\n|---|---|\n| Code compiles | `scripts/check` |\n")
+        code, out = self.run_check()
+        self.assertEqual(code, 0, out)
+
+    def test_table_without_an_enforcer_column_is_rejected(self):
+        self.reference_setup()
+        write(self.work / "AGENTS.md", "# Agents\n\n| Name | Value |\n|---|---|\n| a | b |\n")
+        code, out = self.run_check()
+        self.assertNotEqual(code, 0, out)
+        self.assertIn("AGENTS.md has no rule table", out)
 
 
 if __name__ == "__main__":

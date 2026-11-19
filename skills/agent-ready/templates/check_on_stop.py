@@ -20,6 +20,7 @@ from pathlib import Path
 
 MAX_CONTINUES = 3
 TAIL_LINES = 60
+TAIL_CHARS = 8000
 TIMEOUT_S = int(os.environ.get("AGENT_READY_CHECK_TIMEOUT", "240"))  # below the hook's 300 s timeout
 
 
@@ -67,7 +68,10 @@ def decide(payload: dict, check: list[str], root: Path) -> dict | None:
         return None
     prompt = payload.get("lastUserInput") if isinstance(payload.get("lastUserInput"), str) else ""
     counter = _counter(root, conversation, prompt)
-    used = int(counter.read_text()) if counter.exists() else 0
+    try:
+        used = int(counter.read_text())
+    except (OSError, ValueError):
+        used = 0  # missing or corrupt counter: start over
     if used >= MAX_CONTINUES:
         return None
     code, output = _run_check(check, root)
@@ -75,7 +79,7 @@ def decide(payload: dict, check: list[str], root: Path) -> dict | None:
         return None
     counter.parent.mkdir(parents=True, exist_ok=True)
     counter.write_text(str(used + 1))
-    tail = "\n".join(output.strip().splitlines()[-TAIL_LINES:])
+    tail = "\n".join(output.strip().splitlines()[-TAIL_LINES:])[-TAIL_CHARS:]
     return {"decision": "continue", "reason": f"{' '.join(check)} failed (exit {code}); fix it before finishing:\n{tail}"}
 
 
@@ -84,7 +88,7 @@ def main(argv: list[str]) -> None:
         payload = json.loads(sys.stdin.read() or "null")
         if not isinstance(payload, dict) or not argv:
             return
-        here = Path(__file__).resolve().parent
+        here = Path(__file__).absolute().parent  # not resolve(): a symlinked hook keeps .agents/ as its home
         root = here.parent
         check = [str((here / a).resolve()) if a.startswith(("./", "../")) else a for a in argv]
         out = decide(payload, check, root)

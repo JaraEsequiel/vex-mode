@@ -142,6 +142,48 @@ class CheckOnStopTest(unittest.TestCase):
             subprocess.run(["git", "-C", str(self.repo), *args], check=True, capture_output=True, env=dict(os.environ, **ENV))
         self.assertEqual(self.stop(), "")
 
+    def test_huge_single_line_is_capped(self):
+        self.dirty()
+        (self.repo / "scripts/check").write_text("#!/bin/sh\nprintf '%01000000d' 7\nprintf 'END_MARK'\nexit 1\n")
+        out = json.loads(self.stop())
+        self.assertLess(len(out["reason"]), 9000)
+        self.assertIn("END_MARK", out["reason"])
+
+    def test_corrupt_counter_counts_as_zero(self):
+        import importlib.util
+        spec = importlib.util.spec_from_file_location("check_on_stop_mod", TEMPLATE)
+        mod = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(mod)
+        self.dirty()
+        old = tempfile.tempdir
+        tempfile.tempdir = str(self.tmp)
+        try:
+            counter = mod._counter(self.repo, self.conv, "fix it")
+        finally:
+            tempfile.tempdir = old
+        counter.parent.mkdir(parents=True, exist_ok=True)
+        for garbage in ("", "abc"):
+            counter.write_text(garbage)
+            out = json.loads(self.stop())
+            self.assertEqual(out["decision"], "continue")
+
+    def test_symlinked_hook_uses_symlink_folder_as_root(self):
+        self.dirty()
+        real = self.tmp / "elsewhere"
+        real.mkdir()
+        shutil.copy(TEMPLATE, real / "check_on_stop.py")
+        (self.repo / ".agents/check_on_stop.py").unlink()
+        (self.repo / ".agents/check_on_stop.py").symlink_to(real / "check_on_stop.py")
+        out = json.loads(self.stop())
+        self.assertEqual(out["decision"], "continue")
+        self.assertIn("lint: app.py:3 bad thing", out["reason"])
+
+    def test_check_path_relative_to_repo_root(self):
+        self.dirty()
+        out = json.loads(self.stop(check="scripts/check"))
+        self.assertEqual(out["decision"], "continue")
+        self.assertIn("lint: app.py:3 bad thing", out["reason"])
+
 
 if __name__ == "__main__":
     unittest.main()

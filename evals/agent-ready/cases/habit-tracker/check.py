@@ -73,9 +73,23 @@ def hook_continues(work: Path) -> bool:
     return False
 
 
+def _cells(line: str) -> list[str]:
+    return [c.strip() for c in line.strip().strip("|").split("|")]
+
+
 def has_table(text: str) -> bool:
-    rows = [l for l in text.splitlines() if l.strip().startswith("|")]
-    return len(rows) >= 3 and set(rows[1].replace("|", "").strip()) <= set("-: ")
+    """A header with an 'enforc' column, a separator row, then at least one data row."""
+    lines = [l.strip() for l in text.splitlines()]
+    for i in range(len(lines) - 2):
+        head, sep, data = lines[i], lines[i + 1], lines[i + 2]
+        if not (head.startswith("|") and sep.startswith("|") and data.startswith("|")):
+            continue
+        sep_cells = _cells(sep)
+        if not all(c and set(c) <= set("-: ") and "-" in c for c in sep_cells):
+            continue
+        if any("enforc" in c.lower() for c in _cells(head)):
+            return True
+    return False
 
 
 def verify_skill_ok(work: Path) -> bool:
@@ -114,6 +128,8 @@ def main(work: Path) -> int:
                 failed.append("check passes on a broken habits.py")
         if not stop_commands(work):
             failed.append("no Stop hook in .agents/hooks.json")
+        elif any(str(work.resolve()) in c or str(work) in c for c in stop_commands(work)):
+            failed.append("Stop hook uses an absolute path to the workdir; hooks must use paths relative to .agents/")
         else:
             if not hook_continues(broken):
                 failed.append("Stop hook does not continue on a broken habits.py")
