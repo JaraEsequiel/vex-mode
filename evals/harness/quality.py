@@ -36,11 +36,12 @@ def is_test(rel: str) -> bool:
 
 
 def apply_diff(project: Path, diff: str, dest: Path) -> str | None:
-    """Copy project to dest and apply diff there. Saved diffs lose their final newline, so it is restored."""
-    shutil.copytree(project, dest, ignore=SKIP, dirs_exist_ok=True)
+    """Copy project to dest and apply diff there. Diffs saved before M5 were stripped of trailing whitespace,
+    so the final newline is restored and --recount rebuilds their hunk sizes."""
+    shutil.copytree(project, dest, ignore=SKIP, dirs_exist_ok=True, symlinks=True)
     if not diff.strip():
         return None
-    r = subprocess.run(["git", "apply", "-p1", "--whitespace=nowarn", "-"], cwd=dest, capture_output=True, text=True,
+    r = subprocess.run(["git", "apply", "-p1", "--recount", "--whitespace=nowarn", "-"], cwd=dest, capture_output=True, text=True,
                        input=diff if diff.endswith("\n") else diff + "\n")
     return None if r.returncode == 0 else f"diff does not apply: {r.stderr.strip()[:300]}"
 
@@ -90,13 +91,16 @@ def measure_dirs(before: Path, after: Path, check: Path | None, timeout_s: int =
         added = _added(ops)
         prod = not is_test(rel)
         try:
+            values["comments_added"] += len(_comments("".join(b)) & added)
+        except (SyntaxError, tokenize.TokenError) as e:
+            fail(("comments_added",) if prod else ("docstrings_added",), f"{rel}: {type(e).__name__} {e}")
+        try:
             tree_after, tree_before = ast.parse("".join(b)), ast.parse("".join(a)) if a else None
-            comments = _comments("".join(b))
-        except (SyntaxError, ValueError, tokenize.TokenError) as e:
-            fail(("comments_added", "docstrings_added", "security_findings")
-                 + (("complexity_delta", "verbosity") if prod else ()), f"{rel}: {type(e).__name__} {e}")
+        except (SyntaxError, ValueError, RecursionError) as e:
+            # A test file the hidden check never runs may be broken; that is reported, not blocking.
+            fail(("security_findings", "complexity_delta", "verbosity") if prod else ("docstrings_added",),
+                 f"{rel}: {type(e).__name__} {e}")
             continue
-        values["comments_added"] += len(comments & added)
         values["docstrings_added"] += len(_docstrings(tree_after) & added)
         values["security_findings"] += max(0, _hits(tree_after) - (_hits(tree_before) if tree_before else 0))
         if prod:
@@ -257,7 +261,7 @@ def _removable(after: Path, files: dict, check: Path, timeout_s: int) -> int:
         raise ValueError("check fails on the patch itself")
     with tempfile.TemporaryDirectory(prefix="vex-trim-") as tmp:
         scratch = Path(tmp) / "w"
-        shutil.copytree(after, scratch, ignore=SKIP)
+        shutil.copytree(after, scratch, ignore=SKIP, symlinks=True)
         state = {rel: {"blocks": set(), "lines": set()} for rel in files}
 
         def render(rel: str) -> str:

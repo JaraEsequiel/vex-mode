@@ -18,6 +18,7 @@ VERDICTS = ("promote", "reject", "inconclusive")
 SHA = re.compile(r"^[0-9a-f]{64}$")
 DATE = re.compile(r"^\d{4}-\d{2}-\d{2}$")
 SLUG = re.compile(r"^[a-z0-9-]+$")
+SIGNALS = ("better", "worse", "noise", "few", "error")
 QUALITY_SINCE = "2026-11-20"  # results before M5 have no quality and cannot get it (design §8.2.1)
 
 
@@ -141,6 +142,10 @@ def _result_errors(result: dict, skill: str, rel: str, root: Path) -> list[str]:
             for m in QUALITY_ALL:
                 if m not in (metrics.get(arm) or {}):
                     errors.append(f"{rel}: metrics.{arm}.{m} is missing")
+        b_vs_a = (result.get("signals") or {}).get("B_vs_A") or {}
+        for m in QUALITY_ALL:
+            if b_vs_a.get(m) not in SIGNALS:
+                errors.append(f"{rel}: signals.B_vs_A.{m} must be one of {SIGNALS}")
     if result.get("verdict") == "promote" and (blockers := promote_blockers(result)):
         errors.append(f"{rel}: promote refused: {'; '.join(blockers)}")
     if result.get("verdict") not in VERDICTS:

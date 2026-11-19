@@ -91,6 +91,14 @@ class QualityJudgeTest(unittest.TestCase):
         self.assertEqual(len(errors), 1)
         self.assertRegex(errors[0], r"^judge_\w+ vote 1: ")
 
+    def test_huge_patch_is_truncated_in_the_prompt(self):
+        self.api.handler = all_vote("pass")
+        self.patches[4] = "diff --git a/x.py b/x.py\n" + "+x = 1\n" * 50000
+        self.grade()
+        for prompt in self.prompts():
+            self.assertLess(len(prompt), 3 * qj.PATCH_LIMIT)
+            self.assertIn("[diff truncated]", prompt)
+
     def test_failed_call_is_an_error_not_a_crash(self):
         self.api.handler = lambda req: (400, {}, {"error": {"message": "bad request"}})
         values, errors, _ = self.grade()

@@ -17,8 +17,15 @@ FIX = HERE / "fixtures/quality"
 GOOD = (FIX / "good_invoices.py").read_text()
 
 
+TMP = Path(tempfile.mkdtemp(prefix="quality-tests-"))
+
+
+def tearDownModule():
+    shutil.rmtree(TMP, ignore_errors=True)
+
+
 def tree(invoices: str = GOOD, **extra: str) -> Path:
-    root = Path(tempfile.mkdtemp(prefix="quality-"))
+    root = Path(tempfile.mkdtemp(prefix="t-", dir=TMP))
     shutil.copytree(BEFORE, root, dirs_exist_ok=True)
     (root / "invoices.py").write_text(invoices)
     for name, text in extra.items():
@@ -163,9 +170,29 @@ class QualityTest(unittest.TestCase):
         self.assertEqual(errors["removable_lines"], "check fails on the patch itself")
 
     def test_syntax_error_file_is_reported(self):
-        values, errors = run(tree(test_x_py="def broken(:\n"))
-        self.assertIn("test_x.py", errors["comments_added"])
+        values, errors = run(tree(test_x_py="def broken(x) x\n# note\n"))
+        self.assertIn("test_x.py", errors["docstrings_added"])
+        self.assertFalse(set(errors) & {"comments_added", "security_findings", "complexity_delta", "verbosity"}, errors)
+        self.assertEqual(values["comments_added"], 1)
         self.assertIsInstance(values["prod_lines"], int)
+
+    def test_stripped_diff_with_blank_trailing_context_applies(self):
+        import subprocess
+        work = Path(tempfile.mkdtemp(prefix="quality-git-"))
+        self.addCleanup(shutil.rmtree, work, True)
+        shutil.copytree(BEFORE, work, dirs_exist_ok=True)
+        env = {"GIT_AUTHOR_NAME": "t", "GIT_AUTHOR_EMAIL": "t@t", "GIT_COMMITTER_NAME": "t", "GIT_COMMITTER_EMAIL": "t@t"}
+        for args in (["init", "-q"], ["add", "-A"], ["commit", "-qm", "i"]):
+            subprocess.run(["git", "-C", str(work), *args], check=True, capture_output=True, env={**__import__("os").environ, **env})
+        src = (work / "invoices.py").read_text()
+        old = "    subtotal = sum(line_total(price, quantity) for price, quantity in lines)"
+        (work / "invoices.py").write_text(src.replace(old, old + " + 0"))
+        raw = subprocess.run(["git", "-C", str(work), "diff"], capture_output=True, text=True).stdout
+        self.assertTrue(raw.endswith(" \n \n"), repr(raw[-30:]))
+        diff = raw.strip()
+        values, errors = quality.measure(BEFORE, diff, CHECK)
+        self.assertNotIn("prod_lines", errors)
+        self.assertEqual(values["prod_lines"], 2)
 
     def test_measure_applies_saved_diff(self):
         diff = (FIX / "slot9.diff").read_text()

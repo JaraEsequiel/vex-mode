@@ -385,6 +385,32 @@ class RunTest(unittest.TestCase):
         self.assertEqual([r.get("quality") for r in self.passing(after)], [r.get("quality") for r in self.passing(before)])
         self.assertTrue(after["quality"]["enabled"])
 
+    def test_diff_keeps_trailing_context_and_ignores_user_prefixes(self):
+        work = self.home / "w"
+        write(work, {"a.py": "x = 1\ny = 2\n\n\n"})
+        for args in (["init", "-q"], ["config", "diff.mnemonicPrefix", "true"], ["add", "-A"], ["commit", "-qm", "i"]):
+            git(work, *args)
+        (work / "a.py").write_text("x = 3\ny = 2\n\n\n")
+        diff = run._diff(work)
+        self.assertTrue(diff.startswith("diff --git a/a.py b/a.py"), diff[:40])
+        self.assertTrue(diff.endswith(" \n"), repr(diff[-20:]))
+
+    def test_quality_survives_unreadable_project_file(self):
+        case = self.repo / "evals/x/cases/c1"
+        (case / "project/data.bin").write_bytes(b"\xff\xfe\x00binary")
+        run_dir = self.cache / "qrun"
+        (run_dir / "diffs").mkdir(parents=True)
+        (run_dir / "diffs/1.diff").write_text("diff --git a/data.bin b/data.bin\nBinary files differ\n")
+        records = {"A": {"runs": [{"slot": 1, "invalid": None, "outcome": 1}]}}
+        real = run.quality_judge.grade
+        run.quality_judge.grade = lambda patches, context, *a: ({s: {} for s in patches}, [], {})
+        try:
+            rec = run._quality(records, case, {"quality": True}, "fix it", {}, run_dir, __import__("random").Random(1))
+        finally:
+            run.quality_judge.grade = real
+        self.assertTrue(rec["errors"])
+        self.assertTrue(records["A"]["runs"][0]["quality_errors"])
+
     def test_verdict_subcommand_sets_fields(self):
         path = self.run_eval()
         self.assertEqual(run.main(["verdict", str(path), "inconclusive", "spread larger than the gap"]), 0)

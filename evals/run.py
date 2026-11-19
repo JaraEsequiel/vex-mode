@@ -76,8 +76,10 @@ def _diff(work: Path) -> str:
     """Everything the run changed since the project was planted, committed or not."""
     root = _git(work, "rev-list", "--max-parents=0", "HEAD", check=False).splitlines()
     subprocess.run(["git", "-C", str(work), "add", "-A"], capture_output=True)
-    return _git(work, "diff", "--cached", root[-1] if root else "HEAD", "--", ".", ":(exclude)**/__pycache__/**",
-                ":(exclude)__pycache__/**", check=False)
+    return subprocess.run(
+        ["git", "-C", str(work), "-c", "core.quotePath=false", "diff", "--cached", "--binary", "--no-color",
+         "--no-ext-diff", "--src-prefix=a/", "--dst-prefix=b/", root[-1] if root else "HEAD", "--", ".",
+         ":(exclude)**/__pycache__/**", ":(exclude)__pycache__/**"], capture_output=True, text=True).stdout
 
 
 def _material(t: transcript.Transcript, diff: str) -> str:
@@ -168,7 +170,11 @@ def _quality(records: dict, case_dir: Path, cfg: dict, prompt: str, judge_cfg: d
             if r["invalid"] or r["outcome"] != 1:
                 continue
             diff = (run_dir / "diffs" / f"{r['slot']}.diff").read_text()
-            r["quality"], r["quality_errors"] = quality.measure(case_dir / "project", diff, case_dir / "check.py")
+            try:
+                r["quality"], r["quality_errors"] = quality.measure(case_dir / "project", diff, case_dir / "check.py")
+            except Exception as e:  # noqa: BLE001 - a crash here would lose every candidate run already made
+                why = f"measure crashed: {type(e).__name__}: {e}"
+                r["quality"], r["quality_errors"] = dict.fromkeys(quality.DETERMINISTIC), dict.fromkeys(quality.DETERMINISTIC, why)
             errors += [f"slot {r['slot']} {name}: {why}" for name, why in r["quality_errors"].items()]
             patches[r["slot"]], runs[r["slot"]] = diff, r
     usage = {}
@@ -176,7 +182,7 @@ def _quality(records: dict, case_dir: Path, cfg: dict, prompt: str, judge_cfg: d
         project = case_dir / "project"
         files = sorted(rel for diff in patches.values() for rel in _touched(diff) if (project / rel).is_file())
         context = f"## Request\n\n{prompt}\n\n## Original files\n" + "".join(
-            f"\n### {rel}\n\n```\n{(project / rel).read_text()}\n```\n" for rel in dict.fromkeys(files))
+            f"\n### {rel}\n\n```\n{(project / rel).read_text(errors='replace')}\n```\n" for rel in dict.fromkeys(files))
         values, judge_errors, usage = quality_judge.grade(patches, context, judge_cfg, run_dir, rng)
         failed = {e.split(" ", 1)[0] for e in judge_errors}
         for slot, r in runs.items():

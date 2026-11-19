@@ -221,6 +221,12 @@ class QualityResultTest(unittest.TestCase):
         del r["metrics"]["A"]["prod_lines"]
         self.assertTrue(any("metrics.A.prod_lines" in e for e in self.errors(r)))
 
+    def test_quality_signal_must_be_present(self):
+        r = self.quality_result()
+        del r["signals"]["B_vs_A"]["judge_reuse"]
+        r["verdict"] = "promote"
+        self.assertTrue(any("signals.B_vs_A.judge_reuse" in e for e in self.errors(r)))
+
     def test_case_quality_must_be_bool(self):
         self.assertTrue(any("quality" in e for e in self.errors(eval_result(), quality="yes")))
 

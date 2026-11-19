@@ -15,6 +15,7 @@ DIMENSIONS = {
                 "types), unless the request required otherwise?",
 }
 VOTES = 3
+PATCH_LIMIT = 20000  # same cap as the compliance judge's material (run.DIFF_LIMIT)
 SCHEMA = {
     "type": "object",
     "properties": {"runs": {"type": "array", "items": {
@@ -41,8 +42,12 @@ def tally(votes: list[str | None]) -> float | None:
     return None
 
 
+def _cap(patch: str) -> str:
+    return patch if len(patch) <= PATCH_LIMIT else patch[:PATCH_LIMIT] + "\n[diff truncated]"
+
+
 def _prompt(question: str, context: str, items: list[tuple[str, str]]) -> str:
-    body = "".join(f"\n## {label}\n\n```diff\n{patch}\n```\n" for label, patch in items)
+    body = "".join(f"\n## {label}\n\n```diff\n{_cap(patch)}\n```\n" for label, patch in items)
     return HEADER.format(n=len(items), question=question, context=context.strip()) + body
 
 
