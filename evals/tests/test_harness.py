@@ -37,6 +37,10 @@ class TranscriptTest(unittest.TestCase):
         self.assertEqual(t.status, "UNFINISHED")
         self.assertEqual(t.total_tokens, 0)
 
+    def test_unfinished_run_keeps_step_tokens(self):
+        t = transcript.parse((FIX / "run_unfinished.ndjson").read_text())
+        self.assertGreater(t.step_tokens, 0)
+
     def test_garbage_lines_are_skipped(self):
         t = transcript.parse("not json\n\n")
         self.assertEqual(t.status, "UNFINISHED")
@@ -76,6 +80,33 @@ class IsolationTest(unittest.TestCase):
     def test_clean_run_has_no_violations(self):
         t = transcript.Transcript(reads=["/work/app.py", "/plug/vex-mode/skills/x/SKILL.md"])
         self.assertEqual(isolation.violations(t, plugin_root=Path("/plug/vex-mode"), forbidden=[Path("/run")]), [])
+
+
+class IsolationHardeningTest(unittest.TestCase):
+    def roots(self):
+        return dict(plugin_root=Path("/plug/vex-mode"), forbidden=[Path("/cache/vex-mode"), Path("/repo")],
+                    workdir=Path("/cache/vex-work/ab12/invoices"), work_root=Path("/cache/vex-work"))
+
+    def test_dotdot_path_is_normalized(self):
+        t = transcript.Transcript(reads=["/cache/vex-work/ab12/invoices/../../../vex-mode/runs/1/labels.json"])
+        self.assertTrue(isolation.violations(t, **self.roots()))
+
+    def test_relative_read_resolves_against_workdir(self):
+        t = transcript.Transcript(reads=["../../cd34/invoices/invoices.py"])
+        self.assertTrue(isolation.violations(t, **self.roots()))
+        self.assertEqual(isolation.violations(transcript.Transcript(reads=["invoices.py"]), **self.roots()), [])
+
+    def test_other_workdirs_and_evals_paths_are_forbidden(self):
+        for path in ("/cache/vex-work/cd34/invoices/invoices.py", "/home/u/clone/evals/x/cases/c/rubric.md"):
+            self.assertTrue(isolation.violations(transcript.Transcript(reads=[path]), **self.roots()), path)
+
+    def test_shell_reads_are_checked(self):
+        for cmd in ("cat /repo/evals/x/cases/c/rubric.md", "cat ~/.cache/vex-mode/runs/*/judge-prompt.md",
+                    "ls ../../", "grep -r total /home/u/clone/evals"):
+            t = transcript.Transcript(commands=[cmd])
+            self.assertTrue(isolation.violations(t, **self.roots(), home=Path("/home/u"), cache=Path("/cache")), cmd)
+        ok = transcript.Transcript(commands=["python3 invoices.py inv-1042.csv", "git diff HEAD~1"])
+        self.assertEqual(isolation.violations(ok, **self.roots(), home=Path("/home/u"), cache=Path("/cache")), [])
 
 
 class StatsTest(unittest.TestCase):

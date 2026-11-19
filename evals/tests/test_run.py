@@ -63,6 +63,7 @@ class RunTest(unittest.TestCase):
             "VEX_CACHE": str(self.cache),
             "FAKE_HOME": str(self.home),
             "FAKE_AGY_MODE": "ok",
+            "FAKE_PARENT": str(os.getpid()),
         }
         self.old = {k: os.environ.get(k) for k in [*self.env, "FAKE_PEEK"]}
         os.environ.update(self.env)
@@ -150,6 +151,59 @@ class RunTest(unittest.TestCase):
         self.assertEqual(after["arms"]["A"]["tree_sha256"], before["arms"]["A"]["tree_sha256"])
         self.assertEqual([r["outcome"] for r in after["arms"]["B"]["runs"]], [r["outcome"] for r in before["arms"]["B"]["runs"]])
 
+    def test_judge_too_few_criteria_sets_error(self):
+        (self.repo / "evals/x/cases/c1/rubric.md").write_text("1. Fixes it.\n2. Shows proof.\n")
+        git(self.repo, "commit", "-qam", "two criteria")
+        result = json.loads(self.run_eval().read_text())
+        self.assertIsNotNone(result["judge"]["error"])
+
+    def test_unfinished_run_cost_is_not_zero(self):
+        os.environ["FAKE_AGY_MODE"] = "crash"
+        result = json.loads(self.run_eval().read_text())
+        bad = [r for a in "ABC" for r in result["arms"][a]["runs"] if r["status"] == "UNFINISHED"][0]
+        self.assertGreater(bad["duration_s"], 0)
+
+    def test_sigterm_still_restores_plugin(self):
+        os.environ["FAKE_AGY_MODE"] = "sigterm"
+        with self.assertRaises(BaseException):
+            self.run_eval()
+        self.assertEqual(self.installed(), "original install")
+        self.assertFalse((self.cache / "vex-mode/restore-pending").exists())
+
+    def test_pending_restore_blocks_next_run(self):
+        backup = self.cache / "vex-mode/runs/old/installed-backup"
+        backup.mkdir(parents=True)
+        (backup / "plugin.json").write_text("{}")
+        (backup / "skills/x").mkdir(parents=True)
+        (backup / "skills/x/SKILL.md").write_text("from backup")
+        (self.cache / "vex-mode/restore-pending").write_text(str(backup))
+        with self.assertRaises(run.EvalError):
+            self.run_eval()
+        self.assertEqual(run.main(["restore"]), 0)
+        self.assertEqual(self.installed(), "from backup")
+        self.assertFalse((self.cache / "vex-mode/restore-pending").exists())
+
+    def test_workdirs_are_private_and_removed(self):
+        os.environ["FAKE_AGY_MODE"] = "ls"
+        result = json.loads(self.run_eval().read_text())
+        listings = (self.home / "ls.log").read_text().splitlines()
+        self.assertTrue(listings)
+        self.assertTrue(all(line == "ledger-app" for line in listings), listings)
+        self.assertEqual(list((self.cache / "vex-work").glob("*")), [])
+        self.assertTrue(list((Path(result["run_dir"]) / "diffs").glob("*.diff")))
+
+    def test_rejudge_uses_saved_diffs(self):
+        path = self.run_eval()
+        self.assertEqual(run.main(["rejudge", str(path)]), 0)
+        prompt = (Path(json.loads(path.read_text())["run_dir"]) / "judge-prompt.md").read_text()
+        self.assertIn("+fixed", prompt)
+
+    def test_result_name_has_case_and_never_overwrites(self):
+        path = self.run_eval()
+        self.assertIn("-c1-", path.name)
+        with self.assertRaises(run.EvalError):
+            self.run_eval()
+
     def test_refuses_dirty_variant(self):
         (self.repo / "skills/x/SKILL.md").write_text("dirty")
         with self.assertRaises(run.EvalError):
@@ -176,6 +230,22 @@ class JudgeTest(unittest.TestCase):
                                                          {"name": "b", "pass": False, "note": ""}]}]}
         self.assertEqual(judge.compliance(verdict, "R1"), 0.5)
         self.assertIsNone(judge.compliance(verdict, "R2"))
+
+    def test_wrong_criterion_count_is_an_error(self):
+        verdict = {"runs": [{"label": "R1", "criteria": [{"name": "a", "pass": True, "note": ""}]}]}
+        self.assertIsNotNone(judge.check_verdict(verdict, ["R1"], 4))
+        full = {"runs": [{"label": "R1", "criteria": [{"name": str(i), "pass": True, "note": ""} for i in range(4)]}]}
+        self.assertIsNone(judge.check_verdict(full, ["R1"], 4))
+        dup = {"runs": full["runs"] * 2}
+        self.assertIsNotNone(judge.check_verdict(dup, ["R1"], 4))
+
+    def test_parse_output_never_crashes(self):
+        for out in ("null", "[]", json.dumps({"structured_output": {"runs": ["x"]}}), json.dumps({"structured_output": None})):
+            verdict, error = judge.parse_output(out)
+            self.assertIsNotNone(error, out)
+
+    def test_rubric_criteria_count(self):
+        self.assertEqual(judge.criteria_count("1. a\n2. b\n\n3. c\n"), 3)
 
     def test_parse_output(self):
         ok = json.dumps({"status": "SUCCESS", "structured_output": {"runs": []}})

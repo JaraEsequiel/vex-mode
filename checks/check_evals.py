@@ -133,19 +133,37 @@ def _git(root: Path, *args: str) -> subprocess.CompletedProcess:
     return subprocess.run(["git", "-C", str(root), *args], capture_output=True, text=True)
 
 
+PLUGIN_WIDE = ("hooks/", "hooks.json", "rules/", "agents/", "plugin.json")
+
+
 def changed_skills(root: Path, base: str) -> set[str]:
-    merge_base = _git(root, "merge-base", base, "HEAD").stdout.strip()
-    diff = _git(root, "diff", "--name-only", merge_base, "--", "skills/").stdout.split()
-    untracked = _git(root, "ls-files", "--others", "--exclude-standard", "--", "skills/").stdout.split()
-    names = {p.split("/")[1] for p in diff + untracked if p.count("/") >= 2}
+    """Skills changed since the merge base. A change to hooks, rules, agents or the manifest counts as a
+    change to the vex-mode skill, because it changes how every /vex-mode run behaves."""
+    mb = _git(root, "merge-base", base, "HEAD")
+    if mb.returncode != 0 or not mb.stdout.strip():
+        raise ValueError(f"no merge base between '{base}' and HEAD; fetch full history or set VEX_BASE_REF")
+    diff = _git(root, "diff", "--name-only", mb.stdout.strip())
+    if diff.returncode != 0:
+        raise ValueError(f"git diff against '{base}' failed: {diff.stderr.strip()}")
+    untracked = _git(root, "ls-files", "--others", "--exclude-standard").stdout.split()
+    names = set()
+    for p in diff.stdout.split() + untracked:
+        if p.startswith("skills/") and p.count("/") >= 2:
+            names.add(p.split("/")[1])
+        elif p.startswith(PLUGIN_WIDE) and "/tests/" not in p:
+            names.add("vex-mode")
     return {n for n in names if (root / "skills" / n).is_dir()}
 
 
 def policy_errors(root: Path, base: str) -> list[str]:
     if _git(root, "rev-parse", "--verify", "--quiet", base + "^{commit}").returncode != 0:
         return [f"cannot resolve base ref '{base}'; fetch it or set VEX_BASE_REF"]
+    try:
+        changed = changed_skills(root, base)
+    except ValueError as e:
+        return [str(e)]
     errors = []
-    for skill in sorted(changed_skills(root, base)):
+    for skill in sorted(changed):
         sha = skill_tree_sha256(root / "skills" / skill)
         ok = [
             p for p, r in _load_results(root / "evals" / skill)

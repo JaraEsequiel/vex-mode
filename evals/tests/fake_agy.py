@@ -49,6 +49,15 @@ def main(argv: list[str]) -> int:
     emit({"event": "init", "conversation_id": f"c{n}", "init": {"model": model, "cwd": os.getcwd()}})
     if MODE == "crash" and n == 2:
         return 1
+    if MODE == "sigterm" and n == 2:
+        import signal
+        os.kill(int(os.environ["FAKE_PARENT"]), signal.SIGTERM)
+        import time
+        time.sleep(2)
+        return 1
+    if MODE == "ls":
+        with open(HOME / "ls.log", "a") as f:
+            f.write("\n".join(sorted(os.listdir(".."))) + "\n")
     skill = next((PLUGINS / "vex-mode/skills").glob("*/SKILL.md"))
     emit({"event": "step_update", "step_update": {"step_type": "tool", "state": "DONE",
           "tool_info": {"name": "read_file", "parameters": {"Path": str(skill)}}}})

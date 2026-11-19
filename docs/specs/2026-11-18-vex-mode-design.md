@@ -290,6 +290,7 @@ Cada hito termina en un estado verificable antes de empezar el siguiente `[P-mod
 | Hooks en lugar de prosa para lecturas, autonomía y verificación | Los agentes ignoran las lecturas pedidas en prosa | `[I-726]` `[I-864]` `[T-teamday]` |
 | Núcleo mínimo siempre activo (`rules/AGENTS.md`) + pausa ante lo irreversible siempre activa. El resto solo con `/vex-mode` | Mantiene la activación manual de pstack, pero la seguridad no depende de acordarse | `[P-mode:4]` `[VEX]` |
 | Cada eval mide cumplimiento, resultado y costo, con una palanca por comparación y una línea base de cambio de modelo | Aprobar solo por cumplimiento dejó pasar un cambio caro que apenas mejoraba el resultado | `[I-1178]` `[VEX]` |
+| Cuando el cambio evaluado toca el propio playbook de evals, el plugin del brazo B nombra "eval" | Es la skill bajo prueba: el candidato carga lo que se evalúa. Los casos, las rúbricas y el juez siguen ocultos | `[P-eval:7]` `[VEX]` |
 | Las fases B y C de `arena` las ejecuta un arnés determinista con `agy -p`, no subagentes | En agy el modelo de cada candidato se fija por flag, y el aislamiento exige instalar cada variante | `[P-eval:20-21]` `[I-877]` `[A-cli]` `[MÍA]` |
 | Auto-mejora programada | pstack la dispara a mano | `[P-correct]` `[VEX]` |
 | Evals guardados y exigidos en CI | pstack no publica evidencia | `[AUD]` `[VEX]` |

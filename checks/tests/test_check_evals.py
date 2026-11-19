@@ -203,6 +203,25 @@ class PolicyTest(unittest.TestCase):
         git(root, "commit", "-qm", "drop y")
         self.assertEqual(check_evals.policy_errors(root, "main~1"), [])
 
+    def test_unrelated_base_is_an_error(self):
+        root = git_repo({"skills/x/SKILL.md": "v1"})
+        git(root, "checkout", "-q", "--orphan", "other")
+        git(root, "commit", "-qm", "orphan", "--allow-empty")
+        git(root, "branch", "-q", "orphanbase")
+        git(root, "checkout", "-q", "main")
+        errors = check_evals.policy_errors(root, "orphanbase")
+        self.assertEqual(len(errors), 1, errors)
+
+    def test_plugin_wide_change_counts_for_vex_mode(self):
+        root = git_repo({"skills/vex-mode/SKILL.md": "r", "skills/x/SKILL.md": "x", "hooks/activate.py": "a",
+                         "rules/AGENTS.md": "r", "plugin.json": "{}"})
+        for rel in ("hooks/activate.py", "rules/AGENTS.md", "plugin.json"):
+            git(root, "checkout", "-q", "main")
+            git(root, "checkout", "-qB", "f-" + rel.replace("/", "-"))
+            (root / rel).write_text("changed")
+            self.assertEqual(check_evals.changed_skills(root, "main"), {"vex-mode"}, rel)
+            git(root, "checkout", "-q", "--", rel)
+
     def test_unresolvable_base_is_an_error(self):
         root = git_repo({"skills/x/SKILL.md": "v1"})
         old = os.environ.get("VEX_BASE_REF")

@@ -13,6 +13,7 @@ class Transcript:
     steps: list[str] = field(default_factory=list)
     status: str = "UNFINISHED"
     total_tokens: int = 0
+    step_tokens: int = 0
     duration_s: float = 0.0
     response: str = ""
 
@@ -30,6 +31,7 @@ def parse(text: str) -> Transcript:
             t.conversation_id = event.get("conversation_id")
         elif kind == "step_update":
             step = event["step_update"]
+            t.step_tokens += int((step.get("usage") or {}).get("total_tokens") or 0)
             if step.get("step_type") != "tool" or step.get("state") != "DONE":
                 continue
             info = step.get("tool_info") or {}

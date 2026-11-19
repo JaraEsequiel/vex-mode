@@ -49,7 +49,9 @@ A skill change ships with evidence for its exact version (its tree hash):
 2. Read every candidate's output and transcript in the printed run dir, compare with the judge, then `python3 evals/run.py verdict <result> <promote|reject|inconclusive> "<synthesis>"`.
 3. If no eval can measure the change, add a waiver result with a reason instead. The user accepts or rejects it in the PR.
 
-A PR that changes `skills/<name>/` without a valid result for its current tree hash fails CI.
+A PR that changes `skills/<name>/` without a valid result for its current tree hash fails CI. A change to `hooks/`, `rules/`, `agents/`, `hooks.json` or `plugin.json` counts as a change to `vex-mode`.
+
+If an eval was killed before it restored the user's plugin, the next eval refuses to start; run `python3 evals/run.py restore`.
 
 ## Rules
 
@@ -71,7 +73,7 @@ A PR that changes `skills/<name>/` without a valid result for its current tree h
 | The judge is from another model family than every candidate | `checks/check_evals.py` `evals/harness/arms.py` |
 | Every eval measures compliance, outcome and cost on three fixed arms | `evals/harness/arms.py` `evals/tests/test_run.py` |
 | An eval never leaves a variant installed | `evals/run.py` `evals/tests/test_run.py` |
-| A run that read the run dir, the repo or another skill copy is invalid | `evals/harness/isolation.py` `evals/tests/test_run.py` |
+| A run that read (by file or shell) the eval cache, the repo, another project copy, an `evals/` folder or another skill copy is invalid | `evals/harness/isolation.py` `evals/tests/test_run.py` |
 | A PreToolUse hook with no opinion prints nothing (`{}` denies the tool) | `hooks/tests/test_irreversible.py` `docs/decisions/2026-11-18-hook-probe.md` |
 
 When you are corrected for a mistake, add a row here together with its enforcer in the same change. A rule that nothing enforces is a repeat waiting to happen.

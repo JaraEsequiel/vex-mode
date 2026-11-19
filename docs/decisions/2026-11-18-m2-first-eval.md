@@ -3,7 +3,7 @@
 - **Date:** 2026-11-18
 - **agy:** 1.5.11. Candidates `gemini-4-neon-medium` (arms A, B) and `gemini-4-neon-high` (arm C), judge `claude-opus-5-5-high`. 3 runs per arm.
 - **Arms:** A = `main` (`539ae35e6a18`), B = `m2` (`751c0e58ac82`), C = `main` on the upgrade model.
-- **Result:** `evals/vex-mode/results/2026-11-18-751c0e58ac82.json`. **Verdict: promote.**
+- **Result:** `evals/vex-mode/results/2026-11-18-tax-rounding-751c0e58ac82.json`. **Verdict: promote.**
 - **Run dir (local only):** `~/.cache/vex-mode/runs/20261118-221441-180861`
 
 ## Numbers (mean, spread over 3 runs)
@@ -33,5 +33,7 @@
 
 - **n=3 per arm.** One run moves the mean by 0.33.
 - **The case exercises the bug-fix path, not the Eval playbook** that M2 adds. The result shows no harm, not a benefit.
+- **Rechecked after the final review.** All 9 runs stay valid under the hardened isolation, which also checks shell commands, `..` paths, other project copies and any `evals/` folder. The judge's grades also pass the stricter verdict check (4 criteria per label, no duplicates).
+- **The B arm's plugin itself names evals.** It ships `playbooks/eval.md`, and its router lists "Eval" and "an eval result". A and C do not have these, so the A↔B lever includes them. This is inherent to evaluating a change to the eval playbook: the skill under test is what the candidate loads. Design §11 records it.
 - **Isolation checks only the parent's reads.** Subagents are separate conversations (`2026-11-18-hook-probe.md`, finding 4), and their transcripts are not in `stream-json`. A subagent that read a rubric would go unflagged.
   - Mitigation in place: rubrics and the run dir live outside every candidate's project, and the plugin build excludes `evals/`.

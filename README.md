@@ -35,7 +35,7 @@ python3 evals/run.py verdict <resultado.json> promote "<síntesis>"
 
 - Los casos están en `evals/<skill>/cases/` y los resultados en `evals/<skill>/results/`.
 - Los transcripts completos quedan solo en local, en `~/.cache/vex-mode/runs/`.
-- Mientras corre un eval, el plugin instalado cambia en cada brazo. Al terminar se restaura el original, aunque el eval falle. No uses agy durante el eval.
+- Mientras corre un eval, el plugin instalado cambia en cada brazo. Al terminar se restaura el original, aunque el eval falle. No uses agy durante el eval. Si el proceso muere sin restaurar, el siguiente eval no arranca hasta que ejecutes `python3 evals/run.py restore`.
 
 ## Documentación
 
