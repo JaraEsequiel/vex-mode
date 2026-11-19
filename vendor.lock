@@ -72,7 +72,12 @@
       "path": "skills/show-me-your-work/SKILL.md",
       "upstream_path": "pstack/skills/show-me-your-work/SKILL.md",
       "upstream_sha256": "ec29326ac20515f2941198205bec615320a55b21659692e19650530dbf217bde",
-      "pending_refs": []
+      "pending_refs": [],
+      "adapted": true,
+      "removed_refs": [
+        "unslop",
+        "poteto-mode"
+      ]
     },
     {
       "path": "skills/show-me-your-work/references/decision-log-template.tsv",
@@ -130,7 +135,6 @@
         "principle-redesign-from-first-principles",
         "principle-test-behavior-not-implementation",
         "principle-type-system-discipline",
-        "show-me-your-work",
         "swarm",
         "technical-writing",
         "unslop"
