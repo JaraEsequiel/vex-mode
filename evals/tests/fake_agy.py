@@ -47,6 +47,8 @@ def main(argv: list[str]) -> int:
     n = bump("candidates")
     model = argv[argv.index("--model") + 1]
     emit({"event": "init", "conversation_id": f"c{n}", "init": {"model": model, "cwd": os.getcwd()}})
+    if MODE == "fail":
+        return 1
     if MODE == "crash" and n == 2:
         return 1
     if MODE == "sigterm" and n == 2:
