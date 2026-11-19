@@ -1,7 +1,7 @@
 # vex-mode — Documento de diseño
 
 - **Fecha:** 2026-11-18 · actualizado 2026-11-19
-- **Estado:** aprobado e implementado: M1 a M4 (PRs #1 a #4). M5 (calidad del código, §8.2.1) diseñado, pendiente de aprobación. Cada hito corrigió este documento tras releer sus fuentes.
+- **Estado:** aprobado e implementado: M1 a M4 (PRs #1 a #4). M5 (calidad del código, §8.2.1) aprobado e implementado; evidencia en `docs/decisions/2026-11-19-m5-quality.md`. Cada hito corrigió este documento tras releer sus fuentes.
 - **Repo:** `~/Projects/VexOs/Code/Repos/vex-mode`, privado en GitHub (`JaraEsequiel/vex-mode`). Este archivo vive en `docs/specs/`; el HTML se genera con `python3 scripts/render_design.py`.
 
 **Cómo leer las fuentes.** Cada decisión lleva su fuente entre corchetes. La tabla del final (§13) define cada código. Las etiquetas son:
