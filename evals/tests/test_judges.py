@@ -27,7 +27,11 @@ class FakeAPI:
             def do_POST(self):
                 body = json.loads(self.rfile.read(int(self.headers["Content-Length"])))
                 api.requests.append({"path": self.path, "headers": dict(self.headers), "body": body})
-                status, headers, reply = api.handler(api.requests[-1]) if api.handler else api.replies.pop(0)
+                item = api.handler(api.requests[-1]) if api.handler else api.replies.pop(0)
+                if item is None:  # drop the connection without answering
+                    self.close_connection = True
+                    return
+                status, headers, reply = item
                 data = reply if isinstance(reply, bytes) else json.dumps(reply).encode()
                 self.send_response(status)
                 for k, v in headers.items():
@@ -137,6 +141,42 @@ class JudgesTest(unittest.TestCase):
         verdict, error, _ = self.call()
         self.assertIsNone(error)
         self.assertEqual(len(self.api.requests), 2)
+
+    def test_connection_reset_is_a_judge_error(self):
+        self.api.replies += [None, None]
+        verdict, error, _ = self.call()
+        self.assertIsNone(verdict)
+        self.assertIn("judge call failed", error)
+
+    def test_http_date_retry_after_and_string_error_body(self):
+        judges.RETRY_FALLBACK_S = 0
+        self.addCleanup(setattr, judges, "RETRY_FALLBACK_S", 30)
+        self.api.replies += [(429, {"retry-after": "Wed, 21 Oct 2026 07:28:00 GMT"}, {"error": "bad"}),
+                             (200, {}, openai_reply(json.dumps(VERDICT)))]
+        verdict, error, _ = self.call()
+        self.assertIsNone(error)
+        self.api.replies.append((400, {}, {"error": "plain string"}))
+        verdict, error, _ = self.call()
+        self.assertIn("plain string", error)
+
+    def test_no_retry_after_the_work_may_be_done(self):
+        self.api.replies.append((200, {}, b"not json"))
+        verdict, error, _ = self.call()
+        self.assertIsNone(verdict)
+        self.assertEqual(len(self.api.requests), 1)
+        self.api.replies.append((502, {}, {"error": {"message": "bad gateway"}}))
+        verdict, error, _ = self.call()
+        self.assertEqual(len(self.api.requests), 2)
+
+    def test_retry_wait_is_capped(self):
+        self.assertEqual(judges._retry_wait("100000"), judges.MAX_RETRY_WAIT_S)
+        self.assertEqual(judges._retry_wait("2"), 2)
+
+    def test_partial_key_is_scrubbed(self):
+        self.api.replies.append((401, {}, {"error": {"message": "Incorrect API key provided: sk-tes*******5678."}}))
+        verdict, error, _ = self.call()
+        self.assertNotIn("sk-", error)
+        self.assertNotIn("5678", error)
 
     def test_openai_schema_is_strict(self):
         def check(node):

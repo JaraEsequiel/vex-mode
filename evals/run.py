@@ -29,7 +29,7 @@ sys.path.insert(0, str(HERE.parent / "scripts"))
 sys.path.insert(0, str(HERE.parent / "checks"))
 
 import build_plugin  # noqa: E402
-from _util import skill_tree_sha256  # noqa: E402
+from _util import model_family, skill_tree_sha256  # noqa: E402
 from harness import arms as arms_mod  # noqa: E402
 from harness import isolation, judge, judges, stats, transcript  # noqa: E402
 
@@ -92,7 +92,8 @@ def _run_candidate(arm, prompt: str, timeout_s: int, work: Path, log: Path) -> t
     start = time.monotonic()
     try:
         with open(log, "w") as out:
-            subprocess.run(cmd, cwd=work, stdout=out, stderr=subprocess.DEVNULL, timeout=timeout_s + 60)
+            subprocess.run(cmd, cwd=work, stdout=out, stderr=subprocess.DEVNULL, timeout=timeout_s + 60,
+                           env=judges.agent_env())
     except subprocess.TimeoutExpired:
         pass
     return transcript.parse(log.read_text()), time.monotonic() - start
@@ -193,6 +194,9 @@ def rejudge(path: Path) -> None:
             materials[r["slot"]] = _material(t, diff.read_text())
             r["compliance"] = None
     judge_cfg = _judge_config(repo)
+    families = {model_family(rec["model"]) for rec in result["arms"].values()}
+    if model_family(judge_cfg["model"]) in families:
+        raise EvalError(f"judge {judge_cfg['model']} shares a model family with a candidate ({sorted(families)})")
     with _locked():
         error, usage = _judge(result["arms"], materials, (case_dir / "rubric.md").read_text(), judge_cfg,
                               run_dir, random.Random())
@@ -304,7 +308,7 @@ def run_eval(repo: Path, skill: str, case: str, base: str | None = None,
                     try:
                         t, wall = _run_candidate(arm, prompt, cfg["timeout_s"], work,
                                                  run_dir / "transcripts" / f"{slot}.ndjson")
-                        bad = isolation.violations(t, plugin_root=installed, forbidden=[_cache() / "vex-mode", repo],
+                        bad = isolation.violations(t, plugin_root=installed, forbidden=[_cache() / "vex-mode", repo, judges._secrets_file()],
                                                    workdir=work, work_root=work_root, home=Path.home())
                         invalid = "; ".join(bad) or (None if t.status == "SUCCESS" else f"status {t.status}")
                         diff = _diff(work)

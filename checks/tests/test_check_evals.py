@@ -158,6 +158,12 @@ class ResultTest(unittest.TestCase):
         r["metrics"]["B"]["compliance"] = None
         self.assertTrue(self.errors(r))
 
+    def test_result_judge_must_differ_from_candidates(self):
+        r = eval_result(judge={"model": "gemini-4-argon-high", "error": None})
+        for arm in "ABC":
+            r["arms"][arm]["model"] = "gemini-4-neon-medium"
+        self.assertTrue(any("family" in e for e in self.errors(r)))
+
     def test_eval_needs_verdict(self):
         self.assertTrue(any("verdict" in e for e in self.errors(eval_result(verdict=None))))
 

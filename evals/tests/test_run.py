@@ -188,6 +188,27 @@ class RunTest(unittest.TestCase):
         leaks = [p for p in [path, *run_dir.rglob("*")] if p.is_file() and b"sk-secret-123" in p.read_bytes()]
         self.assertEqual(leaks, [])
 
+    def test_candidates_never_see_api_keys(self):
+        self.openai_judge()
+        os.environ["FAKE_AGY_MODE"] = "env"
+        path = self.run_eval()
+        run_dir = Path(json.loads(path.read_text())["run_dir"])
+        leaks = [p for p in [path, *run_dir.rglob("*")] if p.is_file() and b"sk-secret-123" in p.read_bytes()]
+        self.assertEqual(leaks, [])
+
+    def test_rejudge_refuses_a_same_family_judge(self):
+        path = self.run_eval()
+        os.environ.update({"VEX_JUDGE_PROVIDER": "agy", "VEX_JUDGE_MODEL": "gemini-4-argon-high"})
+        with self.assertRaises(run.EvalError) as ctx:
+            run.rejudge(path)
+        self.assertIn("family", str(ctx.exception))
+
+    def test_reading_the_secrets_file_invalidates_a_run(self):
+        os.environ["FAKE_AGY_MODE"] = "peek"
+        os.environ["FAKE_PEEK"] = os.environ["VEX_SECRETS"]
+        result = json.loads(self.run_eval().read_text())
+        self.assertTrue(all(r["invalid"] for arm in "ABC" for r in result["arms"][arm]["runs"]))
+
     def test_missing_key_fails_before_runs(self):
         os.environ.update({"VEX_JUDGE_PROVIDER": "openai", "VEX_JUDGE_MODEL": "gpt-6.2-sol"})
         os.environ.pop("OPENAI_API_KEY", None)

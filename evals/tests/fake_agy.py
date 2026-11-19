@@ -71,6 +71,8 @@ def main(argv: list[str]) -> int:
     if MODE == "peek":
         emit({"event": "step_update", "step_update": {"step_type": "tool", "state": "DONE",
               "tool_info": {"name": "read_file", "parameters": {"Path": os.environ["FAKE_PEEK"]}}}})
+    if MODE == "env":
+        Path("leak.txt").write_text(os.environ.get("OPENAI_API_KEY", "") + os.environ.get("ANTHROPIC_API_KEY", ""))
     if MODE not in ("noop", "trail"):
         Path("app.py").write_text("fixed\n" + ("x = 1\n" * 60000 if MODE == "big" else ""))
     if MODE in ("commit", "commit-trail"):

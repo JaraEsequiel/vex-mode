@@ -115,6 +115,10 @@ def _result_errors(result: dict, skill: str, rel: str) -> list[str]:
     if not (isinstance(arms, dict) and sorted(arms) == list(ARMS)):
         errors.append(f"{rel}: arms must be exactly {list(ARMS)}")
     judge = result.get("judge") or {}
+    if isinstance(arms, dict) and isinstance(judge.get("model"), str):
+        families = {model_family(a.get("model", "")) for a in arms.values() if isinstance(a, dict) and a.get("model")}
+        if model_family(judge["model"]) in families:
+            errors.append(f"{rel}: judge {judge['model']} shares a model family with a candidate")
     if judge.get("error"):
         errors.append(f"{rel}: judge failed ({judge['error']}); rerun the eval or add a waiver")
     metrics = result.get("metrics") or {}

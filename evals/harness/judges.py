@@ -5,9 +5,12 @@ VEX_JUDGE_EFFORT override it. Keys: OPENAI_API_KEY / ANTHROPIC_API_KEY, else ~/.
 (VEX_SECRETS), which must not be readable by group or others. A key is never returned in an error.
 """
 import copy
+import http.client
 import json
 import os
+import re
 import shlex
+import socket
 import subprocess
 import time
 import urllib.error
@@ -78,34 +81,64 @@ def strict_schema(schema: dict) -> dict:
     return out
 
 
+RETRY_FALLBACK_S = 30
+MAX_RETRY_WAIT_S = 120
+RETRY_STATUS = {429, 500, 503, 529}  # rejected or overloaded before any work: safe to send again
+KEY_PATTERN = re.compile(r"(sk|sk-ant)-[A-Za-z0-9_*\-.]+")
+
+
+def agent_env() -> dict:
+    """The environment for agents and candidates: the judge's API keys never reach them."""
+    return {k: v for k, v in os.environ.items() if k not in KEY_ENV.values()}
+
+
+def _retry_wait(value: str | None) -> float:
+    try:
+        wait = float(value) if value else RETRY_FALLBACK_S
+    except ValueError:  # e.g. an HTTP-date
+        wait = RETRY_FALLBACK_S
+    return max(0.0, min(wait, MAX_RETRY_WAIT_S))
+
+
 def _post(url: str, headers: dict, body: dict) -> tuple[int, dict | str]:
+    """One request, sent again only when the provider certainly did no work (429/500/503/529, or the
+    connection was refused). A read timeout or an unreadable 2xx body is never retried: it may be billed."""
     data = json.dumps(body).encode()
     for attempt in (1, 2):
         req = urllib.request.Request(url, data=data, method="POST",
                                      headers={"Content-Type": "application/json", **headers})
         try:
             with urllib.request.urlopen(req, timeout=TIMEOUT_S) as resp:
-                return resp.status, json.loads(resp.read() or b"{}")
+                raw = resp.read()
+            try:
+                return resp.status, json.loads(raw or b"{}")
+            except ValueError:
+                return 0, f"judge call failed: the API answered {resp.status} with a body that is not JSON"
         except urllib.error.HTTPError as e:
             text = e.read().decode(errors="replace")
-            if attempt == 1 and (e.code == 429 or e.code >= 500):
-                time.sleep(float(e.headers.get("retry-after") or 30))
+            if attempt == 1 and e.code in RETRY_STATUS:
+                time.sleep(_retry_wait(e.headers.get("retry-after")))
                 continue
             try:
                 return e.code, json.loads(text)
             except ValueError:
                 return e.code, text
-        except (urllib.error.URLError, TimeoutError, ValueError) as e:
-            if attempt == 1:
-                time.sleep(30)
+        except urllib.error.URLError as e:
+            if attempt == 1 and isinstance(e.reason, (ConnectionRefusedError, socket.gaierror)):
+                time.sleep(_retry_wait(None))
                 continue
-            return 0, str(e)
-    return 0, "unreachable"
+            return 0, f"judge call failed: {type(e.reason).__name__}: {e.reason}"
+        except (OSError, http.client.HTTPException, ValueError) as e:
+            return 0, f"judge call failed: {type(e).__name__}: {e}"
+    return 0, "judge call failed: no answer"
 
 
 def _http_error(status: int, body) -> str:
-    msg = body.get("error", {}).get("message") if isinstance(body, dict) else str(body)[:500]
-    return f"judge API returned HTTP {status}: {msg}"
+    if status == 0:
+        return str(body)
+    err = body.get("error") if isinstance(body, dict) else body
+    msg = err.get("message") if isinstance(err, dict) else err
+    return f"judge API returned HTTP {status}: {str(msg)[:500]}"
 
 
 def _verdict(text: str) -> tuple[dict | None, str | None]:
@@ -191,7 +224,10 @@ def judge(prompt: str, schema: dict, cfg: dict, cwd: Path) -> tuple[dict | None,
     if not key:
         return None, f"no API key for {cfg['provider']}: set {KEY_ENV[cfg['provider']]} or {_secrets_file()}", {}
     call = _openai if cfg["provider"] == "openai" else _anthropic
-    verdict, error, usage = call(prompt, schema, cfg, key)
-    if error and key in error:
-        error = error.replace(key, "***")
+    try:
+        verdict, error, usage = call(prompt, schema, cfg, key)
+    except Exception as e:  # noqa: BLE001 - a crash here would lose every candidate run already made
+        verdict, error, usage = None, f"judge call failed: {type(e).__name__}: {e}", {}
+    if error:
+        error = KEY_PATTERN.sub("<key>", error.replace(key, "<key>"))
     return verdict, error, usage

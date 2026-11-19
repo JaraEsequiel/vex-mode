@@ -52,7 +52,6 @@ Description=vex-mode weekly unattended /correct run
 Type=oneshot
 Environment=PATH={path}
 Environment=VEX_AGY={agy}
-EnvironmentFile=-%h/.config/vex-mode/secrets.env
 ExecStart=/usr/bin/python3 {script} run --repo {repo}
 """,
         "vex-correct.timer": """[Unit]
@@ -198,7 +197,8 @@ def _run(repo: Path, state: Path, model: str, days: int, timeout_s: int, open_pr
     cmd = [*agy_command(), "--model", model, "--print-timeout", f"{timeout_s}s",
            "--output-format", "stream-json", "-p", build_prompt(since)]
     with open(transcript, "w") as out:
-        code = subprocess.run(cmd, cwd=worktree, stdout=out, stderr=subprocess.STDOUT).returncode
+        env = {k: v for k, v in os.environ.items() if k not in ("OPENAI_API_KEY", "ANTHROPIC_API_KEY")}
+        code = subprocess.run(cmd, cwd=worktree, stdout=out, stderr=subprocess.STDOUT, env=env).returncode
     _save_trail(worktree, state)
     if code != 0 or not _finished(transcript):
         _notify(f"failed (exit {code}); worktree kept at {worktree}, transcript {transcript}")
