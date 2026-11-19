@@ -27,14 +27,8 @@ UNIT_DIR = Path.home() / ".config/systemd/user"
 DEFAULT_MODEL = "gemini-4-neon-high"
 
 
-def build_prompt(since: str, open_pr: bool) -> str:
+def build_prompt(since: str) -> str:
     today = dt.date.today().isoformat()
-    finish = (
-        "Push this branch and open a PR with `gh pr create`, ready for review, following the Opening a PR "
-        "playbook of the **vex-mode** skill."
-        if open_pr else
-        "Commit only. Do not push and do not open a PR: this is a dry run."
-    )
     return f"""/correct
 This is the weekly unattended run on the vex-mode repo, in this worktree. Nobody is watching: never ask a question; make the choice you can undo and say why.
 
@@ -43,19 +37,21 @@ This is the weekly unattended run on the vex-mode repo, in this worktree. Nobody
 3. Keep a decision trail with the **show-me-your-work** skill at `docs/decisions/{today}-correct.tsv`, and commit it.
 4. For a change to `skills/`, `hooks/`, `rules/`, `agents/`, `hooks.json` or `plugin.json`, follow `AGENTS.md` "How to change a skill", including the eval run and its verdict, so the change carries its result.
 5. Run the verify command from `AGENTS.md` before each commit.
-6. {finish}
+6. If you committed a fix, write the PR title on the first line of `.scratch/pr.md` and the body below it, following the Opening a PR playbook of the **vex-mode** skill.
 
-Never merge, and never push to main: the user merges. A command the pause hook stops is not run, and in this headless run a paused command ends this run, so commit the trail after each row you add and avoid `rm -rf` on absolute paths (keep scratch files inside this worktree, untracked).
+Commit only: never push and never open a PR; the script that started you pushes this branch and opens the PR after you finish. Never merge: the user merges. A command the pause hook stops is not run, and in this headless run a paused command ends this run, so commit the trail after each row you add and avoid `rm -rf` on absolute paths. Keep scratch files in `.scratch/` in this worktree; git ignores it.
 """
 
 
-def render_units(script: Path, repo: Path) -> dict[str, str]:
+def render_units(script: Path, repo: Path, *, path: str, agy: str) -> dict[str, str]:
     return {
         "vex-correct.service": f"""[Unit]
 Description=vex-mode weekly unattended /correct run
 
 [Service]
 Type=oneshot
+Environment=PATH={path}
+Environment=VEX_AGY={agy}
 ExecStart=/usr/bin/python3 {script} run --repo {repo}
 """,
         "vex-correct.timer": """[Unit]
@@ -101,20 +97,68 @@ def _new_branch(repo: Path, day: str) -> str:
     return name
 
 
+def _plugin_home() -> Path:
+    return Path(os.environ.get("VEX_PLUGIN_HOME", Path.home() / ".gemini/config/plugins"))
+
+
+def _cache() -> Path:
+    return Path(os.environ.get("VEX_CACHE", Path.home() / ".cache"))
+
+
+def _preflight() -> str | None:
+    """Refuse unless the installed plugin can run /correct and guards merges, and no eval swapped it."""
+    plugin = _plugin_home() / "vex-mode"
+    if not (plugin / "skills/correct/SKILL.md").is_file():
+        return "the installed vex-mode plugin has no correct skill"
+    probe = subprocess.run(
+        [sys.executable, "-c", "import sys; sys.path.insert(0, sys.argv[1]); import irreversible; "
+         "sys.exit(0 if irreversible.classify('gh pr merge 1') else 1)", str(plugin / "hooks")],
+        capture_output=True)
+    if probe.returncode != 0:
+        return "the installed pause hook does not block merges"
+    evals = _cache() / "vex-mode"
+    if (evals / "restore-pending").exists():
+        return "an eval left a variant installed (run python3 evals/run.py restore)"
+    if (evals / "eval.lock").exists():
+        with open(evals / "eval.lock") as held:
+            try:
+                fcntl.flock(held, fcntl.LOCK_EX | fcntl.LOCK_NB)
+            except BlockingIOError:
+                return "an eval is running and has swapped the installed plugin"
+    return None
+
+
+def _dirty_outside_trail(worktree: Path) -> bool:
+    lines = _git(worktree, "status", "--porcelain", "--untracked-files=all").stdout.splitlines()
+    return any(not line[3:].startswith(("docs/decisions/", ".scratch/")) for line in lines if line.strip())
+
+
+def _open_pr(worktree: Path, branch: str) -> str:
+    _git(worktree, "push", "-q", "origin", f"HEAD:refs/heads/{branch}")
+    gh = shlex.split(os.environ.get("VEX_GH", "gh"))
+    pr = worktree / ".scratch/pr.md"
+    if pr.is_file() and pr.read_text().strip():
+        title, _, body = pr.read_text().strip().partition("\n")
+        text = ["--title", title.strip(), "--body", body.strip() or title.strip()]
+    else:
+        text = ["--fill"]
+    out = subprocess.run([*gh, "pr", "create", "--base", "main", "--head", branch, *text],
+                         cwd=worktree, check=True, capture_output=True, text=True)
+    return out.stdout.strip()
+
+
 def _save_trail(worktree: Path, state: Path) -> None:
     """Keep a copy of the run's trail outside the worktree, which may be removed."""
     for trail in (worktree / "docs/decisions").glob("*-correct.tsv"):
         shutil.copyfile(trail, state / f"{worktree.name.removeprefix('wt-')}-correct.tsv")
 
 
-def _commit_trail(worktree: Path, open_pr: bool) -> None:
+def _commit_trail(worktree: Path) -> None:
     """A headless run can end before it commits its trail (a paused command ends the turn)."""
     if not _git(worktree, "status", "--porcelain", "--", "docs/decisions").stdout.strip():
         return
     _git(worktree, "add", "--", "docs/decisions")
     _git(worktree, "commit", "-q", "-m", "docs(decisions): commit the correct run's trail")
-    if open_pr and _git(worktree, "rev-parse", "--abbrev-ref", "@{u}", check=False).returncode == 0:
-        _git(worktree, "push", "-q")
 
 
 def run(repo: Path, *, state: Path, model: str, days: int = 7, timeout_s: int = 14400,
@@ -128,32 +172,49 @@ def run(repo: Path, *, state: Path, model: str, days: int = 7, timeout_s: int = 
         print("another scheduled correct run holds the lock", file=sys.stderr)
         return 2
     try:
-        today = dt.date.today()
-        _git(repo, "fetch", "-q", "origin")
-        branch = _new_branch(repo, today.isoformat())
-        worktree = state / ("wt-" + branch.split("/", 1)[1])
-        _git(repo, "worktree", "add", "-q", "--no-track", "-b", branch, str(worktree), base)
-        transcript = state / (worktree.name.removeprefix("wt-") + ".ndjson")
-        since = (today - dt.timedelta(days=days)).isoformat()
-        cmd = [*agy_command(), "--model", model, "--print-timeout", f"{timeout_s}s",
-               "--output-format", "stream-json", "-p", build_prompt(since, open_pr)]
-        with open(transcript, "w") as out:
-            code = subprocess.run(cmd, cwd=worktree, stdout=out, stderr=subprocess.STDOUT).returncode
-        _save_trail(worktree, state)
-        if code != 0 or not _finished(transcript):
-            _notify(f"failed (exit {code}); worktree kept at {worktree}, transcript {transcript}")
-            return 1
-        ahead = int(_git(worktree, "rev-list", "--count", f"{base}..HEAD").stdout.strip())
-        if ahead == 0:
-            _git(repo, "worktree", "remove", "--force", str(worktree))
-            _git(repo, "branch", "-D", branch)
-            _notify(f"no repeated mistake found; transcript {transcript}")
-        else:
-            _commit_trail(worktree, open_pr)
-            _notify(f"{ahead} commit(s) on {branch}; worktree {worktree}")
-        return 0
+        refusal = _preflight()
+        if refusal:
+            _notify(f"refused: {refusal}")
+            return 3
+        return _run(repo, state, model, days, timeout_s, open_pr, base)
+    except Exception as e:  # noqa: BLE001 - an unattended run must always tell the user
+        _notify(f"failed: {e}")
+        return 1
     finally:
         lock.close()
+
+
+def _run(repo: Path, state: Path, model: str, days: int, timeout_s: int, open_pr: bool, base: str) -> int:
+    today = dt.date.today()
+    _git(repo, "fetch", "-q", "origin")
+    branch = _new_branch(repo, today.isoformat())
+    worktree = state / ("wt-" + branch.split("/", 1)[1])
+    _git(repo, "worktree", "add", "-q", "--no-track", "-b", branch, str(worktree), base)
+    (worktree / ".scratch").mkdir()
+    (worktree / ".scratch/.gitignore").write_text("*\n")
+    transcript = state / (worktree.name.removeprefix("wt-") + ".ndjson")
+    since = (today - dt.timedelta(days=days)).isoformat()
+    cmd = [*agy_command(), "--model", model, "--print-timeout", f"{timeout_s}s",
+           "--output-format", "stream-json", "-p", build_prompt(since)]
+    with open(transcript, "w") as out:
+        code = subprocess.run(cmd, cwd=worktree, stdout=out, stderr=subprocess.STDOUT).returncode
+    _save_trail(worktree, state)
+    if code != 0 or not _finished(transcript):
+        _notify(f"failed (exit {code}); worktree kept at {worktree}, transcript {transcript}")
+        return 1
+    if _dirty_outside_trail(worktree):
+        _notify(f"failed: the run ended with uncommitted changes; worktree kept at {worktree}")
+        return 1
+    ahead = int(_git(worktree, "rev-list", "--count", f"{base}..HEAD").stdout.strip())
+    if ahead == 0:
+        _git(repo, "worktree", "remove", "--force", str(worktree))
+        _git(repo, "branch", "-D", branch)
+        _notify(f"no repeated mistake found; transcript {transcript}")
+        return 0
+    _commit_trail(worktree)
+    where = _open_pr(worktree, branch) if open_pr else f"worktree {worktree}"
+    _notify(f"{ahead} commit(s) on {branch}: {where}")
+    return 0
 
 
 def install(units: dict[str, str]) -> None:
@@ -183,7 +244,11 @@ def main(argv: list[str]) -> int:
     sub.add_parser("uninstall")
     args = parser.parse_args(argv)
     if args.cmd == "install":
-        install(render_units(Path(__file__).resolve(), REPO))
+        agy = shutil.which(agy_command()[0])
+        if not agy:
+            print("agy not found on PATH", file=sys.stderr)
+            return 1
+        install(render_units(Path(__file__).resolve(), REPO, path=os.environ["PATH"], agy=agy))
         return 0
     if args.cmd == "uninstall":
         uninstall()

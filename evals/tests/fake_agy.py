@@ -66,7 +66,8 @@ def main(argv: list[str]) -> int:
     if MODE == "peek":
         emit({"event": "step_update", "step_update": {"step_type": "tool", "state": "DONE",
               "tool_info": {"name": "read_file", "parameters": {"Path": os.environ["FAKE_PEEK"]}}}})
-    Path("app.py").write_text("fixed\n")
+    if MODE not in ("noop", "trail"):
+        Path("app.py").write_text("fixed\n")
     if MODE in ("commit", "commit-trail"):
         import subprocess
         env = dict(os.environ, GIT_AUTHOR_NAME="a", GIT_AUTHOR_EMAIL="a@a", GIT_COMMITTER_NAME="a", GIT_COMMITTER_EMAIL="a@a")

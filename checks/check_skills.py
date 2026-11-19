@@ -8,6 +8,7 @@ SKILL_MAX = 16384
 RULE_MAX = 24576
 BOLD_REF = re.compile(r"\*\*([a-z0-9-]+)\*\* (?:skill|principle)")
 PRINCIPLE_REF = re.compile(r"\bprinciple-[a-z0-9-]+\b")
+AGY_PRINT_THEN_FLAG = re.compile(r"\bagy\s+(-p|--print)\s+--?[a-z]")
 PLAYBOOK_REF = re.compile(r"playbooks/[a-z0-9-]+\.md")
 LINK_REF = re.compile(r"\]\((\.\.?/[^)\s]+)\)")
 
@@ -56,6 +57,9 @@ def run(root: Path) -> list[str]:
         if rel.startswith("rules/") and len(data) > RULE_MAX:
             errors.append(f"{rel}: {len(data)} bytes exceeds agy rule cap of {RULE_MAX}")
         errors += _check_refs(root, path, rel, text, pending.get(rel, set()))
+        if AGY_PRINT_THEN_FLAG.search(text):
+            errors.append(f"{rel}: `agy -p` takes the next word as its prompt; put -p last: "
+                          "`agy --model <model> -p \"<prompt>\"`")
         for ref in sorted(pending.get(rel, set())):
             if not re.search(r"(?<![A-Za-z0-9-])" + re.escape(ref) + r"(?![A-Za-z0-9-])", text):
                 errors.append(f"{rel}: stale pending_ref '{ref}' (no longer referenced; remove it from vendor.lock)")

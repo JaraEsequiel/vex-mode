@@ -39,7 +39,9 @@ python3 evals/run.py verdict <resultado.json> promote "<síntesis>"
 
 ## Auto-mejora programada
 
-Cada domingo a las 03:00 un timer de systemd de usuario ejecuta `/correct` sobre los commits y PRs de los últimos 7 días. Lo hace desatendido, en un worktree propio y en una rama `correct/<fecha>`. Si encuentra errores que se repiten, deja un PR con su rastro de decisiones y, si toca una skill, un hook o una regla, también con el resultado del eval. **Ningún PR se mergea solo:** el hook de pausa bloquea `gh pr merge` y los push a `main`, y el merge lo haces tú.
+Cada domingo a las 03:00 un timer de systemd de usuario ejecuta `/correct` sobre los commits y PRs de los últimos 7 días. Lo hace desatendido, en un worktree propio y en una rama `correct/<fecha>`. Si encuentra errores que se repiten, el agente los commitea con su rastro de decisiones y, si toca una skill, un hook o una regla, también con el resultado del eval. Después el script pushea la rama y abre el PR. **Ningún PR se mergea solo:** el agente no pushea, el hook de pausa bloquea `gh pr merge` y los push a `main`, y el merge lo haces tú.
+
+Antes de empezar, el script se niega (y te avisa) si el plugin instalado no tiene `correct` o el guardián de merge, o si hay un eval en curso. Así un domingo sin M3 mergeado no corre nada.
 
 ```bash
 python3 scripts/scheduled_correct.py install     # instala y activa el timer

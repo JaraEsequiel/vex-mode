@@ -257,16 +257,18 @@ El mecanismo exacto del hook `Stop` (qué cuenta como evidencia) se prototipa an
    - **Destino de la edición:** si la skill es de vex-mode, la edita en un worktree del repo y abre un PR que mergeas tú, siguiendo "How to change a skill" del `AGENTS.md`. Si es de otro plugin, sigue a pstack: edita una copia en `.agents/skills/<skill>/` o `~/.gemini/config/skills/<skill>/` y nunca abre PRs `[P-reflect:17]` `[A-skills]` `[VEX]`.
 3. **`show-me-your-work`:** guarda las decisiones en `decisions.tsv` `[P-smyw:46]`. Por defecto no se commitea; se commitea cuando un revisor necesita el rastro para confiar en el resultado `[P-smyw:48]`. En este repo, un rastro commiteado va en `docs/decisions/<fecha>-<tema>.tsv`, porque el repo vive de su propio historial `[MÍA]`.
    - La auditoría del final lee el transcript de agy de esa conversación `[P-smyw:57]` `[A-transcript]`.
-   - La revisión cruzada del rastro usa `agy -p --model <modelo de otra familia>`, igual que el juez de los evals `[P-smyw:67]` `[I-1159]` `[A-cli]`.
+   - La revisión cruzada del rastro usa `agy --model <modelo de otra familia> -p "<prompt>"`, igual que el juez de los evals `[P-smyw:67]` `[I-1159]` `[A-cli]`.
 4. **Cómo entra un cambio:** como PR desde un worktree, con la plantilla de `worker.md`. Solo entra si pasa CI (§8.4) y, cuando toca una skill, el eval (§8.2) `[P-worker]` `[VEX]`.
 5. **Disparo programado, y el merge lo haces tú** `[VEX]`.
    - Una ejecución periódica corre `correct` sobre el historial reciente y deja PRs.
    - **Ningún PR de la IA se mergea solo.** Es el primer peldaño de la escalera de confianza de poteto: el automerge se gana después, con evidencia acumulada `[T-maily]` `[T-talk]`.
    - **Mecanismo:** un timer de systemd de usuario, semanal (domingo 03:00, `Persistent=true`), que ejecuta `scripts/scheduled_correct.py` en local, porque GitHub Actions no tiene tu sesión de agy `[VEX]` `[MÍA]`.
-   - El script crea un worktree desde `origin/main` en una rama `correct/<fecha>` y ejecuta `agy -p "/correct …"` sobre los commits y PRs de los últimos 7 días.
+   - El script crea un worktree desde `origin/main` en una rama `correct/<fecha>` (sin upstream) y ejecuta `agy --model … -p "/correct …"` sobre los commits y PRs de los últimos 7 días.
+   - **El agente solo commitea.** El push de la rama y el `gh pr create` los hace el script al terminar, así el agente nunca necesita una vía hacia `main` `[VEX]` (revisión final de M3).
+   - **Antes de empezar, el script se niega** si el plugin instalado no tiene `correct`, si su hook de pausa no bloquea `gh pr merge`, o si un eval tiene el plugin reemplazado. Avisa con una notificación en cada fallo y conserva el worktree si quedó trabajo sin commitear.
    - Si `correct` cambia una skill, un hook o una regla, la misma ejecución corre el eval (§8.2) y deja el resultado en el PR, así el CI del PR pasa sin que intervengas `[VEX]`.
    - El rastro de decisiones de la ejecución se commitea en el PR (`show-me-your-work`), porque nadie la vio correr `[P-smyw:48]`.
-   - **Qué hace cumplir "no se mergea solo":** el hook de pausa trata `gh pr merge` y cualquier push a `main` como irreversibles. En `agy -p` un `force_ask` no se ejecuta, porque no hay humano que confirme `[A-hooks]` (`docs/decisions/2026-11-18-hook-probe.md`).
+   - **Qué hace cumplir "no se mergea solo":** que el agente no pushea (lo hace el script) y el hook de pausa, que trata `gh pr merge`, los merges por `gh api` y cualquier push a `main` como irreversibles. El repo es privado sin GitHub Pro, así que no hay protección de rama del lado del servidor. En `agy -p` un `force_ask` no se ejecuta, porque no hay humano que confirme `[A-hooks]` (`docs/decisions/2026-11-18-hook-probe.md`).
    - **Costo conocido:** el eval reemplaza el plugin instalado mientras corre (unos 70 minutos). Si el timer se pone al día al iniciar sesión, una sesión tuya de agy en ese rato ve la variante; el arnés restaura tu plugin al terminar.
 6. **Nunca sobreajustar** a una sola conversación: hacen falta varias repeticiones para convertir algo en regla `[P-automate:87]`.
 

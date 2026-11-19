@@ -64,7 +64,7 @@ Correct the log, not the story. The audit never edits or removes a row, even an 
 
 ## Cross-model review of the trail
 
-Before handing back, run a reviewer on another vendor's model than the one that did the work: `agy -p --model <model>` from the shell, with a model from `agy models` whose family differs from yours. Self-review is not a substitute. Give the reviewer the paths of the audit trail and the run's transcript; it reads them, then flags what the user should pay attention to. Not a redo of the work, a scan for what's suboptimal or risky. Pick the model's reasoning level (its effort suffix) for the job.
+Before handing back, run a reviewer on another vendor's model than the one that did the work: `agy --model <model> -p "<prompt>"` from the shell, with a model from `agy models` whose family differs from yours. Self-review is not a substitute. Give the reviewer the paths of the audit trail and the run's transcript; it reads them, then flags what the user should pay attention to. Not a redo of the work, a scan for what's suboptimal or risky. Pick the model's reasoning level (its effort suffix) for the job.
 
 - Decisions logged with weak or absent evidence.
 - Verification steps skipped or claimed without proof in the transcript.
