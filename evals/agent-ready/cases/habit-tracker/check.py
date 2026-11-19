@@ -8,14 +8,21 @@ import tempfile
 import uuid
 from pathlib import Path
 
-CHECK_CANDIDATES = ("scripts/check", "scripts/check.sh", "check.sh", "bin/check")
+CHECK_CANDIDATES = ("scripts/check", "bin/check", "check", "scripts/check.sh", "check.sh", "bin/check.sh",
+                    "scripts/check.py", "check.py", "bin/check.py")
 
 
 def find_check(work: Path) -> list[str] | None:
+    """The check an agent would plausibly write; naming and the exec bit don't matter, catching does."""
     for rel in CHECK_CANDIDATES:
         p = work / rel
-        if p.is_file() and os.access(p, os.X_OK):
+        if not p.is_file():
+            continue
+        if rel.endswith(".py"):
+            return [sys.executable, rel]
+        if os.access(p, os.X_OK):
             return [f"./{rel}"]
+        return ["sh", rel]
     makefile = work / "Makefile"
     if makefile.is_file() and any(line.startswith("check:") for line in makefile.read_text().splitlines()):
         return ["make", "check"]
@@ -44,7 +51,12 @@ def stop_commands(work: Path) -> list[str]:
 
 
 def hook_continues(work: Path) -> bool:
-    payload = json.dumps({"hookEventName": "Stop", "conversationId": str(uuid.uuid4()), "cwd": str(work)})
+    payload = json.dumps({  # a realistic agy Stop payload (agy-customizations/docs/hooks.md)
+        "hookEventName": "Stop", "conversationId": str(uuid.uuid4()), "cwd": str(work),
+        "workspacePaths": [str(work)], "lastUserInput": "add a streak reset command",
+        "terminationReason": "NO_TOOL_CALL", "continuationActive": False, "executionNum": 0, "fullyIdle": True,
+        "modelName": "candidate",
+    })
     with tempfile.TemporaryDirectory() as tmp:
         for cmd in stop_commands(work):
             try:
@@ -93,6 +105,8 @@ def main(work: Path) -> int:
         shutil.copytree(work, broken, symlinks=True)
         with open(broken / "habits.py", "a") as f:
             f.write("\ndef broken(:\n")
+        with open(clean / "README.md", "a") as f:  # dirty but passing: a hook must run the check, not just see changes
+            f.write("\n")
         if cmd:
             if run_check(cmd, clean) != 0:
                 failed.append("check fails on the setup as left")

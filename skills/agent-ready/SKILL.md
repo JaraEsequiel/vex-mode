@@ -18,7 +18,7 @@ Write `scripts/check`, executable, that runs the repo's existing static checks a
 
 ## 3. The Stop hook
 
-Copy `templates/check_on_stop.py` and `templates/hooks.json` from this skill's folder into the repo's `.agents/`. When the agent is about to finish with uncommitted changes, the hook runs `scripts/check` and, on failure, sends the error back so the agent fixes it first. It gives up after 3 tries per conversation and stays silent on a clean tree. agy ignores a `PostToolUse` hook's output, so the check runs at `Stop`.
+Copy `templates/check_on_stop.py` from this skill's folder into the repo's `.agents/`. If `.agents/hooks.json` already exists, add the `agent-ready-check` entry from `templates/hooks.json` to it and keep every other hook; otherwise copy the template. When the agent is about to finish with changes no remote has (uncommitted, or commits not pushed), the hook runs `scripts/check` and, on failure, sends the error back so the agent fixes it first. A check that can't run or hangs counts as a failure. It gives up after 3 tries per user message and stays silent on a cancel, an error, or a passing check. agy ignores a `PostToolUse` hook's output, so the check runs at `Stop`.
 
 ## 4. The rule table
 
@@ -30,14 +30,12 @@ Run `/create-verification-skill` by following the **create-verification-skill** 
 
 ## 6. CI
 
-If the repo has a GitHub remote, copy `templates/check.yml` to `.github/workflows/check.yml`. Otherwise say that CI is not set up and why.
+If the repo has a GitHub remote, copy `templates/check.yml` to `.github/workflows/check.yml` (or add its job to an existing workflow of that name), and add the setup and install steps `scripts/check` needs on a fresh runner (language toolchain, dependencies). Otherwise say that CI is not set up and why.
 
 ## 7. Prove it
 
 1. `scripts/check` passes on the repo as you leave it.
-2. Make one small deliberate break (a syntax error, a violated rule). `scripts/check` fails, and `echo '{"hookEventName":"Stop","conversationId":"proof"}' | (cd .agents && python3 check_on_stop.py ../scripts/check)` prints a `continue` with the error.
-3. Restore the break. Both pass again, and the hook prints nothing.
-
-Then delete the hook's proof counter (`$TMPDIR/agent-ready/`) so the real sessions start fresh.
+2. Make one small deliberate break (a syntax error, a violated rule). `scripts/check` fails, and `echo "{\"hookEventName\":\"Stop\",\"terminationReason\":\"NO_TOOL_CALL\",\"conversationId\":\"proof-$(date +%s%N)\"}" | (cd .agents && python3 check_on_stop.py ../scripts/check)` prints a `continue` with the error.
+3. Restore the break. Both pass again, and the same command prints nothing.
 
 **Reply:** each artifact with its path and the proof you ran, and every rule left without an enforcer.

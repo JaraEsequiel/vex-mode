@@ -1,15 +1,18 @@
-"""agy Stop hook: when the agent is about to finish with uncommitted changes, run the repo's check
-and, if it fails, send the error back so the agent fixes it first.
+"""agy Stop hook: when the agent is about to finish with changes that are not pushed (uncommitted, or
+commits no remote has), run the repo's check and, if it fails, send the error back so the agent fixes
+it first.
 
 Lives in <repo>/.agents/ and runs with that folder as cwd:
     python3 check_on_stop.py ../scripts/check
 
-Prints nothing to let the agent stop (a clean tree, a passing check, odd input, or after 3 tries in
-one conversation). It never raises: a broken hook must not trap the agent.
+Prints nothing to let the agent stop: a normal finish with nothing unpushed, a passing check, a
+cancel or error, odd input, or after 3 tries for the same user message. It never raises: a broken
+hook must not trap the agent. A check that cannot run or hangs counts as a failure.
 """
 import hashlib
 import json
 import os
+import signal
 import subprocess
 import sys
 import tempfile
@@ -17,30 +20,57 @@ from pathlib import Path
 
 MAX_CONTINUES = 3
 TAIL_LINES = 60
+TIMEOUT_S = int(os.environ.get("AGENT_READY_CHECK_TIMEOUT", "240"))  # below the hook's 300 s timeout
 
 
-def _counter(root: Path, conversation: str) -> Path:
-    key = hashlib.sha1(str(root).encode()).hexdigest()[:12]
-    safe = "".join(c for c in conversation if c.isalnum() or c in "-_")[:64]
-    return Path(tempfile.gettempdir()) / "agent-ready" / f"{key}-{safe}"
+def _counter(root: Path, conversation: str, prompt: str) -> Path:
+    key = hashlib.sha1(f"{root}\0{conversation}\0{prompt}".encode()).hexdigest()[:20]
+    return Path(tempfile.gettempdir()) / "agent-ready" / key
+
+
+def _git(root: Path, *args: str) -> str | None:
+    r = subprocess.run(["git", "-C", str(root), *args], capture_output=True, text=True)
+    return r.stdout if r.returncode == 0 else None
+
+
+def _has_unpushed_changes(root: Path) -> bool:
+    status = _git(root, "status", "--porcelain")
+    if status is None:
+        return False
+    if status.strip():
+        return True
+    return bool((_git(root, "rev-list", "-n", "1", "HEAD", "--not", "--remotes") or "").strip())
+
+
+def _run_check(check: list[str], root: Path) -> tuple[int, str]:
+    try:
+        proc = subprocess.Popen(check, cwd=root, stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
+                                start_new_session=True)
+    except OSError as e:
+        return 126, f"could not run {check[0]}: {e}"
+    try:
+        out, _ = proc.communicate(timeout=TIMEOUT_S)
+        return proc.returncode, out.decode(errors="replace")
+    except subprocess.TimeoutExpired:
+        os.killpg(proc.pid, signal.SIGKILL)
+        out, _ = proc.communicate()
+        return 124, f"check timed out after {TIMEOUT_S} s\n" + out.decode(errors="replace")
 
 
 def decide(payload: dict, check: list[str], root: Path) -> dict | None:
     conversation = payload.get("conversationId")
     if not isinstance(conversation, str) or not conversation:
         return None
-    status = subprocess.run(["git", "-C", str(root), "status", "--porcelain"], capture_output=True, text=True)
-    if status.returncode != 0 or not status.stdout.strip():
+    if payload.get("terminationReason") != "NO_TOOL_CALL":
         return None
-    counter = _counter(root, conversation)
+    if not _has_unpushed_changes(root):
+        return None
+    prompt = payload.get("lastUserInput") if isinstance(payload.get("lastUserInput"), str) else ""
+    counter = _counter(root, conversation, prompt)
     used = int(counter.read_text()) if counter.exists() else 0
     if used >= MAX_CONTINUES:
         return None
-    try:
-        run = subprocess.run(check, cwd=root, capture_output=True, text=True, timeout=600)
-        code, output = run.returncode, run.stdout + run.stderr
-    except FileNotFoundError:
-        code, output = 127, f"{check[0]} not found"
+    code, output = _run_check(check, root)
     if code == 0:
         return None
     counter.parent.mkdir(parents=True, exist_ok=True)
@@ -56,7 +86,7 @@ def main(argv: list[str]) -> None:
             return
         here = Path(__file__).resolve().parent
         root = here.parent
-        check = [str((here / argv[0]).resolve()) if argv[0].startswith(".") else argv[0], *argv[1:]]
+        check = [str((here / a).resolve()) if a.startswith(("./", "../")) else a for a in argv]
         out = decide(payload, check, root)
         if out:
             print(json.dumps(out))

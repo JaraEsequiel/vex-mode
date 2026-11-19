@@ -31,10 +31,21 @@ class CheckOnStopTest(unittest.TestCase):
             subprocess.run(["git", "-C", str(self.repo), *args], check=True, capture_output=True, env=dict(os.environ, **ENV))
         self.conv = str(uuid.uuid4())
 
-    def stop(self, stdin=None, check="../scripts/check"):
-        payload = json.dumps({"hookEventName": "Stop", "conversationId": self.conv}) if stdin is None else stdin
-        r = subprocess.run([sys.executable, "check_on_stop.py", check], cwd=self.repo / ".agents", input=payload,
+    def test_interpreter_with_relative_script(self):
+        self.dirty(broken=False)
+        r = subprocess.run([sys.executable, "check_on_stop.py", "sh", "../scripts/check"], cwd=self.repo / ".agents",
+                           input=json.dumps({"conversationId": self.conv, "terminationReason": "NO_TOOL_CALL"}),
                            capture_output=True, text=True, env=dict(os.environ, TMPDIR=str(self.tmp)))
+        self.assertEqual(r.stdout.strip(), "")
+
+    def stop(self, stdin=None, check="../scripts/check", reason="NO_TOOL_CALL", prompt="fix it", timeout=None):
+        payload = json.dumps({"hookEventName": "Stop", "conversationId": self.conv, "terminationReason": reason,
+                              "lastUserInput": prompt}) if stdin is None else stdin
+        env = dict(os.environ, TMPDIR=str(self.tmp))
+        if timeout:
+            env["AGENT_READY_CHECK_TIMEOUT"] = str(timeout)
+        r = subprocess.run([sys.executable, "check_on_stop.py", check], cwd=self.repo / ".agents", input=payload,
+                           capture_output=True, text=True, env=env, timeout=60)
         self.assertEqual(r.returncode, 0, r.stderr)
         return r.stdout.strip()
 
@@ -42,12 +53,6 @@ class CheckOnStopTest(unittest.TestCase):
         (self.repo / "app.py").write_text("x = 2\n")
         if broken:
             (self.repo / "broken").write_text("1")
-
-    def test_clean_tree_prints_nothing(self):
-        (self.repo / "broken").write_text("1")
-        subprocess.run(["git", "-C", str(self.repo), "add", "-A"], check=True)
-        subprocess.run(["git", "-C", str(self.repo), "commit", "-qm", "b"], check=True, env=dict(os.environ, **ENV))
-        self.assertEqual(self.stop(), "")
 
     def test_failing_check_continues_with_output(self):
         self.dirty()
@@ -85,6 +90,57 @@ class CheckOnStopTest(unittest.TestCase):
         for _ in range(3):
             self.stop(check="../scripts/nope")
         self.assertEqual(self.stop(check="../scripts/nope"), "")
+
+
+    def test_cancel_or_error_never_continues(self):
+        self.dirty()
+        for reason in ("USER_CANCELED", "ERROR", "MAX_INVOCATIONS", "MAX_TOKEN_BUDGET_EXCEEDED"):
+            self.assertEqual(self.stop(reason=reason), "", reason)
+
+    def test_unrunnable_check_is_a_failure(self):
+        self.dirty()
+        (self.repo / "scripts/check").chmod(0o644)
+        out = json.loads(self.stop())
+        self.assertEqual(out["decision"], "continue")
+        self.assertIn("check", out["reason"])
+
+    def test_non_utf8_output_is_reported(self):
+        self.dirty()
+        (self.repo / "scripts/check").write_text("#!/bin/sh\nprintf 'bad \\377 byte\\n'\nexit 1\n")
+        out = json.loads(self.stop())
+        self.assertIn("bad", out["reason"])
+
+    def test_hanging_check_is_killed_and_reported(self):
+        self.dirty()
+        pidfile = self.tmp / "pid"
+        (self.repo / "scripts/check").write_text(f"#!/bin/sh\nsleep 30 &\necho $! > {pidfile}\nwait\n")
+        out = json.loads(self.stop(timeout=1))
+        self.assertIn("timed out", out["reason"])
+        pid = int(pidfile.read_text())
+        with self.assertRaises(ProcessLookupError):
+            os.kill(pid, 0)
+
+    def test_new_prompt_resets_the_counter(self):
+        self.dirty()
+        for _ in range(3):
+            self.stop(prompt="turn one")
+        self.assertEqual(self.stop(prompt="turn one"), "")
+        self.assertTrue(self.stop(prompt="turn two"))
+
+    def test_committed_broken_change_is_checked(self):
+        (self.repo / "broken").write_text("1")
+        subprocess.run(["git", "-C", str(self.repo), "add", "-A"], check=True)
+        subprocess.run(["git", "-C", str(self.repo), "commit", "-qm", "b"], check=True, env=dict(os.environ, **ENV))
+        self.assertTrue(self.stop())
+
+    def test_pushed_clean_tree_prints_nothing(self):
+        origin = self.tmp / "origin.git"
+        subprocess.run(["git", "init", "-q", "--bare", str(origin)], check=True)
+        (self.repo / "broken").write_text("1")
+        for args in (["add", "-A"], ["commit", "-qm", "b"], ["remote", "add", "origin", str(origin)],
+                     ["push", "-q", "origin", "HEAD:refs/heads/main"], ["fetch", "-q", "origin"]):
+            subprocess.run(["git", "-C", str(self.repo), *args], check=True, capture_output=True, env=dict(os.environ, **ENV))
+        self.assertEqual(self.stop(), "")
 
 
 if __name__ == "__main__":

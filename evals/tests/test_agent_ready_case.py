@@ -67,5 +67,38 @@ class HiddenCheckTest(unittest.TestCase):
         self.assertIn("hook", out)
 
 
+    def test_hook_with_agy_guards_is_accepted(self):
+        self.reference_setup()
+        write(self.work / ".agents/guarded.py",
+              "import json, subprocess, sys\n"
+              "p = json.load(sys.stdin)\n"
+              "if p['terminationReason'] != 'NO_TOOL_CALL' or p['continuationActive']:\n    sys.exit(0)\n"
+              "root = p['workspacePaths'][0]\n"
+              "if subprocess.run(['./scripts/check'], cwd=root).returncode:\n"
+              "    print(json.dumps({'decision': 'continue', 'reason': 'check failed'}))\n")
+        write(self.work / ".agents/hooks.json", '{"g": {"Stop": [{"type": "command", "command": "python3 guarded.py"}]}}')
+        code, out = self.run_check()
+        self.assertEqual(code, 0, out)
+
+    def test_non_executable_shell_check_is_found(self):
+        self.reference_setup()
+        (self.work / "scripts/check").unlink()
+        write(self.work / "scripts/check.sh", "set -e\npython3 -m py_compile habits.py\n")
+        write(self.work / ".agents/hooks.json",
+              '{"a": {"Stop": [{"type": "command", "command": "python3 check_on_stop.py sh ../scripts/check.sh"}]}}')
+        code, out = self.run_check()
+        self.assertEqual(code, 0, out)
+
+    def test_hook_that_ignores_the_check_is_rejected(self):
+        self.reference_setup()
+        write(self.work / ".agents/dirty.sh",
+              "cd .. && [ -n \"$(git status --porcelain)\" ] && echo '{\"decision\": \"continue\"}'; exit 0\n")
+        write(self.work / ".agents/hooks.json", '{"d": {"Stop": [{"type": "command", "command": "sh dirty.sh"}]}}')
+        for args in (["add", "-A"], ["commit", "-qm", "setup"]):
+            subprocess.run(["git", "-C", str(self.work), *args], check=True, capture_output=True, env=dict(os.environ, **ENV))
+        code, out = self.run_check()
+        self.assertNotEqual(code, 0, out)
+
+
 if __name__ == "__main__":
     unittest.main()
