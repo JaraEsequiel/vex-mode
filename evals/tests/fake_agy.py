@@ -56,6 +56,10 @@ def main(argv: list[str]) -> int:
         emit({"event": "step_update", "step_update": {"step_type": "tool", "state": "DONE",
               "tool_info": {"name": "read_file", "parameters": {"Path": os.environ["FAKE_PEEK"]}}}})
     Path("app.py").write_text("fixed\n")
+    if MODE == "commit":
+        import subprocess
+        env = dict(os.environ, GIT_AUTHOR_NAME="a", GIT_AUTHOR_EMAIL="a@a", GIT_COMMITTER_NAME="a", GIT_COMMITTER_EMAIL="a@a")
+        subprocess.run(["git", "commit", "-qam", "fix"], check=True, env=env)
     emit({"event": "result", "result": {"conversation_id": f"c{n}", "status": "SUCCESS", "response": "done",
           "duration_seconds": 1.5, "usage": {"total_tokens": 100 * n}}})
     return 0

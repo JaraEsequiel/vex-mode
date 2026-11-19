@@ -1,6 +1,7 @@
 """Run one eval case on the three fixed arms, judge it blind, and write a result (design §8.2).
 
     python3 evals/run.py <skill> <case> [--base REF] [--variant REF] [--runs N]
+    python3 evals/run.py rejudge <result.json>
     python3 evals/run.py verdict <result.json> <promote|reject|inconclusive> "<synthesis>"
 
 Environment (tests override these): VEX_AGY (agy command), VEX_PLUGIN_HOME (default
@@ -66,8 +67,11 @@ def _fresh_workdir(project: Path, work: Path) -> None:
 
 
 def _diff(work: Path) -> str:
+    """Everything the run changed since the project was planted, committed or not."""
+    root = _git(work, "rev-list", "--max-parents=0", "HEAD", check=False).splitlines()
     subprocess.run(["git", "-C", str(work), "add", "-A"], capture_output=True)
-    text = _git(work, "diff", "--cached", "HEAD", check=False)
+    text = _git(work, "diff", "--cached", root[-1] if root else "HEAD", "--", ".", ":(exclude)**/__pycache__/**",
+                ":(exclude)__pycache__/**", check=False)
     return text if len(text) <= DIFF_LIMIT else text[:DIFF_LIMIT] + "\n[diff truncated]"
 
 
@@ -91,6 +95,90 @@ def _run_candidate(arm, prompt: str, timeout_s: int, work: Path, log: Path) -> t
 def _outcome(case_dir: Path, work: Path) -> int:
     r = subprocess.run([sys.executable, "-I", str(case_dir / "check.py"), str(work)], capture_output=True)
     return 1 if r.returncode == 0 else 0
+
+
+def _judge(records: dict, materials: dict[int, str], rubric: str, judge_model: str, run_dir: Path,
+           rng: random.Random) -> str | None:
+    """One blinded pass over every valid run; sets each run's label and compliance. Returns the judge error."""
+    if not materials:
+        return None
+    order = list(materials)
+    rng.shuffle(order)
+    labels = {slot: f"R{i}" for i, slot in enumerate(order, 1)}
+    (run_dir / "labels.json").write_text(json.dumps({labels[s]: s for s in order}, indent=2))
+    prompt = judge.build_prompt(rubric, [(labels[s], materials[s]) for s in order])
+    (run_dir / "judge-prompt.md").write_text(prompt)
+    (run_dir / "schema.json").write_text(json.dumps(judge.SCHEMA))
+    judge_dir = run_dir / "review"
+    judge_dir.mkdir(exist_ok=True)
+    out = subprocess.run([*build_plugin.agy_command(), "-p", prompt, "--model", judge_model,
+                          "--output-format", "json", "--json-schema", str(run_dir / "schema.json")],
+                         cwd=judge_dir, capture_output=True, text=True)
+    (run_dir / "judge.json").write_text(out.stdout)
+    verdict, error = judge.parse_output(out.stdout)
+    missing = []
+    for rec in records.values():
+        for r in rec["runs"]:
+            if r["slot"] in labels:
+                r["label"] = labels[r["slot"]]
+                r["compliance"] = judge.compliance(verdict or {}, r["label"])
+                if r["compliance"] is None:
+                    missing.append(r["label"])
+    if missing and not error:
+        error = f"judge gave no grade for {', '.join(sorted(missing, key=lambda l: int(l[1:])))}"
+    return error
+
+
+def _score(records: dict) -> tuple[dict, dict]:
+    metrics = {}
+    for label, rec in records.items():
+        m = {}
+        for name in METRICS:
+            values = [r[name] for r in rec["runs"]]
+            m[name] = None if any(v is None for v in values) else stats.summarize([float(v) for v in values])
+        metrics[label] = m
+    signals = {}
+    for pair, (a, b) in {"B_vs_A": ("A", "B"), "C_vs_A": ("A", "C")}.items():
+        s = {}
+        for name in METRICS:
+            x, y = metrics[a][name], metrics[b][name]
+            if x is None or y is None:
+                s[name] = None
+            elif name in ("tokens", "duration_s"):
+                s[name] = stats.signal({"mean": -x["mean"], "spread": x["spread"]},
+                                       {"mean": -y["mean"], "spread": y["spread"]})
+            else:
+                s[name] = stats.signal(x, y)
+        signals[pair] = s
+    return metrics, signals
+
+
+def rejudge(path: Path) -> None:
+    """Judge an existing result again from its run dir (transcripts and project copies), without new runs."""
+    result = json.loads(path.read_text())
+    repo = path.resolve().parents[3]
+    case_dir = repo / "evals" / result["skill"] / "cases" / result["case"]
+    cfg = json.loads((case_dir / "case.json").read_text())
+    run_dir = Path(result["run_dir"])
+    materials = {}
+    for rec in result["arms"].values():
+        for r in rec["runs"]:
+            r.pop("label", None)
+            if r["invalid"]:
+                continue
+            work = _cache() / "vex-work" / f"{cfg['workdir']}-{r['slot']}"
+            if not work.is_dir():
+                raise EvalError(f"project copy {work} is gone; rerun the eval")
+            t = transcript.parse((run_dir / "transcripts" / f"{r['slot']}.ndjson").read_text())
+            materials[r["slot"]] = _material(t, _diff(work))
+            r["compliance"] = None
+    error = _judge(result["arms"], materials, (case_dir / "rubric.md").read_text(), cfg["judge_model"],
+                   run_dir, random.Random())
+    result["judge"] = {"model": cfg["judge_model"], "error": error}
+    result["metrics"], result["signals"] = _score(result["arms"])
+    result["verdict"], result["synthesis"] = None, None
+    path.write_text(json.dumps(result, indent=2) + "\n")
+    print(f"result: {path}")
 
 
 def run_eval(repo: Path, skill: str, case: str, base: str | None = None,
@@ -155,52 +243,8 @@ def run_eval(repo: Path, skill: str, case: str, base: str | None = None,
             build_plugin.uninstall()
         lock.close()
 
-    judge_error = None
-    if materials:
-        order = list(materials)
-        rng.shuffle(order)
-        labels = {slot: f"R{i}" for i, slot in enumerate(order, 1)}
-        (run_dir / "labels.json").write_text(json.dumps({labels[s]: s for s in order}, indent=2))
-        prompt_j = judge.build_prompt(rubric, [(labels[s], materials[s]) for s in order])
-        (run_dir / "schema.json").write_text(json.dumps(judge.SCHEMA))
-        judge_dir = run_dir / "review"
-        judge_dir.mkdir()
-        out = subprocess.run([*build_plugin.agy_command(), "-p", prompt_j, "--model", cfg["judge_model"],
-                              "--output-format", "json", "--json-schema", str(run_dir / "schema.json")],
-                             cwd=judge_dir, capture_output=True, text=True)
-        (run_dir / "judge.json").write_text(out.stdout)
-        verdict, judge_error = judge.parse_output(out.stdout)
-        missing = []
-        for arm_rec in records.values():
-            for r in arm_rec["runs"]:
-                if r["slot"] in labels:
-                    r["label"] = labels[r["slot"]]
-                    r["compliance"] = judge.compliance(verdict or {}, r["label"])
-                    if r["compliance"] is None:
-                        missing.append(r["label"])
-        if missing and not judge_error:
-            judge_error = f"judge gave no grade for {', '.join(sorted(missing, key=lambda l: int(l[1:])))}"
-
-    metrics = {}
-    for label, rec in records.items():
-        m = {}
-        for name in METRICS:
-            values = [r["tokens" if name == "tokens" else name] for r in rec["runs"]]
-            m[name] = None if any(v is None for v in values) else stats.summarize([float(v) for v in values])
-        metrics[label] = m
-    signals = {}
-    for pair, (a, b) in {"B_vs_A": ("A", "B"), "C_vs_A": ("A", "C")}.items():
-        s = {}
-        for name in METRICS:
-            x, y = metrics[a][name], metrics[b][name]
-            if x is None or y is None:
-                s[name] = None
-            elif name in ("tokens", "duration_s"):
-                neg = lambda d: {"mean": -d["mean"], "spread": d["spread"]}
-                s[name] = stats.signal(neg(x), neg(y))
-            else:
-                s[name] = stats.signal(x, y)
-        signals[pair] = s
+    judge_error = _judge(records, materials, rubric, cfg["judge_model"], run_dir, rng)
+    metrics, signals = _score(records)
 
     tree = records["B"]["tree_sha256"]
     result = {
@@ -228,6 +272,11 @@ def set_verdict(path: Path, verdict: str, synthesis: str) -> None:
 
 def main(argv: list[str]) -> int:
     try:
+        if argv[:1] == ["rejudge"]:
+            if len(argv) != 2:
+                raise EvalError("usage: rejudge <result.json>")
+            rejudge(Path(argv[1]))
+            return 0
         if argv[:1] == ["verdict"]:
             if len(argv) != 4:
                 raise EvalError('usage: verdict <result.json> <promote|reject|inconclusive> "<synthesis>"')

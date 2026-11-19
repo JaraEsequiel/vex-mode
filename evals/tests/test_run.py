@@ -130,6 +130,26 @@ class RunTest(unittest.TestCase):
         self.assertEqual(len(missing), 1)
         self.assertTrue(any(result["metrics"][arm]["compliance"] is None for arm in "ABC"))
 
+    def test_judge_sees_committed_changes(self):
+        os.environ["FAKE_AGY_MODE"] = "commit"
+        result = json.loads(self.run_eval().read_text())
+        prompt = (Path(result["run_dir"]) / "judge-prompt.md").read_text()
+        self.assertIn("+fixed", prompt)
+        self.assertIn("-broken", prompt)
+        self.assertNotIn("__pycache__", prompt)
+
+    def test_rejudge_rebuilds_from_run_dir(self):
+        path = self.run_eval()
+        before = json.loads(path.read_text())
+        (Path(before["run_dir"]) / "judge-prompt.md").unlink()
+        os.environ["FAKE_AGY_MODE"] = "badjudge"
+        self.assertEqual(run.main(["rejudge", str(path)]), 0)
+        after = json.loads(path.read_text())
+        self.assertTrue((Path(after["run_dir"]) / "judge-prompt.md").is_file())
+        self.assertIn("R6", after["judge"]["error"])
+        self.assertEqual(after["arms"]["A"]["tree_sha256"], before["arms"]["A"]["tree_sha256"])
+        self.assertEqual([r["outcome"] for r in after["arms"]["B"]["runs"]], [r["outcome"] for r in before["arms"]["B"]["runs"]])
+
     def test_refuses_dirty_variant(self):
         (self.repo / "skills/x/SKILL.md").write_text("dirty")
         with self.assertRaises(run.EvalError):
