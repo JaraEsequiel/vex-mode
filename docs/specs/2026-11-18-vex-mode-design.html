@@ -79,41 +79,40 @@ footer{color:var(--muted);font-size:.85rem;border-top:1px solid var(--border);ma
 <nav class="toc">
   <div class="label">Contenido</div>
   <a href="#s1">1. Intención</a>
-  <a href="#s2">2. Objetivos</a>
+  <a href="#s2">2. Objetivos, no-objetivos y anti-objetivos</a>
   <a href="#s3">3. Restricciones</a>
-  <a href="#s4">4. Enfoques</a>
+  <a href="#s4">4. Enfoques considerados</a>
   <a href="#s5">5. Estructura del repo</a>
   <a href="#s6">6. El modo</a>
-  <a href="#s6-6" style="padding-left:22px">6.6 Reutilizar pstack</a>
   <a href="#s7">7. Hooks</a>
-  <a href="#s8">8. Verificación y evals</a>
-  <a href="#s9">9. Auto-mejora</a>
-  <a href="#s10">10. agent-ready</a>
+  <a href="#s8">8. Verificación y evals, en tres niveles</a>
+  <a href="#s9">9. Bucle de auto-mejora (lo que hace al repo AI-faced)</a>
+  <a href="#s10">10. agent-ready: el generador para otros repos</a>
   <a href="#s10b">10b. Hitos</a>
-  <a href="#s11">11. Desviaciones de pstack</a>
-  <a href="#s12">12. Para el implementador</a>
+  <a href="#s11">11. Desviaciones de pstack (documentadas a propósito)</a>
+  <a href="#s12">12. Qué queda para el implementador</a>
   <a href="#s13">13. Fuentes</a>
 </nav>
 
 <main>
 <header>
-  <span class="pill">Documento de diseño · borrador revisado</span>
+  <span class="pill">Documento de diseño</span>
   <h1><span>vex-mode</span> — un modo de trabajo para agentes sobre Antigravity</h1>
   <div class="meta">
-    <span><b>Fecha</b> 2026-11-18</span>
-    <span><b>Estado</b> revisado por un revisor independiente, pendiente de aprobación</span>
-    <span><b>Repo</b> <code>~/Projects/VexOs/Code/Repos/vex-mode</code> · privado · <code>JaraEsequiel/vex-mode</code></span>
+    <span><b>Fecha</b> 2026-11-18 · actualizado 2026-11-19</span>
+    <span><b>Estado</b> aprobado e implementado: M1 a M4 (PRs #1 a #4). Cada hito corrigió este documento tras releer sus fuentes.</span>
+    <span><b>Repo</b> <code>~/Projects/VexOs/Code/Repos/vex-mode</code>, privado en GitHub (<code>JaraEsequiel/vex-mode</code>). Este archivo vive en <code>docs/specs/</code>; el HTML se genera con <code>python3 scripts/render_design.py</code>.</span>
   </div>
   <div class="card" style="margin-top:18px">
     <div class="legend">
       <b style="color:var(--text)">Cada decisión lleva su fuente:</b>
-      <span><a class="s p" href="#src">P-…</a> código de pstack, con línea</span>
-      <span><a class="s t" href="#src">T-…</a> charlas de poteto</span>
-      <span><a class="s i" href="#src">I-…</a> issues de GitHub</span>
-      <span><a class="s a" href="#src">A-…</a> documentación de agy</span>
-      <span><a class="s aud" href="#src">AUD</a> nuestra auditoría</span>
-      <span><a class="s vex" href="#src">VEX</a> decisión tuya</span>
-      <span><a class="s mia" href="#src">MÍA</a> propuesta mía, corregible</span>
+      <span><a class="s p" href="#s13">P-…</a> código de pstack, con línea</span>
+      <span><a class="s t" href="#s13">T-…</a> charlas de poteto</span>
+      <span><a class="s i" href="#s13">I-…</a> issues de GitHub</span>
+      <span><a class="s a" href="#s13">A-…</a> documentación de agy</span>
+      <span><a class="s aud" href="#s13">AUD</a> nuestra auditoría</span>
+      <span><a class="s vex" href="#s13">VEX</a> decisión tuya</span>
+      <span><a class="s mia" href="#s13">MÍA</a> propuesta mía, corregible</span>
     </div>
     <div class="filters">Resaltar:
       <button data-hl="">todo</button>
@@ -125,317 +124,511 @@ footer{color:var(--muted);font-size:.85rem;border-top:1px solid var(--border);ma
 </header>
 
 <h2 id="s1"><span class="n">1</span>Intención</h2>
-<p>Construir un modo de trabajo personal para agentes. Se llama <b>vex-mode</b>, está fuertemente inspirado en pstack/poteto-mode y corre sobre Antigravity (agy CLI, IDE y app) <a class="s vex" href="#VEX">VEX</a>.</p>
+<p>Construir un modo de trabajo personal para agentes. Se llama vex-mode, está fuertemente inspirado en pstack/poteto-mode y corre sobre Antigravity (agy CLI, IDE y app) <a class="s vex" href="#VEX">VEX</a>.</p>
 <p>El repo es <b>AI-faced</b>: lo mantiene y lo mejora la propia IA <a class="s vex" href="#VEX">VEX</a>. La idea viene de la tesis de poteto: un repo preparado para agentes asume que cada contribuidor es un agente que solo ve los archivos que abrió, copia el ejemplo más cercano y toma el camino más corto que compila <a class="s p" href="#P-correct">P-correct:11</a> <a class="s t" href="#T-talk">T-talk</a>.</p>
-<div class="card warn">
-  <b>Por qué no instalar pstack tal cual.</b> La auditoría mostró tres cosas <a class="s aud" href="#AUD">AUD</a>:
-  <ul>
-    <li>Las ideas son buenas: diseño 7/10 tras la refutación.</li>
-    <li>La ejecución falla, porque las reglas son prosa que los agentes ignoran. En 18 ejecuciones el agente leyó 0 veces los archivos de principios <a class="s i" href="#I-726">I-726</a> <a class="s i" href="#I-864">I-864</a>.</li>
-    <li>No hay evidencia publicada de que funcione: 2/10.</li>
-  </ul>
-</div>
-<p>vex-mode toma las ideas y corrige la ejecución con estructura. Es la regla de la propia poteto <a class="s t" href="#T-teamday">T-teamday</a> <a class="s p" href="#P-encode">P-encode</a>:</p>
-<blockquote>"think about how you can make that a deterministic check instead of adding another line to your rules."</blockquote>
-
+<p><b>Por qué no instalar pstack tal cual.</b> La auditoría mostró tres cosas <a class="s aud" href="#AUD">AUD</a>:</p>
+<ul>
+<li>Las ideas son buenas: diseño 7/10 tras la refutación.
+</li>
+<li>La ejecución falla, porque las reglas son prosa que los agentes ignoran. En 18 ejecuciones el agente leyó 0 veces los archivos de principios <a class="s i" href="#I-726">I-726</a>. En otro programa con 93 delegados, solo 5 leyeron <code>no-comments</code> <a class="s i" href="#I-864">I-864</a>.
+</li>
+<li>No hay evidencia publicada de que funcione: 2/10.
+</li></ul>
+<p>vex-mode toma las ideas y corrige la ejecución con estructura. Es la regla de la propia poteto: <i>"think about how you can make that a deterministic check instead of adding another line to your rules"</i> <a class="s t" href="#T-teamday">T-teamday</a> <a class="s p" href="#P-encode">P-encode</a>.</p>
 <h2 id="s2"><span class="n">2</span>Objetivos, no-objetivos y anti-objetivos</h2>
-<div class="grid3">
-  <div class="card ok"><h4>Objetivos</h4><ul>
-    <li>Un router (<code>vex-mode</code>) que elige un playbook y copia sus pasos a la lista de tareas <a class="s p" href="#P-mode">P-mode:108</a></li>
-    <li>Reglas que se cumplen por hooks y checks, no solo por texto <a class="s p" href="#P-correct">P-correct:19-22</a> <a class="s t" href="#T-talk">T-talk</a></li>
-    <li>Un bucle de auto-mejora en el que cada corrección termina en estructura <a class="s p" href="#P-correct">P-correct</a> <a class="s p" href="#P-reflect">P-reflect</a></li>
-    <li>Evidencia de que funciona, con evals guardados y vinculados a la versión de cada skill <a class="s aud" href="#AUD">AUD</a></li>
-    <li>Un generador <code>agent-ready</code> que prepara cualquier proyecto <a class="s t" href="#T-talk">T-talk</a> <a class="s p" href="#P-verify">P-verify</a> <a class="s p" href="#P-correct">P-correct</a></li>
-  </ul></div>
-  <div class="card no"><h4>No-objetivos (por ahora)</h4><ul>
-    <li>Soportar varias herramientas (Claude Code, Codex, Cursor) <a class="s vex" href="#VEX">VEX</a>. El port de pstack a Claude Code quedó en 5/10 por mantener adaptadores <a class="s aud" href="#AUD">AUD</a></li>
-    <li>Paneles de revisión con modelos de varios vendors como requisito <a class="s mia" href="#MIA">MÍA</a></li>
-    <li>Publicarlo <a class="s vex" href="#VEX">VEX</a></li>
-  </ul></div>
-  <div class="card anti"><h4>Anti-objetivos</h4><p style="margin:0 0 6px;color:var(--muted);font-size:.88rem">Aunque funcione, sería un fracaso si…</p><ul>
-    <li>Se vuelve un manual largo. <i>"When in doubt, delete. Keep only prose that changes a decision"</i> <a class="s p" href="#P-authoring">P-authoring:10</a></li>
-    <li>Tiene reglas que nada hace cumplir. Es lo que falló en pstack <a class="s aud" href="#AUD">AUD</a></li>
-    <li>Aumenta el volumen sin aumentar la confianza. <i>"automating that loop just produces more slop"</i> <a class="s t" href="#T-teamday">T-teamday</a></li>
-  </ul></div>
-</div>
-
+<p><b>Objetivos</b></p>
+<ul>
+<li>Un router (<code>vex-mode</code>) que elige un playbook y copia sus pasos a la lista de tareas <a class="s p" href="#P-mode">P-mode:108</a>.
+</li>
+<li>Reglas que se cumplen por hooks y checks, no solo por texto <a class="s p" href="#P-correct">P-correct:19-22</a> <a class="s t" href="#T-talk">T-talk</a>.
+</li>
+<li>Un bucle de auto-mejora en el que cada corrección termina en estructura <a class="s p" href="#P-correct">P-correct</a> <a class="s p" href="#P-reflect">P-reflect</a>.
+</li>
+<li>Evidencia de que funciona, con evals guardados y vinculados a la versión de cada skill <a class="s aud" href="#AUD">AUD</a>.
+</li>
+<li>Un generador <code>agent-ready</code> que prepara cualquier proyecto para recibir agentes <a class="s t" href="#T-talk">T-talk</a> <a class="s p" href="#P-verify">P-verify</a> <a class="s p" href="#P-correct">P-correct</a>.
+</li></ul>
+<p><b>No-objetivos (por ahora)</b></p>
+<ul>
+<li>Soportar varias herramientas: Claude Code, Codex o Cursor. Era el enfoque C y queda descartado por ahora <a class="s vex" href="#VEX">VEX</a>. Motivo: el port de pstack a Claude Code quedó en 5/10 por mantener adaptadores <a class="s aud" href="#AUD">AUD</a>.
+</li>
+<li>Paneles de revisión con modelos de varios vendors como requisito. Se decide al implementar, según los modelos que ofrezca agy <a class="s mia" href="#MIA">MÍA</a>.
+</li>
+<li>Publicarlo <a class="s vex" href="#VEX">VEX</a>.
+</li></ul>
+<p><b>Anti-objetivos</b> (aunque funcione, sería un fracaso si…)</p>
+<ul>
+<li>Se vuelve un manual largo que nadie lee. <i>"When in doubt, delete. Keep only prose that changes a decision"</i> <a class="s p" href="#P-authoring">P-authoring:10</a>.
+</li>
+<li>Tiene reglas que nada hace cumplir. Esto es exactamente lo que falló en pstack <a class="s aud" href="#AUD">AUD</a>.
+</li>
+<li>Aumenta el volumen de trabajo sin aumentar la confianza. <i>"if your inner coding loop produces slop, then automating that loop just produces more slop"</i> <a class="s t" href="#T-teamday">T-teamday</a>.
+</li></ul>
 <h2 id="s3"><span class="n">3</span>Restricciones</h2>
 <ul>
-  <li><b>Plataforma:</b> Antigravity. Un plugin es una carpeta con <code>plugin.json</code> y subcarpetas opcionales: <code>skills/</code>, <code>agents/</code>, <code>rules/AGENTS.md</code>, <code>mcp_config.json</code>, <code>hooks.json</code> y <code>assets/</code> <a class="s a" href="#A-plugin">A-plugin</a></li>
-  <li><b>Formato:</b> <code>AGENTS.md</code> + <code>SKILL.md</code> estándar <a class="s vex" href="#VEX">VEX</a>. agy lee los dos <a class="s a" href="#A-plugin">A-plugin</a> <a class="s a" href="#A-skills">A-skills</a></li>
-  <li><b>Hooks disponibles:</b> <code>SessionStart</code>, <code>PreToolUse</code>, <code>PostToolUse</code> y <code>Stop</code>. Reciben JSON con <code>hookEventName</code>, <code>cwd</code> y <code>toolCall.id</code> <a class="s a" href="#A-hooks">A-hooks</a></li>
-  <li><b>Ubicaciones de hooks:</b> global (<code>~/.gemini/config/hooks.json</code>), dentro de un plugin, y en el workspace (<code>&lt;repo&gt;/.agents/hooks.json</code>, que solo se carga si la carpeta es confiable) <a class="s a" href="#A-hooks">A-hooks</a></li>
-  <li><b>Validación nativa:</b> <code>agy plugin validate --strict</code> <a class="s a" href="#A-validate">A-validate</a></li>
-  <li><b>No tocar lo de Omarchy.</b> Las skills <code>omarchy</code>, <code>omarchy-app</code> y <code>diagnose-crash</code> las gestiona Omarchy <a class="s vex" href="#VEX">VEX</a></li>
-</ul>
-
+<li><b>Plataforma:</b> Antigravity. Un plugin es una carpeta con <code>plugin.json</code> y subcarpetas opcionales: <code>skills/</code>, <code>agents/</code>, <code>rules/AGENTS.md</code>, <code>mcp_config.json</code>, <code>hooks.json</code> y <code>assets/</code> <a class="s a" href="#A-plugin">A-plugin</a>.
+</li>
+<li><b>Formato:</b> <code>AGENTS.md</code> + <code>SKILL.md</code> estándar <a class="s vex" href="#VEX">VEX</a>. agy lee los dos <a class="s a" href="#A-plugin">A-plugin</a> <a class="s a" href="#A-skills">A-skills</a>.
+</li>
+<li><b>Hooks disponibles:</b> <code>SessionStart</code>, <code>PreToolUse</code>, <code>PostToolUse</code> y <code>Stop</code>. Reciben JSON con <code>hookEventName</code>, <code>cwd</code> y <code>toolCall.id</code> <a class="s a" href="#A-hooks">A-hooks</a>.
+</li>
+<li><b>Ubicaciones de hooks:</b> global (<code>~/.gemini/config/hooks.json</code>), dentro de un plugin, y en el workspace (<code>&lt;repo&gt;/.agents/hooks.json</code>, que solo se carga si la carpeta es confiable) <a class="s a" href="#A-hooks">A-hooks</a>.
+</li>
+<li><b>Validación nativa:</b> <code>agy plugin validate --strict</code> <a class="s a" href="#A-validate">A-validate</a>.
+</li>
+<li><b>No tocar lo de Omarchy.</b> Las skills <code>omarchy</code>, <code>omarchy-app</code> y <code>diagnose-crash</code> viven en <code>~/.gemini/config/skills</code> y las gestiona Omarchy <a class="s vex" href="#VEX">VEX</a>.
+</li></ul>
 <h2 id="s4"><span class="n">4</span>Enfoques considerados</h2>
 <table>
   <tr><th></th><th>Enfoque</th><th>Gana</th><th>Cede</th></tr>
-  <tr class="chosen"><td><b>A ✅</b></td><td>El repo es un plugin de Antigravity, con dos AGENTS.md</td><td>Hooks reales, validación nativa, instalación con un comando</td><td>Queda atado a Antigravity. Las skills siguen siendo SKILL.md estándar y portables</td></tr>
+  <tr><td><b>A ✅</b></td><td>El repo es un plugin de Antigravity, con dos AGENTS.md</td><td>Hooks reales, validación nativa, instalación con un comando</td><td>Queda atado a Antigravity. Las skills siguen siendo SKILL.md estándar y portables</td></tr>
   <tr><td>B</td><td>Solo <code>AGENTS.md</code> + <code>.agents/skills/</code>, sin plugin</td><td>Funciona en cualquier herramienta</td><td>Sin hooks todo es prosa, y está demostrado que se ignora <a class="s i" href="#I-726">I-726</a></td></tr>
   <tr><td>C</td><td>Núcleo portable + adaptadores por herramienta</td><td>Varias herramientas</td><td>Mantenimiento doble. El adaptador de pstack quedó en 5/10 <a class="s aud" href="#AUD">AUD</a></td></tr>
 </table>
 <p><b>Elegido: A</b> <a class="s vex" href="#VEX">VEX</a>. Es lo que pstack predica (<i>encode lessons in structure</i>) aplicado al propio modo, que es lo que pstack no hizo <a class="s p" href="#P-encode">P-encode</a> <a class="s aud" href="#AUD">AUD</a>.</p>
-
 <h2 id="s5"><span class="n">5</span>Estructura del repo</h2>
-<pre class="tree"><code>vex-mode/
-├── AGENTS.md                 <span class="sec">§6.1</span>  <span class="c">para la IA que mantiene ESTE repo</span>
-├── README.md                       <span class="c">para humanos: qué es, cómo instalar</span>
-├── plugin.json               <span class="sec">§3</span>    <span class="c">manifiesto del plugin</span>
-├── rules/AGENTS.md           <span class="sec">§6.2</span>  <span class="c">núcleo mínimo cargado en tus sesiones</span>
-├── agents/vex-agent.md       <span class="sec">§6.4</span>  <span class="c">definición del subagente</span>
+<pre><code>vex-mode/
+├── AGENTS.md                 § 6.1  para la IA que mantiene ESTE repo
+├── README.md                 para humanos: qué es, cómo instalar
+├── plugin.json               § 3    manifiesto del plugin
+├── rules/AGENTS.md           § 6.2  núcleo mínimo cargado en tus sesiones
+├── agents/vex-agent.md       § 6.4  definición del subagente
 ├── skills/
-│   ├── vex-mode/             <span class="sec">§6.3</span>  <span class="c">router</span>
+│   ├── vex-mode/             § 6.3  router
 │   │   ├── SKILL.md
-│   │   ├── worker.md         <span class="sec">§6.4</span>  <span class="c">reglas que hereda cada subagente</span>
+│   │   ├── worker.md         § 6.4  reglas que hereda cada subagente
 │   │   └── playbooks/*.md
-│   ├── principle-*/          <span class="sec">§6.5</span>
-│   ├── correct/  reflect/    <span class="sec">§9</span>    <span class="c">auto-mejora</span>
-│   ├── show-me-your-work/    <span class="sec">§9</span>    <span class="c">registro de decisiones</span>
-│   ├── create-verification-skill/  <span class="sec">§8.3</span>
-│   └── agent-ready/          <span class="sec">§10</span>   <span class="c">prepara otros repos</span>
-├── hooks.json + hooks/       <span class="sec">§7.1</span>  <span class="c">hooks del modo</span>
-├── checks/                   <span class="sec">§8.1</span>  <span class="c">checks estructurales (deterministas)</span>
-├── evals/&lt;skill&gt;/            <span class="sec">§8.2</span>  <span class="c">evals de comportamiento (fuera de skills/)</span>
-├── vendor.lock               <span class="sec">§6.6</span>  <span class="c">procedencia de lo copiado de pstack</span>
-├── LICENSES/pstack-MIT.txt   <span class="sec">§6.6</span>
+│   ├── principle-*/          § 6.5
+│   ├── correct/  reflect/    § 9    auto-mejora
+│   ├── show-me-your-work/    § 9    registro de decisiones
+│   ├── create-verification-skill/   § 8.3
+│   ├── maintain-verification-skill/ § 8.3
+│   └── agent-ready/          § 10   prepara otros repos
+├── hooks.json + hooks/       § 7.1  hooks del modo
+├── checks/                   § 8.1  checks estructurales (deterministas)
+├── evals/&lt;skill&gt;/            § 8.2  casos y resultados de evals (fuera de skills/)
+├── evals/run.py              § 8.2  arnés que ejecuta candidatos y juez con agy -p
+├── scripts/build_plugin.py   § 8.2  exporta solo las partes del plugin para instalar
+├── scripts/scheduled_correct.py § 9 ejecución semanal de `correct` (timer de systemd)
+├── vendor.lock               § 6.6  procedencia de lo copiado de pstack
+├── LICENSES/pstack-MIT.txt   § 6.6
 ├── docs/
-│   ├── specs/                      <span class="c">este documento</span>
-│   └── decisions/                  <span class="c">registro de decisiones del repo</span>
-└── .github/workflows/ci.yml  <span class="sec">§8.4</span></code></pre>
-
+│   ├── specs/                este documento
+│   └── decisions/            registro de decisiones del repo
+└── .github/workflows/ci.yml  § 8.4</code></pre>
 <h2 id="s6"><span class="n">6</span>El modo</h2>
 <h3 id="s6-1">6.1 Dos audiencias, dos AGENTS.md</h3>
 <ul>
-  <li><b><code>AGENTS.md</code> en la raíz</b> es para el agente que <b>mantiene</b> vex-mode. Contiene la misión, el mapa del repo, cómo verificar un cambio y la <b>tabla regla → mecanismo que la hace cumplir</b> <a class="s p" href="#P-correct">P-correct:28</a>
-    <ul>
-      <li>Cada regla nueva entra con su mecanismo. Si una regla ya existía y nada la hacía cumplir, es una reincidencia y se sube de nivel en el mismo cambio <a class="s p" href="#P-correct">P-correct:28</a></li>
-      <li>Cuando su error ya no puede ocurrir, la regla se borra <a class="s p" href="#P-correct">P-correct:28</a></li>
-    </ul></li>
-  <li><b><code>rules/AGENTS.md</code></b> se carga en <b>tus</b> sesiones de trabajo, en cualquier proyecto <a class="s a" href="#A-plugin">A-plugin</a>. Contiene solo el núcleo mínimo de §6.2.</li>
-  <li><b>El modo completo solo actúa al invocar <code>/vex-mode</code></b> <a class="s vex" href="#VEX">VEX</a>. Esto incluye las lecturas, el gate de evidencia y los playbooks. Es fiel a poteto-mode, que solo se activa a mano (<code>disable-model-invocation: true</code>) <a class="s p" href="#P-mode">P-mode:4</a>
-    <ul>
-      <li>Al invocarlo se escribe una <b>marca de sesión</b> que leen los hooks de §7.1.</li>
-      <li>Sin marca, los hooks del modo no hacen nada, salvo la pausa ante lo irreversible.</li>
-      <li>El formato de la marca (archivo por conversación o por <code>cwd</code>) lo decide el implementador <a class="s mia" href="#MIA">MÍA</a></li>
-    </ul></li>
-</ul>
-
+<li><b><code>AGENTS.md</code> en la raíz</b> es para el agente que <b>mantiene</b> vex-mode. Contiene la misión, el mapa del repo, cómo verificar un cambio y la <b>tabla regla → mecanismo que la hace cumplir</b> <a class="s p" href="#P-correct">P-correct:28</a>.
+<ul>
+<li>Cada regla nueva entra con su mecanismo. Si una regla ya existía y nada la hacía cumplir, es una reincidencia y se sube de nivel en el mismo cambio <a class="s p" href="#P-correct">P-correct:28</a>.
+</li>
+<li>Cuando su error ya no puede ocurrir, la regla se borra <a class="s p" href="#P-correct">P-correct:28</a>.
+</li></ul>
+</li>
+<li><b><code>rules/AGENTS.md</code></b> se carga en <b>tus</b> sesiones de trabajo, en cualquier proyecto <a class="s a" href="#A-plugin">A-plugin</a>. Contiene solo el núcleo mínimo de §6.2.
+</li>
+<li><b>El modo completo solo actúa al invocar <code>/vex-mode</code></b> <a class="s vex" href="#VEX">VEX</a>. Esto incluye las lecturas, el gate de evidencia y los playbooks. Es fiel a poteto-mode, que solo se activa a mano (<code>disable-model-invocation: true</code>) <a class="s p" href="#P-mode">P-mode:4</a>.
+<ul>
+<li>Al invocarlo se escribe una <b>marca de sesión</b> que leen los hooks de §7.1.
+</li>
+<li>Sin marca, los hooks del modo no hacen nada, salvo la pausa ante lo irreversible.
+</li>
+<li>El formato de la marca (archivo por conversación o por <code>cwd</code>) lo decide el implementador <a class="s mia" href="#MIA">MÍA</a>.
+</li></ul>
+</li></ul>
 <h3 id="s6-2">6.2 Contenido del núcleo (<code>rules/AGENTS.md</code>)</h3>
 <ul>
-  <li><b>Primer mensaje:</b> reformular el objetivo y el cambio mínimo que lo cumple, y seguir <a class="s p" href="#P-mode">P-mode:19</a></li>
-  <li><b>Autonomía:</b> lo reversible se hace sin preguntar; se pausa ante lo irreversible (force-push a ramas compartidas, deploys, borrado de datos, mensajes a clientes) <a class="s p" href="#P-mode">P-mode:76-78</a></li>
-  <li><b>"No" es una respuesta válida:</b> franqueza antes que complacencia <a class="s p" href="#P-mode">P-mode:82</a></li>
-  <li><b>Estilo:</b> frases cortas, cada afirmación con evidencia o etiqueta (medido, inferido o suposición), nunca pasarle al humano un check que podría ejecutar el agente <a class="s p" href="#P-mode">P-mode:104</a></li>
-  <li><b>Verificar contra el artefacto real</b>, nunca contra "compila" <a class="s p" href="#P-prove">P-prove:9</a></li>
-</ul>
-
+<li><b>Primer mensaje:</b> reformular el objetivo y el cambio mínimo que lo cumple, y seguir <a class="s p" href="#P-mode">P-mode:19</a>.
+</li>
+<li><b>Autonomía:</b> lo reversible se hace sin preguntar; se pausa ante lo irreversible (force-push a ramas compartidas, deploys, borrado de datos, mensajes a clientes) <a class="s p" href="#P-mode">P-mode:76-78</a>.
+</li>
+<li><b>"No" es una respuesta válida:</b> franqueza antes que complacencia <a class="s p" href="#P-mode">P-mode:82</a>.
+</li>
+<li><b>Estilo:</b> frases cortas, cada afirmación con evidencia o etiqueta (medido, inferido o suposición), nunca pasarle al humano un check que podría ejecutar el agente <a class="s p" href="#P-mode">P-mode:104</a>.
+</li>
+<li><b>Verificar contra el artefacto real</b>, nunca contra "compila" <a class="s p" href="#P-prove">P-prove:9</a>.
+</li></ul>
 <h3 id="s6-3">6.3 Router <code>vex-mode</code></h3>
 <ul>
-  <li>Elige un playbook y copia sus pasos a la lista de tareas <a class="s p" href="#P-mode">P-mode:108</a></li>
-  <li>Si una duda se resuelve ejecutando algo, se prototipa en lugar de preguntar <a class="s p" href="#P-mode">P-mode</a> (non-negotiables)</li>
-  <li><b>Lista de lecturas explícita por playbook.</b> Cada playbook nombra los archivos exactos que hay que leer. Es lo único que demostró subir el cumplimiento: 65 de 93 delegados leyeron cuando se les nombró <a class="s i" href="#I-864">I-864</a> <a class="s aud" href="#AUD">AUD</a></li>
-  <li><b>Playbooks iniciales:</b> M1 empieza con 2, bug-fix y feature <a class="s vex" href="#VEX">VEX</a>. Los siguientes candidatos son investigation, refactoring y opening-a-pr. Se añaden solo cuando su patrón se repita 2 veces <a class="s mia" href="#MIA">MÍA</a>, con el criterio de <i>"a class counts once it has happened twice"</i> <a class="s p" href="#P-correct">P-correct:15</a></li>
-  <li><b>Sin skills de planificación por defecto.</b> <i>"the best spec is code"</i> <a class="s p" href="#P-readme">P-readme:270</a></li>
-</ul>
-
+<li>Elige un playbook y copia sus pasos a la lista de tareas <a class="s p" href="#P-mode">P-mode:108</a>.
+</li>
+<li>Si una duda se resuelve ejecutando algo, se prototipa en lugar de preguntar <a class="s p" href="#P-mode">P-mode</a> (non-negotiables).
+</li>
+<li><b>Lista de lecturas explícita por playbook.</b> Cada playbook nombra los archivos exactos que hay que leer. Es lo que demostró subir las lecturas: con una lista incondicional al inicio de cada playbook, 68 de 72 ejecuciones leyeron un principio, frente a 0 de 72 sin ella <a class="s i" href="#I-726">I-726</a>. Nombrar la lectura en el kickoff hizo que 65 de 93 delegados leyeran el adaptador <a class="s i" href="#I-864">I-864</a>. Leer no prueba calidad: nadie calificó las respuestas <a class="s i" href="#I-726">I-726</a>.
+</li>
+<li><b>Playbooks iniciales:</b> M1 empieza con 2, bug-fix y feature <a class="s vex" href="#VEX">VEX</a>. Los siguientes candidatos son investigation, refactoring y opening-a-pr. Se añaden solo cuando su patrón se repita 2 veces <a class="s mia" href="#MIA">MÍA</a>, con el criterio de <i>"a class counts once it has happened twice"</i> <a class="s p" href="#P-correct">P-correct:15</a>.
+</li>
+<li><b>Sin skills de planificación por defecto.</b> <i>"the best spec is code"</i> <a class="s p" href="#P-readme">P-readme:270</a>.
+</li></ul>
 <h3 id="s6-4">6.4 Subagentes: <code>worker.md</code> y <code>vex-agent</code></h3>
 <ul>
-  <li>Todo kickoff de un subagente empieza con <code>Read &lt;ruta&gt;/worker.md before anything else.</code> <a class="s p" href="#P-mode">P-mode:20</a></li>
-  <li><code>worker.md</code> contiene <a class="s p" href="#P-worker">P-worker:4-10</a>:
-    <ul>
-      <li>La vara del kickoff es toda la vara.</li>
-      <li>Nunca mostrarle una pregunta a una persona: decidir lo reversible.</li>
-      <li>Los PRs se abren listos para review, nunca en draft, con título <code>type(scope): subject</code>.</li>
-      <li>Cuerpo con Why, What changed, Scope, Tradeoffs, Blast Radius y Verification.</li>
-    </ul></li>
-  <li><b>Refuerzo estructural (desviación):</b> el hook <code>SessionStart</code> (§7.1) inyecta <code>worker.md</code>, en vez de depender de que el kickoff lo pida <a class="s i" href="#I-864">I-864</a> <a class="s a" href="#A-hooks">A-hooks</a></li>
-  <li><b>Respaldo:</b> las reglas de <code>worker.md</code> también van en el cuerpo de <code>agents/vex-agent.md</code>. Así llegan al subagente aunque <code>SessionStart</code> no se dispare en sesiones de subagente, cosa que hay que verificar al implementar <a class="s mia" href="#MIA">MÍA</a></li>
-  <li><b>Subagentes nuevos por defecto:</b> cada reintento va a un agente nuevo con el brief original <a class="s p" href="#P-mode">P-mode:100</a></li>
-  <li><b>Modelo fijo en <code>vex-agent.md</code></b> solo si agy lo acepta como campo válido. pstack falló justamente por usar un nombre de modelo inválido <a class="s i" href="#I-1270">I-1270</a> <a class="s aud" href="#AUD">AUD</a></li>
-</ul>
-
+<li>Todo kickoff de un subagente empieza con <code>Read &lt;ruta&gt;/worker.md before anything else.</code> <a class="s p" href="#P-mode">P-mode:20</a>.
+</li>
+<li><code>worker.md</code> contiene:
+<ul>
+<li>La vara del kickoff es toda la vara.
+</li>
+<li>Nunca mostrarle una pregunta a una persona: decidir lo reversible.
+</li>
+<li>Los PRs se abren listos para review, nunca en draft.
+</li>
+<li>Título <code>type(scope): subject</code>.
+</li>
+<li>Cuerpo con Why, What changed, Scope, Tradeoffs, Blast Radius y Verification.
+</li>
+<li>Fuente: <a class="s p" href="#P-worker">P-worker:4-10</a>.
+</li></ul>
+</li>
+<li><b>Refuerzo estructural (desviación):</b> el hook de activación <code>PreInvocation</code> (§7.1) inyecta la lista de lecturas, <code>worker.md</code> incluido, en vez de depender de que el kickoff lo pida <a class="s i" href="#I-864">I-864</a> <a class="s a" href="#A-hooks">A-hooks</a>.
+</li>
+<li><b>Respaldo:</b> las reglas de <code>worker.md</code> también van en el cuerpo de <code>agents/vex-agent.md</code>, así llegan al subagente, que es una conversación aparte <a class="s mia" href="#MIA">MÍA</a> (<code>docs/decisions/2026-11-18-hook-probe.md</code>).
+</li>
+<li><b>Subagentes nuevos por defecto:</b> cada reintento va a un agente nuevo con el brief original <a class="s p" href="#P-mode">P-mode:100</a>.
+</li>
+<li><b>Modelo fijo en <code>vex-agent.md</code>:</b> solo si agy lo acepta como campo válido. pstack falló justamente por usar un nombre de modelo inválido <a class="s i" href="#I-1270">I-1270</a> <a class="s aud" href="#AUD">AUD</a>.
+</li></ul>
 <h3 id="s6-5">6.5 Principios</h3>
 <ul>
-  <li>Se usa la estructura de dos niveles de pstack: un índice con el disparador de cada principio dentro del router, y cada principio como una skill corta <a class="s p" href="#P-readme">P-readme:224</a></li>
-  <li><b>Cuáles entran:</b> se eligen al implementar. El criterio es que sobreviva a la auditoría y tenga un mecanismo que lo haga cumplir o un disparador claro <a class="s aud" href="#AUD">AUD</a> <a class="s mia" href="#MIA">MÍA</a></li>
-  <li><b>Candidatos fuertes:</b> prove-it-works <a class="s p" href="#P-prove">P-prove</a>, fix-root-causes, laziness-protocol, subtract-before-you-add, sequence-verifiable-units, encode-lessons-in-structure <a class="s p" href="#P-encode">P-encode</a> y never-block-on-the-human.</li>
-  <li><b>La regla de citar principios en cada respuesta queda fuera.</b> La auditoría mostró que los agentes citan principios sin haberlos leído <a class="s i" href="#I-726">I-726</a> <a class="s aud" href="#AUD">AUD</a></li>
-</ul>
-
+<li>Se usa la estructura de dos niveles de pstack: un índice con el disparador de cada principio dentro del router, y cada principio como una skill corta <a class="s p" href="#P-readme">P-readme:224</a>.
+</li>
+<li><b>Cuáles entran:</b> se eligen al implementar. El criterio es que sobreviva a la auditoría y tenga un mecanismo que lo haga cumplir o un disparador claro <a class="s aud" href="#AUD">AUD</a> <a class="s mia" href="#MIA">MÍA</a>.
+</li>
+<li><b>Candidatos fuertes:</b>
+<ul>
+<li>prove-it-works <a class="s p" href="#P-prove">P-prove</a>
+</li>
+<li>fix-root-causes, laziness-protocol, subtract-before-you-add, sequence-verifiable-units
+</li>
+<li>encode-lessons-in-structure <a class="s p" href="#P-encode">P-encode</a>
+</li>
+<li>never-block-on-the-human
+</li></ul>
+</li>
+<li><b>La regla de citar principios en cada respuesta queda fuera.</b> La auditoría mostró que los agentes citan principios sin haberlos leído <a class="s i" href="#I-726">I-726</a> <a class="s aud" href="#AUD">AUD</a>.
+</li></ul>
 <h3 id="s6-6">6.6 Reutilizar pstack: copiar, nunca reescribir <a class="s vex" href="#VEX">VEX</a></h3>
-<div class="card" style="border-color:rgba(251,191,36,.5);background:rgba(251,191,36,.06)">
-<ul style="margin:0">
-  <li><b>Toda skill que ya existe en pstack se copia tal cual</b>, con su carpeta completa. No se reescribe ni se parafrasea <a class="s vex" href="#VEX">VEX</a>. Lo mismo vale para cualquier cosa que ya exista: antes de crear algo, se busca si ya está hecho (skills de pstack, skills incluidas en agy, Omarchy) <a class="s vex" href="#VEX">VEX</a></li>
-  <li><b>Dos commits por skill, en orden</b> <a class="s mia" href="#MIA">MÍA</a>, siguiendo el principio sequence-verifiable-units <a class="s p" href="#P-mode">P-mode</a>:
-    <ol>
-      <li><code>vendor: copy &lt;skill&gt; from pstack@35a9094</code>: la copia exacta, sin cambios.</li>
-      <li><code>adapt: &lt;skill&gt; for antigravity</code>: solo las adaptaciones. Así el diff muestra exactamente qué cambiamos y nada más.</li>
-    </ol></li>
-  <li><b>Qué se permite adaptar:</b> solo lo que no funciona en Antigravity: rutas (<code>.cursor/</code> → <code>.gemini/</code> y <code>.agents/</code>), nombres de modelos, nombres de herramientas (<code>Task</code> → el equivalente en agy) y referencias a <code>cursor-team-kit</code> o a funciones exclusivas de Cursor. Todo lo demás queda igual <a class="s vex" href="#VEX">VEX</a> <a class="s mia" href="#MIA">MÍA</a></li>
-  <li><b>Procedencia:</b> un <code>vendor.lock</code> en la raíz registra, para cada skill copiada, el repo, el commit, la ruta original y el hash del original <a class="s mia" href="#MIA">MÍA</a></li>
-  <li><b>Licencia:</b> pstack es MIT, <i>"Copyright (c) 2026 Lauren Tan"</i>. El aviso se conserva en <code>LICENSES/pstack-MIT.txt</code> <a class="s p" href="#P-license">P-license</a></li>
-  <li><b>Cómo se hace cumplir</b> <a class="s p" href="#P-encode">P-encode</a>:
-    <ul>
-      <li>Un check en CI exige que cada skill copiada tenga su entrada en <code>vendor.lock</code>.</li>
-      <li>Un script compara contra pstack y lista las actualizaciones disponibles upstream <a class="s mia" href="#MIA">MÍA</a></li>
-      <li>La regla entra en la tabla del <code>AGENTS.md</code> raíz con ese check como mecanismo <a class="s p" href="#P-correct">P-correct:28</a></li>
-    </ul></li>
-</ul>
-</div>
-
+<ul>
+<li><b>Toda skill que ya existe en pstack se copia tal cual</b>, con su carpeta completa. No se reescribe ni se parafrasea <a class="s vex" href="#VEX">VEX</a>. Lo mismo vale para cualquier cosa que ya exista: antes de crear algo, se busca si ya está hecho (skills de pstack, skills incluidas en agy, Omarchy) <a class="s vex" href="#VEX">VEX</a>.
+</li>
+<li><b>Dos commits por skill, en orden:</b>
+<ol>
+<li><code>vendor: copy &lt;skill&gt; from pstack@35a9094</code>: la copia exacta, sin cambios.
+</li>
+<li><code>adapt: &lt;skill&gt; for antigravity</code>: solo las adaptaciones.
+</li></ol>
+</li></ul>
+<p>Así el diff muestra exactamente qué cambiamos y nada más <a class="s mia" href="#MIA">MÍA</a>, siguiendo el principio sequence-verifiable-units <a class="s p" href="#P-mode">P-mode</a>.</p>
+<ul>
+<li><b>Qué se permite adaptar:</b> solo lo que no funciona en Antigravity. Eso es:
+<ul>
+<li>Rutas (<code>.cursor/</code> → <code>.gemini/</code> y <code>.agents/</code>).
+</li>
+<li>Nombres de modelos.
+</li>
+<li>Nombres de herramientas (<code>Task</code> → el equivalente en agy).
+</li>
+<li>Referencias a <code>cursor-team-kit</code> y a funciones exclusivas de Cursor.
+</li></ul>
+</li></ul>
+<p>Todo lo demás queda igual <a class="s vex" href="#VEX">VEX</a> <a class="s mia" href="#MIA">MÍA</a>.</p>
+<ul>
+<li><b>Procedencia:</b> un <code>vendor.lock</code> en la raíz registra, para cada skill copiada, el repo, el commit, la ruta original y el hash del original <a class="s mia" href="#MIA">MÍA</a>.
+</li>
+<li><b>Licencia:</b> pstack es MIT, <i>"Copyright (c) 2026 Lauren Tan"</i>. El aviso se conserva en <code>LICENSES/pstack-MIT.txt</code> <a class="s p" href="#P-license">P-license</a>.
+</li>
+<li><b>Cómo se hace cumplir</b> <a class="s p" href="#P-encode">P-encode</a>:
+<ul>
+<li>Un check en CI exige que cada skill copiada tenga su entrada en <code>vendor.lock</code>.
+</li>
+<li><code>scripts/upstream_drift.py</code> compara cada archivo de <code>vendor.lock</code> contra pstack upstream y lo clasifica: sin cambios, cambiado o borrado. Si el archivo está adaptado, muestra el diff de upstream desde el commit de ese archivo, para reaplicarlo sobre la adaptación en vez de pisarla <a class="s mia" href="#MIA">MÍA</a> <a class="s vex" href="#VEX">VEX</a>.
+</li>
+<li><code>vendor.lock</code> guarda el commit de origen <b>por archivo</b> (<code>upstream_commit</code>); el commit global queda como valor por defecto de las entradas viejas <a class="s mia" href="#MIA">MÍA</a>.
+</li>
+<li>Un workflow semanal de GitHub Actions corre el script y mantiene un único issue, "pstack upstream drift": lo abre o actualiza si hay cambios y lo cierra cuando no queda ninguno. No hace fallar el CI de los PRs, porque un cambio upstream no es un error nuestro <a class="s vex" href="#VEX">VEX</a>.
+</li>
+<li>La regla entra en la tabla del <code>AGENTS.md</code> raíz con ese check como mecanismo <a class="s p" href="#P-correct">P-correct:28</a>.
+</li></ul>
+</li></ul>
 <h2 id="s7"><span class="n">7</span>Hooks</h2>
 <h3 id="s7-1">7.1 Hooks del modo (en el plugin)</h3>
 <p>Controlan <b>cómo trabaja el agente</b>, sea cual sea el proyecto <a class="s vex" href="#VEX">VEX</a> <a class="s a" href="#A-hooks">A-hooks</a>.</p>
 <table>
   <tr><th>Hook</th><th>Qué hace</th><th>Cuándo actúa</th><th>Fuente de la regla</th></tr>
-  <tr><td><code>SessionStart</code></td><td>Inyecta la lista de lecturas y <code>worker.md</code></td><td>Solo con la marca de <code>/vex-mode</code> <a class="s vex" href="#VEX">VEX</a></td><td><a class="s p" href="#P-mode">P-mode:20</a> + el fallo documentado en <a class="s i" href="#I-726">I-726</a></td></tr>
+  <tr><td><code>PreInvocation</code></td><td>Con <code>/vex-mode</code>: marca la sesión e inyecta una vez la lista de lecturas (con <code>worker.md</code>). Con cualquier otro <code>/&lt;skill&gt;</code> del plugin: inyecta su texto y su carpeta, una vez por mensaje</td><td>Con <code>/&lt;skill&gt;</code> del plugin <a class="s vex" href="#VEX">VEX</a></td><td><a class="s p" href="#P-mode">P-mode:20</a> + el fallo documentado en <a class="s i" href="#I-726">I-726</a> + <a class="s a" href="#A-probe-slash">A-probe-slash</a></td></tr>
   <tr><td><code>PreToolUse</code></td><td><b>Pausa y pide confirmación</b> ante lo irreversible (force-push a ramas compartidas, deploy, borrado de datos). No bloquea sin salida</td><td><b>Siempre</b></td><td><a class="s p" href="#P-mode">P-mode:78</a> ("Always pause", no "prohibir") <a class="s mia" href="#MIA">MÍA</a></td></tr>
   <tr><td><code>Stop</code></td><td>No deja cerrar una tarea sin evidencia de verificación</td><td>Solo con la marca de <code>/vex-mode</code> <a class="s vex" href="#VEX">VEX</a></td><td><a class="s p" href="#P-prove">P-prove:9</a></td></tr>
 </table>
+<p>El mecanismo del hook <code>Stop</code> se prototipó antes de fijarlo, como indica <a class="s p" href="#P-mode">P-mode</a>: lo que se puede decidir ejecutando algo, se prototipa. El resultado está en <code>docs/decisions/2026-11-18-hook-probe.md</code>. En agy, <code>{}</code> en <code>PreToolUse</code> deniega y <code>force_ask</code> en <code>agy -p</code> no ejecuta el comando y termina el turno <a class="s a" href="#A-hooks">A-hooks</a>.</p>
 <div class="mermaid">
 flowchart LR
-  S([Sesión en agy]) --> M{¿Se invocó /vex-mode?}
-  M -- no --> N[Solo PreToolUse:<br/>pausa ante lo irreversible]
-  M -- sí --> K[Marca de sesión]
-  K --> SS[SessionStart:<br/>inyecta lecturas + worker.md]
-  K --> PT[PreToolUse:<br/>pausa ante lo irreversible]
+  P([Mensaje del usuario]) --> Q{¿Empieza con /skill del plugin?}
+  Q -- /vex-mode --> K[PreInvocation:<br/>marca + lista de lecturas]
+  Q -- otra skill --> I[PreInvocation:<br/>texto y carpeta de la skill]
+  Q -- no --> N[Sin inyección]
   K --> ST[Stop:<br/>exige evidencia]
+  P --> PT[PreToolUse, siempre:<br/>pausa ante lo irreversible y ante merge o push a main]
 </div>
-<p>El mecanismo exacto del hook <code>Stop</code> (qué cuenta como evidencia) se prototipa antes de fijarlo <a class="s mia" href="#MIA">MÍA</a>. Así lo indica <a class="s p" href="#P-mode">P-mode</a>: lo que se puede decidir ejecutando algo, se prototipa.</p>
-
 <h3 id="s7-2">7.2 Hooks de cada proyecto (en cada repo, no en vex-mode)</h3>
 <ul>
-  <li>Las reglas del código de un proyecto viven en <b>lint + CI de ese proyecto</b>, no en hooks. Un hook solo corre cuando usas Antigravity, mientras que CI aplica a cualquiera: humano, Claude Code u otro agente <a class="s p" href="#P-correct">P-correct:26</a> <a class="s t" href="#T-talk">T-talk</a></li>
-  <li>El hook del proyecto es mínimo: un <code>PostToolUse</code> que ejecuta el <code>check</code> del repo después de cada edición y le devuelve el error al agente al momento <a class="s vex" href="#VEX">VEX</a> <a class="s mia" href="#MIA">MÍA</a></li>
-  <li>Lo genera <code>agent-ready</code> (§10). vex-mode no trae hooks de proyecto <a class="s vex" href="#VEX">VEX</a></li>
-</ul>
-
+<li>Las reglas del código de un proyecto viven en <b>lint + CI de ese proyecto</b>, no en hooks. Un hook solo corre cuando usas Antigravity, mientras que CI aplica a cualquiera: humano, Claude Code u otro agente <a class="s p" href="#P-correct">P-correct:26</a> <a class="s t" href="#T-talk">T-talk</a>.
+</li>
+<li>El hook del proyecto es mínimo: un <code>Stop</code> que, si hay cambios, ejecuta el <code>check</code> del repo y, si falla, devuelve <code>continue</code> con el error, así el agente lo arregla antes de terminar. No es <code>PostToolUse</code> porque agy ignora su salida (espera <code>{}</code>); <code>Stop</code> con <code>continue</code> sí llega al agente, probado en un workspace con <code>agy -p</code> <a class="s a" href="#A-hooks-doc">A-hooks-doc</a> <a class="s a" href="#A-probe-m4">A-probe-m4</a>. Un contador propio limita los reintentos, porque <code>continuationActive</code> no funciona en agy <a class="s vex" href="#VEX">VEX</a>.
+</li>
+<li>Lo genera <code>agent-ready</code> (§10). vex-mode no trae hooks de proyecto <a class="s vex" href="#VEX">VEX</a>.
+</li></ul>
 <h2 id="s8"><span class="n">8</span>Verificación y evals, en tres niveles</h2>
-<p>Aprobaste los tres niveles de esta sección <a class="s vex" href="#VEX">VEX</a>.</p>
-<div class="grid3">
-  <div class="card"><h4 style="color:var(--c-p)">1 · Checks estructurales</h4><p style="margin:0;font-size:.92rem">Deterministas y baratos, de cada skill.<br><b>Dónde:</b> <code>checks/</code> de vex-mode, en CI.</p></div>
-  <div class="card"><h4 style="color:var(--c-t)">2 · Evals de comportamiento</h4><p style="margin:0;font-size:.92rem">¿El cambio hace que el agente trabaje mejor?<br><b>Dónde:</b> <code>evals/&lt;skill&gt;/</code>, fuera de <code>skills/</code>.</p></div>
-  <div class="card"><h4 style="color:var(--c-a)">3 · Verificación del proyecto</h4><p style="margin:0;font-size:.92rem">¿La app funciona?<br><b>Dónde:</b> en cada repo de proyecto (<code>verify-&lt;app&gt;</code>).</p></div>
-</div>
-
-<h3 id="s8-1">8.1 Checks estructurales de cada skill → <code>checks/</code>, en CI</h3>
-<p>Son deterministas y baratos. <i>"Test cases if structural. Skip if subjective"</i> <a class="s p" href="#P-authoring">P-authoring:7</a>. Qué revisan:</p>
+<p><a class="s vex" href="#VEX">VEX</a> aprobó los tres puntos de esta sección.</p>
+<h3 id="s8-1">8.1 Checks estructurales de cada skill → <code>checks/</code> en vex-mode, en CI</h3>
 <ul>
-  <li>El frontmatter tiene <code>name</code> y <code>description</code>.</li>
-  <li>Los archivos referenciados existen y los enlaces resuelven <a class="s p" href="#P-authoring">P-authoring</a></li>
-  <li>Las rutas que nombra la lista de lecturas existen <a class="s i" href="#I-726">I-726</a></li>
-  <li>Cada regla de la tabla del <code>AGENTS.md</code> raíz apunta a un mecanismo que existe en el repo. Es la regla que pstack predica y no se aplica a sí mismo <a class="s p" href="#P-encode">P-encode</a> <a class="s aud" href="#AUD">AUD</a></li>
-  <li>Presupuesto de tamaño por skill <a class="s p" href="#P-authoring">P-authoring:10</a> <a class="s mia" href="#MIA">MÍA</a></li>
-</ul>
-
-<h3 id="s8-2">8.2 Evals de comportamiento → <code>evals/&lt;skill&gt;/</code>, fuera de <code>skills/</code></h3>
+<li>Son deterministas y baratos. <i>"Test cases if structural. Skip if subjective"</i> <a class="s p" href="#P-authoring">P-authoring:7</a>.
+</li>
+<li>Qué revisan:
 <ul>
-  <li><b>Por qué fuera de la carpeta de la skill:</b> el candidato no puede ver ningún directorio, archivo o prompt con <code>eval</code>, <code>test</code>, <code>judge</code>, <code>rubric</code>… <a class="s p" href="#P-eval">P-eval:7</a>. La carpeta de una skill es lo que el agente carga, así que una rúbrica guardada ahí contamina el resultado.</li>
-  <li><b>Método</b>, tomado de pstack:
-    <ul>
-      <li>Entornos sanitizados y un prompt que parezca una petición real.</li>
-      <li>Un juez ciego de otra familia de modelos <a class="s p" href="#P-eval">P-eval:21</a></li>
-      <li>La cadena se verifica con los transcripts, no con lo que el agente dice de sí mismo <a class="s p" href="#P-eval">P-eval:22</a></li>
-    </ul></li>
-  <li><b>El juez usa solo modelos de agy</b> <a class="s vex" href="#VEX">VEX</a>
-    <ul>
-      <li>Si <code>agy models</code> ofrece más de una familia, el juez es de una familia distinta a la del candidato <a class="s p" href="#P-eval">P-eval:21</a></li>
-      <li>Si solo hay una familia, el juez usa otro modelo o tamaño de esa familia y el resultado lo declara como limitación (desviación, §11).</li>
-      <li>Los evals corren en local con tu sesión de agy, no en CI. CI solo comprueba el hash <a class="s mia" href="#MIA">MÍA</a></li>
-    </ul></li>
-  <li><b>Mejora sobre pstack:</b> se guarda cada resultado. pstack no publica ninguno <a class="s aud" href="#AUD">AUD</a></li>
-  <li><b>Política de CI</b> <a class="s vex" href="#VEX">VEX</a>: un PR que modifica una skill tiene que incluir un resultado de eval reciente para esa versión. Los evals no se ejecutan en cada PR, por costo.
-    <ul><li>Mecanismo propuesto: cada resultado registra el hash del <code>SKILL.md</code> evaluado, y CI compara ese hash con el actual <a class="s mia" href="#MIA">MÍA</a></li></ul></li>
-</ul>
-
+<li>El frontmatter tiene <code>name</code> y <code>description</code>.
+</li>
+<li>Los archivos referenciados existen y los enlaces resuelven <a class="s p" href="#P-authoring">P-authoring</a>.
+</li>
+<li>Las rutas que nombra la lista de lecturas existen <a class="s i" href="#I-726">I-726</a>.
+</li>
+<li>Cada regla de la tabla del <code>AGENTS.md</code> raíz apunta a un mecanismo que existe en el repo. Es la regla que pstack predica y no se aplica a sí mismo <a class="s p" href="#P-encode">P-encode</a> <a class="s aud" href="#AUD">AUD</a>.
+</li>
+<li>Presupuesto de tamaño por skill <a class="s p" href="#P-authoring">P-authoring:10</a> <a class="s mia" href="#MIA">MÍA</a>.
+</li></ul>
+</li></ul>
+<h3 id="s8-2">8.2 Evals de comportamiento → <code>evals/&lt;skill&gt;/</code> en vex-mode, fuera de <code>skills/</code></h3>
+<p><i>Revisado el 2026-11-18 tras releer las fuentes (§13) y probar agy 1.5.11 <a class="s a" href="#A-cli">A-cli</a>.</i></p>
+<ul>
+<li><b>Para qué:</b> <i>"A skill is a process you measure, and then you make shorter."</i> <a class="s t" href="#T-robson">T-robson</a>. Un eval es <i>"a unit test for an agent"</i> <a class="s t" href="#T-talk">T-talk</a> <a class="s t" href="#T-maily">T-maily</a>.
+</li>
+<li><b>Por qué fuera de la carpeta de la skill:</b> el candidato no puede ver ningún directorio, archivo o prompt con <code>eval</code>, <code>test</code>, <code>judge</code>, <code>rubric</code>… <a class="s p" href="#P-eval">P-eval:7</a>. La carpeta de una skill es lo que el agente carga, así que una rúbrica guardada ahí contamina el resultado.
+</li>
+<li><b>Qué se reutiliza:</b> el playbook <code>eval.md</code> se copia tal cual de pstack y se adapta a agy <a class="s p" href="#P-eval">P-eval</a> <a class="s vex" href="#VEX">VEX</a>.
+<ul>
+<li>Sus pasos 4 y 5 delegan en <code>arena</code> (fases B y C) para lanzar candidatos y juez <a class="s p" href="#P-eval">P-eval:20-21</a>. En agy esas dos fases las ejecuta un arnés determinista, <code>evals/run.py</code>, con <code>agy -p</code>, porque así el modelo de cada candidato queda fijado por flag (<code>--model</code>) <a class="s a" href="#A-cli">A-cli</a> <a class="s mia" href="#MIA">MÍA</a>.
+</li>
+<li><code>arena</code> no se copia en M2. La referencia queda en <code>removed_refs</code> para restaurarla cuando se traiga como skill de diseño <a class="s mia" href="#MIA">MÍA</a>.
+</li>
+<li><code>principle-explain-the-number</code> se copia, porque fija cómo leer el número de un eval: cuántas ejecuciones, la dispersión y si la diferencia supera el ruido <a class="s p" href="#P-explain">P-explain</a>.
+</li></ul>
+</li>
+<li><b>Método</b> (el de pstack):
+<ul>
+<li>Entornos sanitizados.
+</li>
+<li>Un prompt que parezca una petición real.
+</li>
+<li>Un juez ciego de otra familia de modelos, llamado por API <a class="s p" href="#P-eval">P-eval:21</a> <a class="s vex" href="#VEX">VEX</a>.
+</li>
+<li>La cadena se verifica con los transcripts, no con lo que el agente dice de sí mismo <a class="s p" href="#P-eval">P-eval:22</a>.
+</li></ul>
+</li>
+<li><b>El juez es de otra familia y se llama por API, no por agy</b> <a class="s vex" href="#VEX">VEX</a> <a class="s p" href="#P-eval">P-eval:21</a>. Los candidatos siguen corriendo con <code>agy -p</code>; el juez no es un agente, solo lee el material y devuelve el veredicto, así que va directo a la API del proveedor <a class="s vex" href="#VEX">VEX</a>.
+<ul>
+<li><b>Configurable:</b> <code>evals/judge.json</code> (versionado) fija <code>provider</code> (<code>openai</code>, <code>anthropic</code> o <code>agy</code>), <code>model</code> y <code>effort</code>. <code>VEX_JUDGE_PROVIDER</code> y <code>VEX_JUDGE_MODEL</code> lo pisan para una corrida puntual. Por defecto: <code>openai</code>, <code>gpt-6.2-sol</code>, effort <code>medium</code> <a class="s vex" href="#VEX">VEX</a>.
+</li>
+<li><b>API key:</b> nunca en el repo. Se lee de la variable del proveedor (<code>OPENAI_API_KEY</code>, <code>ANTHROPIC_API_KEY</code>) o, si no está, de <code>~/.config/vex-mode/secrets.env</code> (permisos 600), que también usa el timer semanal <a class="s vex" href="#VEX">VEX</a> <a class="s mia" href="#MIA">MÍA</a>.
+</li>
+<li><b>Por qué salió de agy:</b> en M4 el juez por agy falló tres veces por el harness, no por el modelo: un prompt de 213 KB como argumento (<code>E2BIG</code>), la lectura denegada fuera de su workspace y la cuota de Claude agotada <a class="s a" href="#A-probe-m4">A-probe-m4</a> (<code>docs/decisions/2026-11-19-m4-eval.md</code>).
+</li>
+<li><b>Salida estructurada:</b> OpenAI Responses API con <code>text.format</code> <code>json_schema</code> y <code>strict</code> <a class="s a" href="#A-openai-so">A-openai-so</a>; Anthropic Messages API con <code>output_config.format</code> <a class="s a" href="#A-anthropic">A-anthropic</a>. El arnés igual valida cada etiqueta y criterio (§8.2, <code>judge.check_verdict</code>).
+</li>
+<li>El arnés rechaza un juez de la misma familia que los candidatos.
+</li></ul>
+</li>
+<li><b>Transcripts:</b> cada ejecución se guarda con <code>agy -p --output-format stream-json</code>. Ese formato registra cada <code>read_file</code> y <code>run_command</code> con su ruta, y el uso de tokens <a class="s a" href="#A-cli">A-cli</a>. El juez devuelve un veredicto estructurado con el JSON schema de la API de su proveedor.
+</li>
+<li><b>Tres medidas por ejecución, no solo cumplimiento</b> <a class="s i" href="#I-1178">I-1178</a> <a class="s vex" href="#VEX">VEX</a>:
+<ol>
+<li><b>Cumplimiento:</b> la rúbrica de 3 a 6 criterios, calificada por el juez <a class="s p" href="#P-eval">P-eval:17</a>.
+</li>
+<li><b>Resultado:</b> un script de comprobación del caso, que se ejecuta en el directorio del candidato después de la ejecución y nunca se le muestra.
+</li>
+<li><b>Costo:</b> tokens y duración, tomados del evento <code>result</code> del transcript.
+</li></ol>
+</li>
+<li><b>Una sola palanca por comparación</b> <a class="s i" href="#I-1178">I-1178</a>. Cada caso corre tres brazos:
+<ul>
+<li>A: la skill base (la de <code>main</code>).
+</li>
+<li>B: la variante.
+</li>
+<li>C: la base con un modelo mejor (línea base de "solo cambiar de modelo").
+</li>
+<li>A↔B cambia solo la skill; A↔C cambia solo el modelo. El arnés construye los brazos; el caso no puede definir otros.
+</li></ul>
+</li>
+<li><b>Lectura del número</b> <a class="s p" href="#P-explain">P-explain</a>: por defecto 3 ejecuciones por brazo. El resultado guarda la media y la dispersión de cada medida, y marca una diferencia como ruido cuando la dispersión es mayor que el efecto.
+</li>
+<li><b>Aislamiento del candidato</b> <a class="s i" href="#I-877">I-877</a> <a class="s a" href="#A-cli">A-cli</a>:
+<ul>
+<li>agy carga los plugins globalmente, y <code>--settings</code> no puede apagarlos por sesión <a class="s a" href="#A-cli">A-cli</a>. Además, el hook de activación inyecta rutas absolutas del plugin instalado. Por eso cada brazo <b>instala su variante del plugin</b> antes de sus ejecuciones, y el arnés reinstala la original al terminar, también si falla.
+</li>
+<li><code>agy plugin install &lt;dir&gt;</code> copia la carpeta entera, incluidos <code>.git</code>, <code>docs/</code> y <code>evals/</code> <a class="s a" href="#A-cli">A-cli</a>. Un candidato podría leer las rúbricas. Por eso se instala siempre desde <code>scripts/build_plugin.py</code>, que exporta solo las partes del plugin (<code>plugin.json</code>, <code>skills/</code>, <code>agents/</code>, <code>rules/</code>, <code>hooks.json</code>, <code>hooks/</code>, <code>LICENSES/</code>).
+</li>
+<li>Antes de calificar, el arnés verifica en el transcript qué copia se leyó: toda lectura de archivos de la skill debe venir del plugin instalado con el hash del brazo. Si no, la ejecución se invalida.
+</li>
+<li>Los proyectos de los candidatos viven en un directorio de trabajo con nombre de proyecto, fuera del repo.
+</li></ul>
+</li>
+<li><b>Los evals corren en local</b> con tu sesión de agy, no en CI. CI solo comprueba el hash <a class="s mia" href="#MIA">MÍA</a>.
+</li>
+<li><b>Mejora sobre pstack:</b> se guarda cada resultado. pstack no publica ninguno <a class="s aud" href="#AUD">AUD</a>. Se versiona un resumen JSON por eval en <code>evals/&lt;skill&gt;/results/</code>; los transcripts completos quedan en local, por tamaño y privacidad <a class="s mia" href="#MIA">MÍA</a>.
+</li>
+<li><b>Política de CI (aprobada <a class="s vex" href="#VEX">VEX</a>):</b> un PR que modifica una skill tiene que incluir un resultado de eval para esa versión. Los evals no se ejecutan en cada PR, por costo.
+<ul>
+<li>El hash cubre <b>toda la carpeta de la skill</b> (<code>SKILL.md</code>, playbooks y archivos auxiliares), no solo <code>SKILL.md</code>, porque los playbooks también cambian el comportamiento <a class="s mia" href="#MIA">MÍA</a>.
+</li>
+<li>CI calcula qué skills cambiaron respecto de <code>main</code> y exige, para cada una, un resultado con el hash actual.
+</li>
+<li><b>Exención explícita:</b> un resultado de tipo <code>waiver</code> con motivo, para cambios donde un eval no mide nada (por ejemplo, una skill que solo dirige el propio eval). La exención queda visible en el PR y la aceptas o rechazas tú <a class="s mia" href="#MIA">MÍA</a>.
+</li></ul>
+</li>
+<li><b>Formato de un caso:</b> <code>evals/&lt;skill&gt;/cases/&lt;caso&gt;/</code> con <code>prompt.md</code> (lo que vería el candidato), <code>rubric.md</code> (solo para el juez), <code>project/</code> (el proyecto que se copia al candidato), <code>check.py</code> (la comprobación de resultado) y <code>case.json</code> (modelos de los candidatos y número de ejecuciones; el juez es global, en <code>evals/judge.json</code>). Un check estructural impide palabras delatoras en <code>prompt.md</code>, en <code>project/</code> y en los nombres de directorio que ve el candidato <a class="s p" href="#P-eval">P-eval:7</a>.
+</li></ul>
 <h3 id="s8-3">8.3 Verificación de cada proyecto → en cada repo de proyecto</h3>
 <ul>
-  <li>vex-mode trae <code>create-verification-skill</code>, que genera en cada proyecto un <code>verify-&lt;app&gt;</code> con launch, doctor, drive, evidence, cleanup y un feature map <a class="s p" href="#P-verify">P-verify:3</a> <a class="s p" href="#P-verify">P-verify:34</a></li>
-  <li>Un skill generado que nunca se ejecutó es solo un borrador <a class="s p" href="#P-verify">P-verify:40</a></li>
-  <li>Es lo que permite el automerge en Dune <a class="s t" href="#T-maily">T-maily</a> <a class="s t" href="#T-talk">T-talk</a>:</li>
-</ul>
-<blockquote>"Without verification skills, you become the verifier."</blockquote>
-
+<li>vex-mode trae <code>create-verification-skill</code>, que genera en cada proyecto un <code>verify-&lt;app&gt;</code> con estas partes: launch, doctor, drive, evidence, cleanup y un feature map <a class="s p" href="#P-verify">P-verify:3</a> <a class="s p" href="#P-verify">P-verify:34</a>.
+</li>
+<li>Un skill generado que nunca se ejecutó es solo un borrador <a class="s p" href="#P-verify">P-verify:40</a>.
+</li>
+<li><b>Además tiene que demostrar que puede fallar.</b> Por cada feature que recorre, rompe a propósito ese comportamiento, exige que el recorrido falle en la afirmación que lo nombra y registra la rotura en la sección <code>## Breaks</code> del archivo de la feature. <code>maintain-verification-skill</code> vuelve a ejecutar esas roturas en los recorridos que cambia. En el issue, las skills generadas dejaban pasar 7 de 12 roturas; con este paso atraparon 16 de 16 <a class="s i" href="#I-1271">I-1271</a>.
+</li>
+<li>El skill generado vive en <code>.agents/skills/verify-&lt;app&gt;/</code>, la ubicación de skills de workspace en agy <a class="s a" href="#A-skills">A-skills</a>.
+</li>
+<li>Es lo que permite el automerge en Dune: <i>"Without verification skills, you become the verifier"</i> <a class="s t" href="#T-maily">T-maily</a> <a class="s t" href="#T-talk">T-talk</a>.
+</li></ul>
 <h3 id="s8-4">8.4 CI de vex-mode</h3>
 <p><code>agy plugin validate --strict</code> <a class="s a" href="#A-validate">A-validate</a> + <code>checks/</code> + la política de evals de §8.2.</p>
-
 <h2 id="s9"><span class="n">9</span>Bucle de auto-mejora (lo que hace al repo AI-faced)</h2>
 <div class="mermaid">
 flowchart LR
-  T[⏱ Timer semanal] --> C[correct:<br/>mina commits, reverts, reviews]
+  T[⏱ Timer semanal] --> PF{Preflight:<br/>plugin con correct y guardián,<br/>sin eval en curso}
+  PF -- no --> X[Notifica y no corre]
+  PF -- sí --> C[correct en un worktree:<br/>mina commits, reverts, reviews]
   W[Tarea larga terminada] --> R[reflect:<br/>edita una skill existente]
-  C --> F[Fix en el nivel más alto:<br/>arquitectura → tipos/lint → test → docs]
-  R --> PR
-  F --> PR[PR desde worktree]
-  PR --> CI{CI + eval<br/>si toca una skill}
+  C --> F[Fix en el nivel más alto + eval si toca una skill]
+  F --> S[El script pushea la rama y abre el PR]
+  R --> PR[PR]
+  S --> PR
+  PR --> CI{CI}
   CI -- verde --> H[👤 Tú haces el merge]
   CI -- rojo --> F
 </div>
 <ol>
-  <li><b><code>correct</code>:</b> mina commits, reverts y reviews, y agrupa los errores en clases (una clase cuenta cuando ocurrió 2 veces). Cada clase se arregla en el nivel más alto que funcione: arquitectura, después tipos y lint, después test, y docs al final. Cada check nuevo tiene que demostrar que falla con un error real del pasado <a class="s p" href="#P-correct">P-correct:15-26</a></li>
-  <li><b><code>reflect</code>:</b> al terminar una tarea larga, convierte lo aprendido en una edición concreta de una skill existente. Un hallazgo solo se guarda si seguirá siendo cierto en 6 meses <a class="s p" href="#P-reflect">P-reflect:13</a></li>
-  <li><b><code>show-me-your-work</code>:</b> guarda las decisiones en <code>decisions.tsv</code> <a class="s p" href="#P-smyw">P-smyw:46</a>. En este repo va en <code>docs/decisions/</code>, porque el repo vive de su propio historial <a class="s mia" href="#MIA">MÍA</a></li>
-  <li><b>Cómo entra un cambio:</b> como PR desde un worktree, con la plantilla de <code>worker.md</code>. Solo entra si pasa CI (§8.4) y, cuando toca una skill, el eval (§8.2) <a class="s p" href="#P-worker">P-worker</a> <a class="s vex" href="#VEX">VEX</a></li>
-  <li><b>Disparo programado, y el merge lo haces tú</b> <a class="s vex" href="#VEX">VEX</a>
-    <ul>
-      <li>Una ejecución periódica corre <code>correct</code> sobre el historial reciente y deja PRs.</li>
-      <li><b>Ningún PR de la IA se mergea solo.</b> Es el primer peldaño de la escalera de confianza de poteto: el automerge se gana después, con evidencia acumulada <a class="s t" href="#T-maily">T-maily</a> <a class="s t" href="#T-talk">T-talk</a></li>
-      <li>Mecanismo propuesto: un timer de systemd de usuario que ejecuta <code>agy -p</code> en local, porque GitHub Actions no tiene tu sesión de agy. Propongo frecuencia semanal <a class="s mia" href="#MIA">MÍA</a></li>
-    </ul></li>
-  <li><b>Nunca sobreajustar</b> a una sola conversación: hacen falta varias repeticiones para convertir algo en regla <a class="s p" href="#P-automate">P-automate:87</a></li>
-</ol>
-
+<li><b><code>correct</code>:</b> mina commits, reverts y reviews, y agrupa los errores en clases (una clase cuenta cuando ocurrió 2 veces). Cada clase se arregla en el nivel más alto que funcione: arquitectura, después tipos y lint, después test, y docs al final. Cada check nuevo tiene que demostrar que falla con un error real del pasado <a class="s p" href="#P-correct">P-correct:15-26</a>.
+</li>
+<li><b><code>reflect</code>:</b> al terminar una tarea larga, convierte lo aprendido en una edición concreta de una skill existente. Un hallazgo solo se guarda si seguirá siendo cierto en 6 meses <a class="s p" href="#P-reflect">P-reflect:13</a>.
+<ul>
+<li>Lee el transcript completo de la conversación, que agy guarda en <code>&lt;directorio de artefactos&gt;/.system_generated/logs/transcript.jsonl</code> y nombra en el prompt del agente. Como el archivo es completo, lo que una compactación resumió sigue ahí <a class="s p" href="#P-reflect">P-reflect:11</a> <a class="s a" href="#A-transcript">A-transcript</a> <a class="s i" href="#I-875">I-875</a>.
+</li>
+<li><b>Destino de la edición:</b> si la skill es de vex-mode, la edita en un worktree del repo y abre un PR que mergeas tú, siguiendo "How to change a skill" del <code>AGENTS.md</code>. Si es de otro plugin, sigue a pstack: edita una copia en <code>.agents/skills/&lt;skill&gt;/</code> o <code>~/.gemini/config/skills/&lt;skill&gt;/</code> y nunca abre PRs <a class="s p" href="#P-reflect">P-reflect:17</a> <a class="s a" href="#A-skills">A-skills</a> <a class="s vex" href="#VEX">VEX</a>.
+</li></ul>
+</li>
+<li><b><code>show-me-your-work</code>:</b> guarda las decisiones en <code>decisions.tsv</code> <a class="s p" href="#P-smyw">P-smyw:46</a>. Por defecto no se commitea; se commitea cuando un revisor necesita el rastro para confiar en el resultado <a class="s p" href="#P-smyw">P-smyw:48</a>. En este repo, un rastro commiteado va en <code>docs/decisions/&lt;fecha&gt;-&lt;tema&gt;.tsv</code>, porque el repo vive de su propio historial <a class="s mia" href="#MIA">MÍA</a>.
+<ul>
+<li>La auditoría del final lee el transcript de agy de esa conversación <a class="s p" href="#P-smyw">P-smyw:57</a> <a class="s a" href="#A-transcript">A-transcript</a>.
+</li>
+<li>La revisión cruzada del rastro usa <code>agy --model &lt;modelo de otra familia&gt; -p &quot;&lt;prompt&gt;&quot;</code>, igual que el juez de los evals <a class="s p" href="#P-smyw">P-smyw:67</a> <a class="s i" href="#I-1159">I-1159</a> <a class="s a" href="#A-cli">A-cli</a>.
+</li></ul>
+</li>
+<li><b>Cómo entra un cambio:</b> como PR desde un worktree, con la plantilla de <code>worker.md</code>. Solo entra si pasa CI (§8.4) y, cuando toca una skill, el eval (§8.2) <a class="s p" href="#P-worker">P-worker</a> <a class="s vex" href="#VEX">VEX</a>.
+</li>
+<li><b>Disparo programado, y el merge lo haces tú</b> <a class="s vex" href="#VEX">VEX</a>.
+<ul>
+<li>Una ejecución periódica corre <code>correct</code> sobre el historial reciente y deja PRs.
+</li>
+<li><b>Ningún PR de la IA se mergea solo.</b> Es el primer peldaño de la escalera de confianza de poteto: el automerge se gana después, con evidencia acumulada <a class="s t" href="#T-maily">T-maily</a> <a class="s t" href="#T-talk">T-talk</a>.
+</li>
+<li><b>Mecanismo:</b> un timer de systemd de usuario, semanal (domingo 03:00, <code>Persistent=true</code>), que ejecuta <code>scripts/scheduled_correct.py</code> en local, porque GitHub Actions no tiene tu sesión de agy <a class="s vex" href="#VEX">VEX</a> <a class="s mia" href="#MIA">MÍA</a>.
+</li>
+<li>El script crea un worktree desde <code>origin/main</code> en una rama <code>correct/&lt;fecha&gt;</code> (sin upstream) y ejecuta <code>agy --model … -p &quot;/correct …&quot;</code> sobre los commits y PRs de los últimos 7 días.
+</li>
+<li><b>El agente solo commitea.</b> El push de la rama y el <code>gh pr create</code> los hace el script al terminar, así el agente nunca necesita una vía hacia <code>main</code> <a class="s vex" href="#VEX">VEX</a> (revisión final de M3).
+</li>
+<li><b>Antes de empezar, el script se niega</b> si el plugin instalado no tiene <code>correct</code>, si su hook de pausa no bloquea <code>gh pr merge</code>, o si un eval tiene el plugin reemplazado. Avisa con una notificación en cada fallo y conserva el worktree si quedó trabajo sin commitear.
+</li>
+<li>Si <code>correct</code> cambia una skill, un hook o una regla, la misma ejecución corre el eval (§8.2) y deja el resultado en el PR, así el CI del PR pasa sin que intervengas <a class="s vex" href="#VEX">VEX</a>.
+</li>
+<li>El rastro de decisiones de la ejecución se commitea en el PR (<code>show-me-your-work</code>), porque nadie la vio correr <a class="s p" href="#P-smyw">P-smyw:48</a>.
+</li>
+<li><b>Qué hace cumplir "no se mergea solo":</b> que el agente no pushea (lo hace el script) y el hook de pausa, que trata <code>gh pr merge</code>, los merges por <code>gh api</code> y cualquier push a <code>main</code> como irreversibles. El repo es privado sin GitHub Pro, así que no hay protección de rama del lado del servidor. En <code>agy -p</code> un <code>force_ask</code> no se ejecuta, porque no hay humano que confirme <a class="s a" href="#A-hooks">A-hooks</a> (<code>docs/decisions/2026-11-18-hook-probe.md</code>).
+</li>
+<li><b>Costo conocido:</b> el eval reemplaza el plugin instalado mientras corre (unos 70 minutos). Si el timer se pone al día al iniciar sesión, una sesión tuya de agy en ese rato ve la variante; el arnés restaura tu plugin al terminar.
+</li></ul>
+</li>
+<li><b>Nunca sobreajustar</b> a una sola conversación: hacen falta varias repeticiones para convertir algo en regla <a class="s p" href="#P-automate">P-automate:87</a>.
+</li></ol>
 <h2 id="s10"><span class="n">10</span><code>agent-ready</code>: el generador para otros repos</h2>
 <p>Aplica la tesis de poteto sobre repos preparados para agentes <a class="s t" href="#T-talk">T-talk</a> <a class="s t" href="#T-redreamality">T-redreamality</a>. Genera en el proyecto destino:</p>
 <ul>
-  <li>Un <code>AGENTS.md</code> con la tabla regla → mecanismo <a class="s p" href="#P-correct">P-correct:28</a></li>
-  <li>Un <code>verify-&lt;app&gt;</code>, mediante <code>create-verification-skill</code> <a class="s p" href="#P-verify">P-verify</a></li>
-  <li>Un script <code>check</code> que corre igual en local y en CI <a class="s p" href="#P-correct">P-correct:26</a></li>
-  <li>Un <code>.agents/hooks.json</code> con un <code>PostToolUse</code> que ejecuta ese <code>check</code> <a class="s a" href="#A-hooks">A-hooks</a> <a class="s vex" href="#VEX">VEX</a></li>
-</ul>
+<li>Un <code>AGENTS.md</code> con la tabla regla → mecanismo <a class="s p" href="#P-correct">P-correct:28</a>.
+</li>
+<li>Un <code>verify-&lt;app&gt;</code>, mediante <code>create-verification-skill</code> <a class="s p" href="#P-verify">P-verify</a>.
+</li>
+<li>Un script <code>check</code> que corre igual en local y en CI <a class="s p" href="#P-correct">P-correct:26</a>.
+</li>
+<li>Un <code>.agents/hooks.json</code> con un <code>Stop</code> que ejecuta ese <code>check</code> cuando hay cambios y le devuelve el error al agente (§7.2) <a class="s a" href="#A-hooks-doc">A-hooks-doc</a> <a class="s a" href="#A-probe-m4">A-probe-m4</a> <a class="s vex" href="#VEX">VEX</a>.
+</li>
+<li>Si el repo tiene un remoto de GitHub, un workflow de GitHub Actions que ejecuta el mismo <code>check</code> <a class="s p" href="#P-correct">P-correct:26</a> <a class="s vex" href="#VEX">VEX</a>.
+</li>
+<li>Antes de entregar, demuestra que el <code>check</code> y el hook fallan con una rotura deliberada y vuelven a pasar al restaurarla <a class="s i" href="#I-1271">I-1271</a> <a class="s p" href="#P-correct">P-correct:26</a>.
+</li>
+<li><code>agent-ready</code> es texto original; reutiliza <code>correct</code> para la tabla de reglas y <code>create-verification-skill</code> para el <code>verify-&lt;app&gt;</code>, por referencia, sin copiarlos <a class="s vex" href="#VEX">VEX</a>.
+</li></ul>
 <p>Lo guía la pirámide invertida: primero arquitectura, después análisis estático, después verificación en runtime, y prosa al final <a class="s t" href="#T-talk">T-talk</a> <a class="s p" href="#P-correct">P-correct:19-22</a>.</p>
-
 <h2 id="s10b"><span class="n">10b</span>Hitos <a class="s vex" href="#VEX">VEX</a></h2>
 <p>Cada hito termina en un estado verificable antes de empezar el siguiente <a class="s p" href="#P-mode">P-mode</a> (principio sequence-verifiable-units).</p>
-<div class="ms">
-  <div class="card"><div class="k">M1</div><h4>Base</h4><ul>
-    <li>Esqueleto, <code>plugin.json</code>, <code>AGENTS.md</code> con la tabla de reglas, <code>rules/AGENTS.md</code></li>
-    <li><code>checks/</code> + CI con <code>agy plugin validate --strict</code></li>
-    <li>Router con bug-fix y feature, <code>worker.md</code> + <code>vex-agent</code></li>
-    <li>Hooks del modo con la marca de activación</li></ul></div>
-  <div class="card"><div class="k">M2</div><h4>Evals</h4><ul><li>Arnés de evals (§8.2)</li><li>Política de hash en CI</li></ul></div>
-  <div class="card"><div class="k">M3</div><h4>Auto-mejora</h4><ul><li><code>correct</code>, <code>reflect</code>, <code>show-me-your-work</code></li><li>Disparo programado (§9)</li></ul></div>
-  <div class="card"><div class="k">M4</div><h4>Otros repos</h4><ul><li><code>create-verification-skill</code></li><li><code>agent-ready</code> (§10)</li></ul></div>
-</div>
-
+<ul>
+<li><b>M1 — Base:</b>
+<ul>
+<li>Esqueleto del repo, <code>plugin.json</code>, <code>AGENTS.md</code> con la tabla de reglas y <code>rules/AGENTS.md</code>.
+</li>
+<li><code>checks/</code> y CI con <code>agy plugin validate --strict</code>.
+</li>
+<li>Router <code>vex-mode</code> con 2 playbooks (bug-fix y feature) y <code>worker.md</code> + <code>vex-agent</code>.
+</li>
+<li>Hooks del modo, con la marca de activación.
+</li></ul>
+</li>
+<li><b>M2 — Evals:</b> <code>eval.md</code> y <code>principle-explain-the-number</code> copiados de pstack, el arnés <code>evals/run.py</code>, <code>scripts/build_plugin.py</code>, el primer caso real y la política de hash en CI (§8.2).
+</li>
+<li><b>M3 — Auto-mejora:</b> <code>correct</code>, <code>reflect</code> y <code>show-me-your-work</code> copiados de pstack y adaptados, el disparador de <code>show-me-your-work</code> en el router, el guardián de merge en el hook de pausa, <code>scripts/scheduled_correct.py</code> con su timer, y la evidencia de evals del propio PR (§9).
+</li>
+<li><b>M4 — Otros repos:</b> <code>create-verification-skill</code> y <code>maintain-verification-skill</code> copiados de pstack y adaptados (#1271), <code>agent-ready</code> con su plantilla de hook <code>Stop</code>, y un eval real de <code>agent-ready</code> sobre un repo de muestra (§8.3, §10).
+</li></ul>
 <h2 id="s11"><span class="n">11</span>Desviaciones de pstack (documentadas a propósito)</h2>
 <table>
   <tr><th>Desviación</th><th>Motivo</th><th>Fuente</th></tr>
   <tr><td>Hooks en lugar de prosa para lecturas, autonomía y verificación</td><td>Los agentes ignoran las lecturas pedidas en prosa</td><td><a class="s i" href="#I-726">I-726</a> <a class="s i" href="#I-864">I-864</a> <a class="s t" href="#T-teamday">T-teamday</a></td></tr>
-  <tr><td>Núcleo mínimo y pausa ante lo irreversible siempre activos; el resto solo con <code>/vex-mode</code></td><td>Mantiene la activación manual de pstack, pero la seguridad no depende de acordarse</td><td><a class="s p" href="#P-mode">P-mode:4</a> <a class="s vex" href="#VEX">VEX</a></td></tr>
-  <tr><td>El juez de evals puede ser de la misma familia que el candidato si agy solo ofrece una</td><td>Elegiste usar solo modelos de agy</td><td><a class="s p" href="#P-eval">P-eval:21</a> <a class="s vex" href="#VEX">VEX</a></td></tr>
+  <tr><td>Núcleo mínimo siempre activo (<code>rules/AGENTS.md</code>) + pausa ante lo irreversible siempre activa. El resto solo con <code>/vex-mode</code></td><td>Mantiene la activación manual de pstack, pero la seguridad no depende de acordarse</td><td><a class="s p" href="#P-mode">P-mode:4</a> <a class="s vex" href="#VEX">VEX</a></td></tr>
+  <tr><td>Cada eval mide cumplimiento, resultado y costo, con una palanca por comparación y una línea base de cambio de modelo</td><td>Aprobar solo por cumplimiento dejó pasar un cambio caro que apenas mejoraba el resultado</td><td><a class="s i" href="#I-1178">I-1178</a> <a class="s vex" href="#VEX">VEX</a></td></tr>
+  <tr><td>Cuando el cambio evaluado toca el propio playbook de evals, el plugin del brazo B nombra "eval"</td><td>Es la skill bajo prueba: el candidato carga lo que se evalúa. Los casos, las rúbricas y el juez siguen ocultos</td><td><a class="s p" href="#P-eval">P-eval:7</a> <a class="s vex" href="#VEX">VEX</a></td></tr>
+  <tr><td>Las fases B y C de <code>arena</code> las ejecuta un arnés determinista con <code>agy -p</code>, no subagentes</td><td>En agy el modelo de cada candidato se fija por flag, y el aislamiento exige instalar cada variante</td><td><a class="s p" href="#P-eval">P-eval:20-21</a> <a class="s i" href="#I-877">I-877</a> <a class="s a" href="#A-cli">A-cli</a> <a class="s mia" href="#MIA">MÍA</a></td></tr>
+  <tr><td><code>create-verification-skill</code> exige que cada recorrido demuestre que puede fallar (pstack lo cerró como no planificado)</td><td>Una skill que solo se vio pasar parece probada y no lo está; sin esto no hay automerge posible</td><td><a class="s i" href="#I-1271">I-1271</a> <a class="s t" href="#T-maily">T-maily</a> <a class="s vex" href="#VEX">VEX</a></td></tr>
+  <tr><td>El hook de los proyectos es <code>Stop</code>, no <code>PostToolUse</code></td><td>agy ignora la salida de <code>PostToolUse</code></td><td><a class="s a" href="#A-hooks-doc">A-hooks-doc</a> <a class="s a" href="#A-probe-m4">A-probe-m4</a></td></tr>
+  <tr><td><code>hooks/activate.py</code> inyecta el texto y la carpeta de cualquier <code>/&lt;skill&gt;</code> del plugin</td><td>En <code>agy -p</code>, el <code>/&lt;skill&gt;</code> de un plugin no expande su texto: el modelo tiene que leer el <code>SKILL.md</code>, y en el eval de M4 los 3 candidatos con <code>agent-ready</code> leyeron otra skill en su lugar</td><td><a class="s a" href="#A-probe-slash">A-probe-slash</a> <a class="s i" href="#I-726">I-726</a></td></tr>
   <tr><td>Auto-mejora programada</td><td>pstack la dispara a mano</td><td><a class="s p" href="#P-correct">P-correct</a> <a class="s vex" href="#VEX">VEX</a></td></tr>
+  <tr><td><code>reflect</code> abre un PR cuando la skill es de vex-mode (pstack prohíbe PRs y edita una copia local)</td><td>Un cambio a vex-mode entra como PR con su eval (§9.4); una copia local nunca llegaría al repo</td><td><a class="s p" href="#P-reflect">P-reflect:17</a> <a class="s vex" href="#VEX">VEX</a></td></tr>
+  <tr><td>La ejecución programada corre el eval de lo que cambia</td><td>Sin resultado, el CI de su PR falla (§8.2); al estar desatendida, el tiempo no molesta</td><td><a class="s vex" href="#VEX">VEX</a></td></tr>
   <tr><td>Evals guardados y exigidos en CI</td><td>pstack no publica evidencia</td><td><a class="s aud" href="#AUD">AUD</a> <a class="s vex" href="#VEX">VEX</a></td></tr>
   <tr><td>Sin la regla de citar principios en cada respuesta</td><td>Se cumple solo en apariencia</td><td><a class="s i" href="#I-726">I-726</a></td></tr>
   <tr><td>Solo Antigravity</td><td>Los adaptadores de pstack degradaron la calidad</td><td><a class="s aud" href="#AUD">AUD</a> <a class="s vex" href="#VEX">VEX</a></td></tr>
 </table>
-
 <h2 id="s12"><span class="n">12</span>Qué queda para el implementador</h2>
 <ul>
-  <li>Qué principios entran exactamente (§6.5), con el criterio indicado.</li>
-  <li>El mecanismo del hook <code>Stop</code> (§7.1), que se decide con un prototipo.</li>
-  <li>El formato del resultado de eval y el hash (§8.2).</li>
-  <li>Los modelos por rol, según lo que ofrezca <code>agy models</code> después de iniciar sesión.</li>
-  <li>El idioma de las skills. Propuesta: el texto que lee el agente en inglés, que es el idioma de las fuentes que reutilizamos, y la documentación para humanos en español <a class="s mia" href="#MIA">MÍA</a></li>
-</ul>
-
+<li>Qué principios entran exactamente (§6.5), con el criterio indicado.
+</li>
+<li>El mecanismo del hook <code>Stop</code> (§7.1), que se decide con un prototipo.
+</li>
+<li>Los modelos por rol, según lo que ofrezca <code>agy models</code> después de iniciar sesión.
+</li>
+<li>El idioma de las skills. Propuesta mía: el texto que lee el agente en inglés, que es el idioma de las fuentes que reutilizamos, y la documentación para humanos en español <a class="s mia" href="#MIA">MÍA</a>.
+</li></ul>
 <h2 id="s13"><span class="n">13</span>Fuentes</h2>
-<p id="src" style="color:var(--muted)">Las <span style="color:var(--c-p)">P-…</span> son la fuente primaria (cursor/plugins, commit <code>35a9094</code>). Las <span style="color:var(--c-t)">T-…</span> son transcripciones automáticas o reseñas de terceros, no textos de la autora.</p>
 <table>
   <tr><th>Código</th><th>Fuente</th></tr>
-  <tr id="P-mode"><td><a class="s p" href="#P-mode">P-mode</a></td><td><a href="https://github.com/cursor/plugins/blob/35a9094/pstack/skills/poteto-mode/SKILL.md">pstack/skills/poteto-mode/SKILL.md</a>, con línea indicada</td></tr>
+  <tr id="P-mode"><td><a class="s p" href="#P-mode">P-mode</a></td><td><a href="https://github.com/cursor/plugins/blob/35a9094/pstack/skills/poteto-mode/SKILL.md">pstack/skills/poteto-mode/SKILL.md</a> (cursor/plugins@35a9094), con línea indicada</td></tr>
   <tr id="P-worker"><td><a class="s p" href="#P-worker">P-worker</a></td><td><a href="https://github.com/cursor/plugins/blob/35a9094/pstack/skills/poteto-mode/worker.md">pstack/skills/poteto-mode/worker.md</a></td></tr>
   <tr id="P-correct"><td><a class="s p" href="#P-correct">P-correct</a></td><td><a href="https://github.com/cursor/plugins/blob/35a9094/pstack/skills/correct/SKILL.md">pstack/skills/correct/SKILL.md</a></td></tr>
   <tr id="P-verify"><td><a class="s p" href="#P-verify">P-verify</a></td><td><a href="https://github.com/cursor/plugins/blob/35a9094/pstack/skills/create-verification-skill/SKILL.md">pstack/skills/create-verification-skill/SKILL.md</a></td></tr>
@@ -447,24 +640,43 @@ flowchart LR
   <tr id="P-smyw"><td><a class="s p" href="#P-smyw">P-smyw</a></td><td><a href="https://github.com/cursor/plugins/blob/35a9094/pstack/skills/show-me-your-work/SKILL.md">pstack/skills/show-me-your-work/SKILL.md</a></td></tr>
   <tr id="P-automate"><td><a class="s p" href="#P-automate">P-automate</a></td><td><a href="https://github.com/cursor/plugins/blob/35a9094/pstack/skills/automate-me/SKILL.md">pstack/skills/automate-me/SKILL.md</a></td></tr>
   <tr id="P-readme"><td><a class="s p" href="#P-readme">P-readme</a></td><td><a href="https://github.com/cursor/plugins/blob/35a9094/pstack/README.md">pstack/README.md</a></td></tr>
+  <tr id="P-explain"><td><a class="s p" href="#P-explain">P-explain</a></td><td><a href="https://github.com/cursor/plugins/blob/35a9094/pstack/skills/principle-explain-the-number/SKILL.md">pstack/skills/principle-explain-the-number/SKILL.md</a></td></tr>
+  <tr id="P-arena"><td><a class="s p" href="#P-arena">P-arena</a></td><td><a href="https://github.com/cursor/plugins/blob/35a9094/pstack/skills/arena/SKILL.md">pstack/skills/arena/SKILL.md</a></td></tr>
   <tr id="P-license"><td><a class="s p" href="#P-license">P-license</a></td><td><a href="https://github.com/cursor/plugins/blob/35a9094/pstack/LICENSE">pstack/LICENSE</a> (MIT, Copyright (c) 2026 Lauren Tan)</td></tr>
-  <tr id="T-talk"><td><a class="s t" href="#T-talk">T-talk</a></td><td><a href="https://sozai.app/transcript/spacex-ai-engineer-lauren-tan-part-1/">Transcripción de "SpaceX AI Engineer Lauren Tan: Part 1"</a></td></tr>
-  <tr id="T-teamday"><td><a class="s t" href="#T-teamday">T-teamday</a></td><td><a href="https://www.teamday.ai/ai/lauren-tan-spacexsi-grok-bot-11000-agent-prs-lint-rules">Teamday: Grok Bot, 11.000 PRs de agentes y lint rules</a></td></tr>
-  <tr id="T-redreamality"><td><a class="s t" href="#T-redreamality">T-redreamality</a></td><td><a href="https://redreamality.com/blog/lauren-tan-poteto-trust-before-parallel/">Redreamality: trust before parallel</a></td></tr>
-  <tr id="T-maily"><td><a class="s t" href="#T-maily">T-maily</a></td><td><a href="https://maily.so/seanlee/posts/92zene88zep">Maily (seanlee)</a></td></tr>
-  <tr id="I-726"><td><a class="s i" href="#I-726">I-726</a></td><td><a href="https://github.com/cursor/plugins/issues/726">cursor/plugins#726</a> (abierto): 0 de 18 ejecuciones leyeron los principios</td></tr>
-  <tr id="I-864"><td><a class="s i" href="#I-864">I-864</a></td><td><a href="https://github.com/cursor/plugins/issues/864">cursor/plugins#864</a> (abierto): 65 de 93 delegados leyeron cuando se les nombró la lectura</td></tr>
-  <tr id="I-1270"><td><a class="s i" href="#I-1270">I-1270</a></td><td><a href="https://github.com/cursor/plugins/issues/1270">cursor/plugins#1270</a> (abierto): poteto-agent cae en silencio a Opus 5</td></tr>
+  <tr id="T-talk"><td><a class="s t" href="#T-talk">T-talk</a></td><td>Transcripción de "SpaceX AI Engineer Lauren Tan: Part 1": <a href="https://sozai.app/transcript/spacex-ai-engineer-lauren-tan-part-1/">https://sozai.app/transcript/spacex-ai-engineer-lauren-tan-part-1/</a></td></tr>
+  <tr id="T-teamday"><td><a class="s t" href="#T-teamday">T-teamday</a></td><td><a href="https://www.teamday.ai/ai/lauren-tan-spacexsi-grok-bot-11000-agent-prs-lint-rules">https://www.teamday.ai/ai/lauren-tan-spacexsi-grok-bot-11000-agent-prs-lint-rules</a></td></tr>
+  <tr id="T-redreamality"><td><a class="s t" href="#T-redreamality">T-redreamality</a></td><td><a href="https://redreamality.com/blog/lauren-tan-poteto-trust-before-parallel/">https://redreamality.com/blog/lauren-tan-poteto-trust-before-parallel/</a></td></tr>
+  <tr id="T-maily"><td><a class="s t" href="#T-maily">T-maily</a></td><td><a href="https://maily.so/seanlee/posts/92zene88zep">https://maily.so/seanlee/posts/92zene88zep</a></td></tr>
+  <tr id="I-726"><td><a class="s i" href="#I-726">I-726</a></td><td><a href="https://github.com/cursor/plugins/issues/726">https://github.com/cursor/plugins/issues/726</a> (abierto): 0 de 18 ejecuciones leyeron los principios. Seguimiento del 2026-10-19: 0/72 sin cambios, 68/72 con lista incondicional al inicio de cada playbook, 71/72 con bloqueo duro</td></tr>
+  <tr id="I-864"><td><a class="s i" href="#I-864">I-864</a></td><td><a href="https://github.com/cursor/plugins/issues/864">https://github.com/cursor/plugins/issues/864</a> (abierto): 65 de 93 delegados leyeron el adaptador cuando el kickoff nombró las lecturas; solo 5 de 93 leyeron <code>no-comments</code></td></tr>
+  <tr id="I-1270"><td><a class="s i" href="#I-1270">I-1270</a></td><td><a href="https://github.com/cursor/plugins/issues/1270">https://github.com/cursor/plugins/issues/1270</a> (abierto): poteto-agent cae en silencio a Opus 5 por un slug inválido; arreglo en el PR #1273</td></tr>
+  <tr id="I-877"><td><a class="s i" href="#I-877">I-877</a></td><td><a href="https://github.com/cursor/plugins/issues/877">https://github.com/cursor/plugins/issues/877</a> (abierto): aislar la copia del plugin y el estado de usuario de cada candidato; comprobar qué copia se cargó</td></tr>
+  <tr id="I-1178"><td><a class="s i" href="#I-1178">I-1178</a></td><td><a href="https://github.com/cursor/plugins/issues/1178">https://github.com/cursor/plugins/issues/1178</a> (cerrado, abierto en el repo equivocado): un cambio aprobado por cumplimiento (5/5 frente a 0/5) apenas movió el resultado (0,916 frente a 0,897) y costó casi el triple; propone medir resultado y costo, una palanca por comparación y una línea base de cambio de modelo</td></tr>
   <tr id="A-plugin"><td><a class="s a" href="#A-plugin">A-plugin</a></td><td>agy 1.5.11, documentación embebida: estructura de plugin (<code>plugin.json</code>, <code>skills/</code>, <code>agents/</code>, <code>rules/AGENTS.md</code>, <code>hooks.json</code>)</td></tr>
   <tr id="A-skills"><td><a class="s a" href="#A-skills">A-skills</a></td><td>agy 1.5.11: skills globales en <code>~/.gemini/config/skills/&lt;name&gt;/SKILL.md</code> y de workspace en <code>.agents/skills/</code></td></tr>
   <tr id="A-hooks"><td><a class="s a" href="#A-hooks">A-hooks</a></td><td>agy 1.5.11: <code>hooks.json</code>, eventos y ubicaciones (global, plugin, <code>&lt;workspace&gt;/.agents/hooks.json</code>)</td></tr>
   <tr id="A-validate"><td><a class="s a" href="#A-validate">A-validate</a></td><td><code>agy plugin validate --help</code></td></tr>
+  <tr id="A-cli"><td><a class="s a" href="#A-cli">A-cli</a></td><td>agy 1.5.11, probado el 2026-11-18: <code>agy models</code> (familias Gemini, Claude y GPT-OSS); <code>agy -p --output-format stream-json</code> registra cada herramienta con sus parámetros y el uso de tokens; <code>--json-schema</code>; <code>--settings</code> rechaza <code>plugins</code>; una skill en <code>.agents/skills/</code> del workspace reemplaza a la del plugin global; <code>agy plugin install</code> copia la carpeta entera</td></tr>
+  <tr id="I-875"><td><a class="s i" href="#I-875">I-875</a></td><td><a href="https://github.com/cursor/plugins/issues/875">https://github.com/cursor/plugins/issues/875</a> (abierto): <code>reflect</code> descarta como aislados errores repetidos que la compactación resumió; en agy no aplica porque el transcript es completo</td></tr>
+  <tr id="I-876"><td><a class="s i" href="#I-876">I-876</a></td><td><a href="https://github.com/cursor/plugins/issues/876">https://github.com/cursor/plugins/issues/876</a> (abierto): mostrar de nuevo las filas <code>open</code> del rastro; propuesta sin implementar en pstack, no adoptada en M3</td></tr>
+  <tr id="I-1159"><td><a class="s i" href="#I-1159">I-1159</a></td><td><a href="https://github.com/cursor/plugins/issues/1159">https://github.com/cursor/plugins/issues/1159</a> (abierto): el revisor cruzado de <code>show-me-your-work</code> no tiene rol en la configuración de modelos</td></tr>
+  <tr id="A-transcript"><td><a class="s a" href="#A-transcript">A-transcript</a></td><td>agy 1.5.12, probado el 2026-11-19: cada conversación guarda un transcript legible en <code>~/.gemini/antigravity-cli/brain/&lt;id&gt;/.system_generated/logs/transcript.jsonl</code>, y el prompt del agente nombra esa ruta</td></tr>
+  <tr id="P-mverify"><td><a class="s p" href="#P-mverify">P-mverify</a></td><td><a href="https://github.com/cursor/plugins/blob/35a9094/pstack/skills/maintain-verification-skill/SKILL.md">pstack/skills/maintain-verification-skill/SKILL.md</a></td></tr>
+  <tr id="I-1271"><td><a class="s i" href="#I-1271">I-1271</a></td><td><a href="https://github.com/cursor/plugins/issues/1271">https://github.com/cursor/plugins/issues/1271</a> (cerrado como no planificado): las skills de verificación generadas pasaban 7 de 12 roturas deliberadas; exigir una rotura por recorrido las llevó a 16 de 16</td></tr>
+  <tr id="I-457"><td><a class="s i" href="#I-457">I-457</a></td><td><a href="https://github.com/cursor/plugins/issues/457">https://github.com/cursor/plugins/issues/457</a> (cerrado sin cambio): el mapa de features solo enumera entradas humanas; candidato, no adoptado en M4</td></tr>
+  <tr id="I-1245"><td><a class="s i" href="#I-1245">I-1245</a></td><td><a href="https://github.com/cursor/plugins/issues/1245">https://github.com/cursor/plugins/issues/1245</a> (abierto): usar la verificación solo donde los tests no alcanzan; candidato, no adoptado en M4</td></tr>
+  <tr id="A-hooks-doc"><td><a class="s a" href="#A-hooks-doc">A-hooks-doc</a></td><td>agy 1.5.12, <code>~/.gemini/antigravity-cli/builtin/skills/agy-customizations/docs/hooks.md</code>: contrato de cada evento; <code>PostToolUse</code> espera <code>{}</code>; <code>Stop</code> acepta <code>{&quot;decision&quot;:&quot;continue&quot;,&quot;reason&quot;:…}</code></td></tr>
+  <tr id="A-probe-m4"><td><a class="s a" href="#A-probe-m4">A-probe-m4</a></td><td>agy 1.5.12, probado el 2026-11-19: un <code>.agents/hooks.json</code> de workspace se carga en <code>agy -p</code>, el hook corre con cwd en <code>.agents/</code>, <code>PostToolUse</code> se dispara en cada herramienta y la razón de un <code>Stop</code> con <code>continue</code> llega al agente</td></tr>
+  <tr id="A-probe-slash"><td><a class="s a" href="#A-probe-slash">A-probe-slash</a></td><td>agy 1.5.12, probado el 2026-11-19: una skill de workspace se expande con <code>/&lt;nombre&gt;</code> (también con <code>disable-model-invocation</code>); la de un plugin no, el modelo lee su <code>SKILL.md</code> si lo decide</td></tr>
+  <tr id="A-openai-so"><td><a class="s a" href="#A-openai-so">A-openai-so</a></td><td>OpenAI, leído el 2026-11-19: <code>gpt-6.2-sol</code> (contexto 1.05M, salida 128k) soporta Responses API (<code>POST /v1/responses</code>), structured outputs (<code>text.format</code> <code>json_schema</code>, <code>strict</code>: todo objeto con <code>additionalProperties: false</code> y todas las propiedades en <code>required</code>) y reasoning effort <code>minimal</code>–<code>max</code>; <a href="https://developers.openai.com/api/docs/guides/structured-outputs">https://developers.openai.com/api/docs/guides/structured-outputs</a></td></tr>
+  <tr id="A-anthropic"><td><a class="s a" href="#A-anthropic">A-anthropic</a></td><td>Anthropic, skill <code>claude-api</code> (2026-11-03): Messages API, <code>output_config.format</code> para JSON schema, precios por modelo</td></tr>
+  <tr id="T-robson"><td><a class="s t" href="#T-robson">T-robson</a></td><td>Barnaby Robson, "On pstack" (2026-10-05): <a href="https://barnabyrobson.org/on-pstack/">https://barnabyrobson.org/on-pstack/</a></td></tr>
   <tr id="AUD"><td><a class="s aud" href="#AUD">AUD</a></td><td>La auditoría de esta sesión: 3 auditores (diseño, evidencia, Claude Code) y 2 refutadores</td></tr>
   <tr id="VEX"><td><a class="s vex" href="#VEX">VEX</a></td><td>Decisiones tuyas en esta conversación</td></tr>
   <tr id="MIA"><td><a class="s mia" href="#MIA">MÍA</a></td><td>Propuesta del asistente, corregible</td></tr>
 </table>
-
-<footer>Fuente en Markdown: <code>PRDs/2026-11-18-vex-mode-design.md</code>. Cuando se cree el repo, este documento se mueve a <code>docs/specs/</code>.</footer>
+<p><b>Nota sobre la fiabilidad de las fuentes:</b> las <code>T-…</code> son transcripciones automáticas o reseñas de terceros, no textos de la autora. Las <code>P-…</code> son la fuente primaria.</p>
+<footer>Generado desde <code>docs/specs/2026-11-18-vex-mode-design.md</code> con <code>python3 scripts/render_design.py</code>. No lo edites a mano.</footer>
 </main>
 </div>
 <script src="./mermaid.min.js"></script>

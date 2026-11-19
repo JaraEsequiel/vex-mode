@@ -1,0 +1,7 @@
+{
+  "kind": "waiver",
+  "skill": "vex-mode",
+  "tree_sha256": "e2e983302b172af5bc79cbb01053c8b2decb3529dc14ca8e810636cd7fae5406",
+  "date": "2026-11-19",
+  "reason": "Only one line of playbooks/eval.md changed: step 5 now names evals/judge.json instead of the removed case.json judge_model field, so an agent following the playbook finds the real setting. No candidate reads this playbook in any case (the tax-rounding case does not run an eval), so no eval can measure it; the previous tree 787f91e1650c has a full tax-rounding result (2026-11-19, inconclusive)."
+}

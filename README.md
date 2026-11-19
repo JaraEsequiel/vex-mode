@@ -26,7 +26,11 @@ Cada cambio a una skill se mide antes de entrar. El eval compara tres brazos, ca
 - B: la versión nueva.
 - C: la de `main` con un modelo mejor.
 
-Un juez de otra familia de modelos califica las respuestas sin saber de qué brazo viene cada una.
+Un juez de otra familia de modelos califica las respuestas sin saber de qué brazo viene cada una. El juez se llama directo por API, no por agy:
+
+- **Configuración:** `evals/judge.json` (`provider`: `openai`, `anthropic` o `agy`; `model`; `effort`). Por defecto `openai` / `gpt-6.2-sol` / `medium`. Para una corrida puntual: `VEX_JUDGE_PROVIDER`, `VEX_JUDGE_MODEL`, `VEX_JUDGE_EFFORT`.
+- **API key:** `OPENAI_API_KEY` o `ANTHROPIC_API_KEY` en el entorno o en `~/.config/vex-mode/secrets.env` (`chmod 600`; si otros pueden leerlo, el eval se niega). Nunca va al repo. Si falta, el eval falla antes de lanzar candidatos.
+- **Recalificar sin repetir ejecuciones:** `python3 evals/run.py rejudge <resultado.json>` usa el juez configurado ahora.
 
 ```bash
 python3 evals/run.py vex-mode tax-rounding
@@ -54,6 +58,29 @@ systemctl --user list-timers vex-correct.timer   # próxima ejecución
 - `Persistent=true`: si el equipo estaba apagado el domingo, corre al iniciar sesión.
 - **Costo conocido:** el eval reemplaza el plugin instalado mientras corre (~70 min). Si abres agy en ese rato, ves la variante; el arnés restaura tu plugin al terminar.
 - El modelo se cambia con `VEX_CORRECT_MODEL` (por defecto `gemini-4-neon-high`).
+
+## Preparar otro repo para agentes
+
+Dentro del repo destino, en una sesión de agy, ejecuta `/agent-ready`. Genera:
+
+- `AGENTS.md` con la tabla regla → qué la hace cumplir.
+- `scripts/check`: un solo comando que corre igual en local, en el hook y en CI.
+- `.agents/hooks.json` + `.agents/check_on_stop.py`: antes de terminar con cambios, el agente corre el `check` y, si falla, recibe el error y lo arregla. Máximo 3 intentos por conversación.
+- `.agents/skills/verify-<app>/`: una skill que maneja la app como un usuario, con un mapa de features y, por cada recorrido, una rotura registrada que demuestra que puede fallar (`/maintain-verification-skill` la mantiene).
+- `.github/workflows/check.yml`, si el repo tiene remoto de GitHub.
+
+Antes de entregar, rompe algo a propósito y muestra que el `check` y el hook lo detectan.
+
+## Cambios en pstack upstream
+
+Cada lunes, un workflow de GitHub compara los archivos copiados de pstack con su versión upstream y mantiene un único issue, **"pstack upstream drift"**: lo abre o lo actualiza si algo cambió y lo cierra cuando todo coincide. No hace fallar el CI de los PRs.
+
+```bash
+python3 scripts/upstream_drift.py --fetch                       # reporte local
+python3 scripts/upstream_drift.py --fetch --accept <archivo>    # marcar un archivo como reconciliado
+```
+
+Un archivo copiado tal cual se vuelve a copiar con `scripts/vendor.py`. Uno adaptado no se vuelve a copiar: se reaplica sobre nuestra adaptación el diff que muestra el reporte y después se acepta.
 
 ## Documentación
 

@@ -1,8 +1,8 @@
 # vex-mode — Documento de diseño
 
-- **Fecha:** 2026-11-18
-- **Estado:** borrador revisado por un revisor independiente, pendiente de tu aprobación
-- **Repo destino:** `~/Projects/VexOs/Code/Repos/vex-mode`, privado en GitHub (`JaraEsequiel/vex-mode`). Este documento se mueve a `docs/specs/` del repo cuando se cree.
+- **Fecha:** 2026-11-18 · actualizado 2026-11-19
+- **Estado:** aprobado e implementado: M1 a M4 (PRs #1 a #4). Cada hito corrigió este documento tras releer sus fuentes.
+- **Repo:** `~/Projects/VexOs/Code/Repos/vex-mode`, privado en GitHub (`JaraEsequiel/vex-mode`). Este archivo vive en `docs/specs/`; el HTML se genera con `python3 scripts/render_design.py`.
 
 **Cómo leer las fuentes.** Cada decisión lleva su fuente entre corchetes. La tabla del final (§13) define cada código. Las etiquetas son:
 - `[P-…]`: código de pstack (cursor/plugins, commit `35a9094`, con archivo y línea).
@@ -84,6 +84,7 @@ vex-mode/
 │   ├── correct/  reflect/    § 9    auto-mejora
 │   ├── show-me-your-work/    § 9    registro de decisiones
 │   ├── create-verification-skill/   § 8.3
+│   ├── maintain-verification-skill/ § 8.3
 │   └── agent-ready/          § 10   prepara otros repos
 ├── hooks.json + hooks/       § 7.1  hooks del modo
 ├── checks/                   § 8.1  checks estructurales (deterministas)
@@ -134,8 +135,8 @@ vex-mode/
   - Título `type(scope): subject`.
   - Cuerpo con Why, What changed, Scope, Tradeoffs, Blast Radius y Verification.
   - Fuente: `[P-worker:4-10]`.
-- **Refuerzo estructural (desviación):** el hook `SessionStart` (§7.1) inyecta `worker.md`, en vez de depender de que el kickoff lo pida `[I-864]` `[A-hooks]`.
-- **Respaldo:** las reglas de `worker.md` también van en el cuerpo de `agents/vex-agent.md`. Así llegan al subagente aunque `SessionStart` no se dispare en sesiones de subagente, cosa que hay que verificar al implementar `[MÍA]`.
+- **Refuerzo estructural (desviación):** el hook de activación `PreInvocation` (§7.1) inyecta la lista de lecturas, `worker.md` incluido, en vez de depender de que el kickoff lo pida `[I-864]` `[A-hooks]`.
+- **Respaldo:** las reglas de `worker.md` también van en el cuerpo de `agents/vex-agent.md`, así llegan al subagente, que es una conversación aparte `[MÍA]` (`docs/decisions/2026-11-18-hook-probe.md`).
 - **Subagentes nuevos por defecto:** cada reintento va a un agente nuevo con el brief original `[P-mode:100]`.
 - **Modelo fijo en `vex-agent.md`:** solo si agy lo acepta como campo válido. pstack falló justamente por usar un nombre de modelo inválido `[I-1270]` `[AUD]`.
 
@@ -167,7 +168,9 @@ vex-mode/
 - **Licencia:** pstack es MIT, *"Copyright (c) 2026 Lauren Tan"*. El aviso se conserva en `LICENSES/pstack-MIT.txt` `[P-license]`.
 - **Cómo se hace cumplir** `[P-encode]`:
   - Un check en CI exige que cada skill copiada tenga su entrada en `vendor.lock`.
-  - Un script compara contra pstack y lista las actualizaciones disponibles upstream `[MÍA]`.
+  - `scripts/upstream_drift.py` compara cada archivo de `vendor.lock` contra pstack upstream y lo clasifica: sin cambios, cambiado o borrado. Si el archivo está adaptado, muestra el diff de upstream desde el commit de ese archivo, para reaplicarlo sobre la adaptación en vez de pisarla `[MÍA]` `[VEX]`.
+  - `vendor.lock` guarda el commit de origen **por archivo** (`upstream_commit`); el commit global queda como valor por defecto de las entradas viejas `[MÍA]`.
+  - Un workflow semanal de GitHub Actions corre el script y mantiene un único issue, "pstack upstream drift": lo abre o actualiza si hay cambios y lo cierra cuando no queda ninguno. No hace fallar el CI de los PRs, porque un cambio upstream no es un error nuestro `[VEX]`.
   - La regla entra en la tabla del `AGENTS.md` raíz con ese check como mecanismo `[P-correct:28]`.
 
 ## 7. Hooks
@@ -177,15 +180,25 @@ Controlan **cómo trabaja el agente**, sea cual sea el proyecto `[VEX]` `[A-hook
 
 | Hook | Qué hace | Cuándo actúa | Fuente de la regla |
 |---|---|---|---|
-| `SessionStart` | Inyecta la lista de lecturas y `worker.md` | Solo con la marca de `/vex-mode` `[VEX]` | `[P-mode:20]` + el fallo documentado en `[I-726]` |
+| `PreInvocation` | Con `/vex-mode`: marca la sesión e inyecta una vez la lista de lecturas (con `worker.md`). Con cualquier otro `/<skill>` del plugin: inyecta su texto y su carpeta, una vez por mensaje | Con `/<skill>` del plugin `[VEX]` | `[P-mode:20]` + el fallo documentado en `[I-726]` + `[A-probe-slash]` |
 | `PreToolUse` | **Pausa y pide confirmación** ante lo irreversible (force-push a ramas compartidas, deploy, borrado de datos). No bloquea sin salida | **Siempre** | `[P-mode:78]` ("Always pause", no "prohibir") `[MÍA]` |
 | `Stop` | No deja cerrar una tarea sin evidencia de verificación | Solo con la marca de `/vex-mode` `[VEX]` | `[P-prove:9]` |
 
-El mecanismo exacto del hook `Stop` (qué cuenta como evidencia) se prototipa antes de fijarlo `[MÍA]`. Así lo indica `[P-mode]`: lo que se puede decidir ejecutando algo, se prototipa.
+El mecanismo del hook `Stop` se prototipó antes de fijarlo, como indica `[P-mode]`: lo que se puede decidir ejecutando algo, se prototipa. El resultado está en `docs/decisions/2026-11-18-hook-probe.md`. En agy, `{}` en `PreToolUse` deniega y `force_ask` en `agy -p` no ejecuta el comando y termina el turno `[A-hooks]`.
+
+```mermaid
+flowchart LR
+  P([Mensaje del usuario]) --> Q{¿Empieza con /skill del plugin?}
+  Q -- /vex-mode --> K[PreInvocation:<br/>marca + lista de lecturas]
+  Q -- otra skill --> I[PreInvocation:<br/>texto y carpeta de la skill]
+  Q -- no --> N[Sin inyección]
+  K --> ST[Stop:<br/>exige evidencia]
+  P --> PT[PreToolUse, siempre:<br/>pausa ante lo irreversible y ante merge o push a main]
+```
 
 ### 7.2 Hooks de cada proyecto (en cada repo, no en vex-mode)
 - Las reglas del código de un proyecto viven en **lint + CI de ese proyecto**, no en hooks. Un hook solo corre cuando usas Antigravity, mientras que CI aplica a cualquiera: humano, Claude Code u otro agente `[P-correct:26]` `[T-talk]`.
-- El hook del proyecto es mínimo: un `PostToolUse` que ejecuta el `check` del repo después de cada edición y le devuelve el error al agente al momento `[VEX]` `[MÍA]`.
+- El hook del proyecto es mínimo: un `Stop` que, si hay cambios, ejecuta el `check` del repo y, si falla, devuelve `continue` con el error, así el agente lo arregla antes de terminar. No es `PostToolUse` porque agy ignora su salida (espera `{}`); `Stop` con `continue` sí llega al agente, probado en un workspace con `agy -p` `[A-hooks-doc]` `[A-probe-m4]`. Un contador propio limita los reintentos, porque `continuationActive` no funciona en agy `[VEX]`.
 - Lo genera `agent-ready` (§10). vex-mode no trae hooks de proyecto `[VEX]`.
 
 ## 8. Verificación y evals, en tres niveles
@@ -214,10 +227,15 @@ El mecanismo exacto del hook `Stop` (qué cuenta como evidencia) se prototipa an
 - **Método** (el de pstack):
   - Entornos sanitizados.
   - Un prompt que parezca una petición real.
-  - Un juez ciego de otra familia de modelos `[P-eval:21]`.
+  - Un juez ciego de otra familia de modelos, llamado por API `[P-eval:21]` `[VEX]`.
   - La cadena se verifica con los transcripts, no con lo que el agente dice de sí mismo `[P-eval:22]`.
-- **El juez usa solo modelos de agy y es de otra familia** `[VEX]` `[P-eval:21]`. agy 1.5.11 ofrece Gemini, Claude y GPT-OSS `[A-cli]`, así que la desviación prevista para una sola familia ya no hace falta. El arnés rechaza un juez de la misma familia que los candidatos.
-- **Transcripts:** cada ejecución se guarda con `agy -p --output-format stream-json`. Ese formato registra cada `read_file` y `run_command` con su ruta, y el uso de tokens `[A-cli]`. El juez devuelve un veredicto estructurado con `--json-schema` `[A-cli]`.
+- **El juez es de otra familia y se llama por API, no por agy** `[VEX]` `[P-eval:21]`. Los candidatos siguen corriendo con `agy -p`; el juez no es un agente, solo lee el material y devuelve el veredicto, así que va directo a la API del proveedor `[VEX]`.
+  - **Configurable:** `evals/judge.json` (versionado) fija `provider` (`openai`, `anthropic` o `agy`), `model` y `effort`. `VEX_JUDGE_PROVIDER` y `VEX_JUDGE_MODEL` lo pisan para una corrida puntual. Por defecto: `openai`, `gpt-6.2-sol`, effort `medium` `[VEX]`.
+  - **API key:** nunca en el repo. Se lee de la variable del proveedor (`OPENAI_API_KEY`, `ANTHROPIC_API_KEY`) o, si no está, de `~/.config/vex-mode/secrets.env` (permisos 600), que también usa el timer semanal `[VEX]` `[MÍA]`.
+  - **Por qué salió de agy:** en M4 el juez por agy falló tres veces por el harness, no por el modelo: un prompt de 213 KB como argumento (`E2BIG`), la lectura denegada fuera de su workspace y la cuota de Claude agotada `[A-probe-m4]` (`docs/decisions/2026-11-19-m4-eval.md`).
+  - **Salida estructurada:** OpenAI Responses API con `text.format` `json_schema` y `strict` `[A-openai-so]`; Anthropic Messages API con `output_config.format` `[A-anthropic]`. El arnés igual valida cada etiqueta y criterio (§8.2, `judge.check_verdict`).
+  - El arnés rechaza un juez de la misma familia que los candidatos.
+- **Transcripts:** cada ejecución se guarda con `agy -p --output-format stream-json`. Ese formato registra cada `read_file` y `run_command` con su ruta, y el uso de tokens `[A-cli]`. El juez devuelve un veredicto estructurado con el JSON schema de la API de su proveedor.
 - **Tres medidas por ejecución, no solo cumplimiento** `[I-1178]` `[VEX]`:
   1. **Cumplimiento:** la rúbrica de 3 a 6 criterios, calificada por el juez `[P-eval:17]`.
   2. **Resultado:** un script de comprobación del caso, que se ejecuta en el directorio del candidato después de la ejecución y nunca se le muestra.
@@ -239,17 +257,34 @@ El mecanismo exacto del hook `Stop` (qué cuenta como evidencia) se prototipa an
   - El hash cubre **toda la carpeta de la skill** (`SKILL.md`, playbooks y archivos auxiliares), no solo `SKILL.md`, porque los playbooks también cambian el comportamiento `[MÍA]`.
   - CI calcula qué skills cambiaron respecto de `main` y exige, para cada una, un resultado con el hash actual.
   - **Exención explícita:** un resultado de tipo `waiver` con motivo, para cambios donde un eval no mide nada (por ejemplo, una skill que solo dirige el propio eval). La exención queda visible en el PR y la aceptas o rechazas tú `[MÍA]`.
-- **Formato de un caso:** `evals/<skill>/cases/<caso>/` con `prompt.md` (lo que vería el candidato), `rubric.md` (solo para el juez), `project/` (el proyecto que se copia al candidato), `check.py` (la comprobación de resultado) y `case.json` (modelos y número de ejecuciones). Un check estructural impide palabras delatoras en `prompt.md`, en `project/` y en los nombres de directorio que ve el candidato `[P-eval:7]`.
+- **Formato de un caso:** `evals/<skill>/cases/<caso>/` con `prompt.md` (lo que vería el candidato), `rubric.md` (solo para el juez), `project/` (el proyecto que se copia al candidato), `check.py` (la comprobación de resultado) y `case.json` (modelos de los candidatos y número de ejecuciones; el juez es global, en `evals/judge.json`). Un check estructural impide palabras delatoras en `prompt.md`, en `project/` y en los nombres de directorio que ve el candidato `[P-eval:7]`.
 
 ### 8.3 Verificación de cada proyecto → en cada repo de proyecto
 - vex-mode trae `create-verification-skill`, que genera en cada proyecto un `verify-<app>` con estas partes: launch, doctor, drive, evidence, cleanup y un feature map `[P-verify:3]` `[P-verify:34]`.
 - Un skill generado que nunca se ejecutó es solo un borrador `[P-verify:40]`.
+- **Además tiene que demostrar que puede fallar.** Por cada feature que recorre, rompe a propósito ese comportamiento, exige que el recorrido falle en la afirmación que lo nombra y registra la rotura en la sección `## Breaks` del archivo de la feature. `maintain-verification-skill` vuelve a ejecutar esas roturas en los recorridos que cambia. En el issue, las skills generadas dejaban pasar 7 de 12 roturas; con este paso atraparon 16 de 16 `[I-1271]`.
+- El skill generado vive en `.agents/skills/verify-<app>/`, la ubicación de skills de workspace en agy `[A-skills]`.
 - Es lo que permite el automerge en Dune: *"Without verification skills, you become the verifier"* `[T-maily]` `[T-talk]`.
 
 ### 8.4 CI de vex-mode
 `agy plugin validate --strict` `[A-validate]` + `checks/` + la política de evals de §8.2.
 
 ## 9. Bucle de auto-mejora (lo que hace al repo AI-faced)
+
+```mermaid
+flowchart LR
+  T[⏱ Timer semanal] --> PF{Preflight:<br/>plugin con correct y guardián,<br/>sin eval en curso}
+  PF -- no --> X[Notifica y no corre]
+  PF -- sí --> C[correct en un worktree:<br/>mina commits, reverts, reviews]
+  W[Tarea larga terminada] --> R[reflect:<br/>edita una skill existente]
+  C --> F[Fix en el nivel más alto + eval si toca una skill]
+  F --> S[El script pushea la rama y abre el PR]
+  R --> PR[PR]
+  S --> PR
+  PR --> CI{CI}
+  CI -- verde --> H[👤 Tú haces el merge]
+  CI -- rojo --> F
+```
 
 1. **`correct`:** mina commits, reverts y reviews, y agrupa los errores en clases (una clase cuenta cuando ocurrió 2 veces). Cada clase se arregla en el nivel más alto que funcione: arquitectura, después tipos y lint, después test, y docs al final. Cada check nuevo tiene que demostrar que falla con un error real del pasado `[P-correct:15-26]`.
 2. **`reflect`:** al terminar una tarea larga, convierte lo aprendido en una edición concreta de una skill existente. Un hallazgo solo se guarda si seguirá siendo cierto en 6 meses `[P-reflect:13]`.
@@ -278,7 +313,10 @@ Aplica la tesis de poteto sobre repos preparados para agentes `[T-talk]` `[T-red
 - Un `AGENTS.md` con la tabla regla → mecanismo `[P-correct:28]`.
 - Un `verify-<app>`, mediante `create-verification-skill` `[P-verify]`.
 - Un script `check` que corre igual en local y en CI `[P-correct:26]`.
-- Un `.agents/hooks.json` con un `PostToolUse` que ejecuta ese `check` `[A-hooks]` `[VEX]`.
+- Un `.agents/hooks.json` con un `Stop` que ejecuta ese `check` cuando hay cambios y le devuelve el error al agente (§7.2) `[A-hooks-doc]` `[A-probe-m4]` `[VEX]`.
+- Si el repo tiene un remoto de GitHub, un workflow de GitHub Actions que ejecuta el mismo `check` `[P-correct:26]` `[VEX]`.
+- Antes de entregar, demuestra que el `check` y el hook fallan con una rotura deliberada y vuelven a pasar al restaurarla `[I-1271]` `[P-correct:26]`.
+- `agent-ready` es texto original; reutiliza `correct` para la tabla de reglas y `create-verification-skill` para el `verify-<app>`, por referencia, sin copiarlos `[VEX]`.
 
 Lo guía la pirámide invertida: primero arquitectura, después análisis estático, después verificación en runtime, y prosa al final `[T-talk]` `[P-correct:19-22]`.
 
@@ -293,7 +331,7 @@ Cada hito termina en un estado verificable antes de empezar el siguiente `[P-mod
   - Hooks del modo, con la marca de activación.
 - **M2 — Evals:** `eval.md` y `principle-explain-the-number` copiados de pstack, el arnés `evals/run.py`, `scripts/build_plugin.py`, el primer caso real y la política de hash en CI (§8.2).
 - **M3 — Auto-mejora:** `correct`, `reflect` y `show-me-your-work` copiados de pstack y adaptados, el disparador de `show-me-your-work` en el router, el guardián de merge en el hook de pausa, `scripts/scheduled_correct.py` con su timer, y la evidencia de evals del propio PR (§9).
-- **M4 — Otros repos:** `create-verification-skill` y `agent-ready` (§10).
+- **M4 — Otros repos:** `create-verification-skill` y `maintain-verification-skill` copiados de pstack y adaptados (#1271), `agent-ready` con su plantilla de hook `Stop`, y un eval real de `agent-ready` sobre un repo de muestra (§8.3, §10).
 
 ## 11. Desviaciones de pstack (documentadas a propósito)
 
@@ -304,6 +342,9 @@ Cada hito termina en un estado verificable antes de empezar el siguiente `[P-mod
 | Cada eval mide cumplimiento, resultado y costo, con una palanca por comparación y una línea base de cambio de modelo | Aprobar solo por cumplimiento dejó pasar un cambio caro que apenas mejoraba el resultado | `[I-1178]` `[VEX]` |
 | Cuando el cambio evaluado toca el propio playbook de evals, el plugin del brazo B nombra "eval" | Es la skill bajo prueba: el candidato carga lo que se evalúa. Los casos, las rúbricas y el juez siguen ocultos | `[P-eval:7]` `[VEX]` |
 | Las fases B y C de `arena` las ejecuta un arnés determinista con `agy -p`, no subagentes | En agy el modelo de cada candidato se fija por flag, y el aislamiento exige instalar cada variante | `[P-eval:20-21]` `[I-877]` `[A-cli]` `[MÍA]` |
+| `create-verification-skill` exige que cada recorrido demuestre que puede fallar (pstack lo cerró como no planificado) | Una skill que solo se vio pasar parece probada y no lo está; sin esto no hay automerge posible | `[I-1271]` `[T-maily]` `[VEX]` |
+| El hook de los proyectos es `Stop`, no `PostToolUse` | agy ignora la salida de `PostToolUse` | `[A-hooks-doc]` `[A-probe-m4]` |
+| `hooks/activate.py` inyecta el texto y la carpeta de cualquier `/<skill>` del plugin | En `agy -p`, el `/<skill>` de un plugin no expande su texto: el modelo tiene que leer el `SKILL.md`, y en el eval de M4 los 3 candidatos con `agent-ready` leyeron otra skill en su lugar | `[A-probe-slash]` `[I-726]` |
 | Auto-mejora programada | pstack la dispara a mano | `[P-correct]` `[VEX]` |
 | `reflect` abre un PR cuando la skill es de vex-mode (pstack prohíbe PRs y edita una copia local) | Un cambio a vex-mode entra como PR con su eval (§9.4); una copia local nunca llegaría al repo | `[P-reflect:17]` `[VEX]` |
 | La ejecución programada corre el eval de lo que cambia | Sin resultado, el CI de su PR falla (§8.2); al estar desatendida, el tiempo no molesta | `[VEX]` |
@@ -355,6 +396,15 @@ Cada hito termina en un estado verificable antes de empezar el siguiente `[P-mod
 | `I-876` | https://github.com/cursor/plugins/issues/876 (abierto): mostrar de nuevo las filas `open` del rastro; propuesta sin implementar en pstack, no adoptada en M3 |
 | `I-1159` | https://github.com/cursor/plugins/issues/1159 (abierto): el revisor cruzado de `show-me-your-work` no tiene rol en la configuración de modelos |
 | `A-transcript` | agy 1.5.12, probado el 2026-11-19: cada conversación guarda un transcript legible en `~/.gemini/antigravity-cli/brain/<id>/.system_generated/logs/transcript.jsonl`, y el prompt del agente nombra esa ruta |
+| `P-mverify` | `pstack/skills/maintain-verification-skill/SKILL.md` |
+| `I-1271` | https://github.com/cursor/plugins/issues/1271 (cerrado como no planificado): las skills de verificación generadas pasaban 7 de 12 roturas deliberadas; exigir una rotura por recorrido las llevó a 16 de 16 |
+| `I-457` | https://github.com/cursor/plugins/issues/457 (cerrado sin cambio): el mapa de features solo enumera entradas humanas; candidato, no adoptado en M4 |
+| `I-1245` | https://github.com/cursor/plugins/issues/1245 (abierto): usar la verificación solo donde los tests no alcanzan; candidato, no adoptado en M4 |
+| `A-hooks-doc` | agy 1.5.12, `~/.gemini/antigravity-cli/builtin/skills/agy-customizations/docs/hooks.md`: contrato de cada evento; `PostToolUse` espera `{}`; `Stop` acepta `{"decision":"continue","reason":…}` |
+| `A-probe-m4` | agy 1.5.12, probado el 2026-11-19: un `.agents/hooks.json` de workspace se carga en `agy -p`, el hook corre con cwd en `.agents/`, `PostToolUse` se dispara en cada herramienta y la razón de un `Stop` con `continue` llega al agente |
+| `A-probe-slash` | agy 1.5.12, probado el 2026-11-19: una skill de workspace se expande con `/<nombre>` (también con `disable-model-invocation`); la de un plugin no, el modelo lee su `SKILL.md` si lo decide |
+| `A-openai-so` | OpenAI, leído el 2026-11-19: `gpt-6.2-sol` (contexto 1.05M, salida 128k) soporta Responses API (`POST /v1/responses`), structured outputs (`text.format` `json_schema`, `strict`: todo objeto con `additionalProperties: false` y todas las propiedades en `required`) y reasoning effort `minimal`–`max`; https://developers.openai.com/api/docs/guides/structured-outputs |
+| `A-anthropic` | Anthropic, skill `claude-api` (2026-11-03): Messages API, `output_config.format` para JSON schema, precios por modelo |
 | `T-robson` | Barnaby Robson, "On pstack" (2026-10-05): https://barnabyrobson.org/on-pstack/ |
 | `AUD` | La auditoría de esta sesión: 3 auditores (diseño, evidencia, Claude Code) y 2 refutadores |
 | `VEX` | Decisiones tuyas en esta conversación |

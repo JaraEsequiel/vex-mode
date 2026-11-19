@@ -1,0 +1,246 @@
+{
+  "kind": "eval",
+  "skill": "agent-ready",
+  "tree_sha256": "42bf4660d57017f1b3e3e23d9205ffd076a5ad8bd294cdd0a56873a0e02097be",
+  "date": "2026-11-19",
+  "case": "habit-tracker",
+  "run_dir": "/home/vex/.cache/vex-mode/runs/20261119-121558-556461",
+  "arms": {
+    "A": {
+      "model": "gemini-4-neon-medium",
+      "plugin_ref": "248cc5714ce4ce3bee59e8afca5df467f9d4acaf",
+      "tree_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "runs": [
+        {
+          "slot": 4,
+          "status": "SUCCESS",
+          "invalid": null,
+          "outcome": 0,
+          "compliance": 0.5,
+          "tokens": 68793,
+          "duration_s": 224.211520782,
+          "reads": 6,
+          "commands": 6,
+          "label": "R6"
+        },
+        {
+          "slot": 3,
+          "status": "SUCCESS",
+          "invalid": null,
+          "outcome": 0,
+          "compliance": 0.75,
+          "tokens": 56377,
+          "duration_s": 183.421083667,
+          "reads": 6,
+          "commands": 4,
+          "label": "R5"
+        },
+        {
+          "slot": 2,
+          "status": "SUCCESS",
+          "invalid": null,
+          "outcome": 0,
+          "compliance": 0.75,
+          "tokens": 61652,
+          "duration_s": 191.629354011,
+          "reads": 6,
+          "commands": 6,
+          "label": "R3"
+        }
+      ]
+    },
+    "B": {
+      "model": "gemini-4-neon-medium",
+      "plugin_ref": "40c59c27e99582c70afaca1b48dcc8df90d183df",
+      "tree_sha256": "42bf4660d57017f1b3e3e23d9205ffd076a5ad8bd294cdd0a56873a0e02097be",
+      "runs": [
+        {
+          "slot": 1,
+          "status": "SUCCESS",
+          "invalid": null,
+          "outcome": 1,
+          "compliance": 1.0,
+          "tokens": 77995,
+          "duration_s": 253.625095744,
+          "reads": 8,
+          "commands": 15,
+          "label": "R4"
+        },
+        {
+          "slot": 7,
+          "status": "SUCCESS",
+          "invalid": null,
+          "outcome": 1,
+          "compliance": 1.0,
+          "tokens": 85784,
+          "duration_s": 315.569410065,
+          "reads": 10,
+          "commands": 12,
+          "label": "R8"
+        },
+        {
+          "slot": 5,
+          "status": "SUCCESS",
+          "invalid": null,
+          "outcome": 1,
+          "compliance": 1.0,
+          "tokens": 87935,
+          "duration_s": 292.208166105,
+          "reads": 8,
+          "commands": 13,
+          "label": "R2"
+        }
+      ]
+    },
+    "C": {
+      "model": "gemini-4-neon-high",
+      "plugin_ref": "248cc5714ce4ce3bee59e8afca5df467f9d4acaf",
+      "tree_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "runs": [
+        {
+          "slot": 6,
+          "status": "SUCCESS",
+          "invalid": null,
+          "outcome": 0,
+          "compliance": 0.5,
+          "tokens": 85273,
+          "duration_s": 303.294316488,
+          "reads": 6,
+          "commands": 8,
+          "label": "R1"
+        },
+        {
+          "slot": 9,
+          "status": "SUCCESS",
+          "invalid": null,
+          "outcome": 0,
+          "compliance": 0.5,
+          "tokens": 119669,
+          "duration_s": 413.31529052,
+          "reads": 8,
+          "commands": 17,
+          "label": "R9"
+        },
+        {
+          "slot": 8,
+          "status": "SUCCESS",
+          "invalid": null,
+          "outcome": 0,
+          "compliance": 0.25,
+          "tokens": 98135,
+          "duration_s": 375.545186657,
+          "reads": 7,
+          "commands": 15,
+          "label": "R7"
+        }
+      ]
+    }
+  },
+  "judge": {
+    "provider": "openai",
+    "model": "gpt-6.2-sol",
+    "effort": "medium",
+    "error": null,
+    "usage": {
+      "input": 70293,
+      "output": 2910,
+      "reasoning": 708
+    }
+  },
+  "metrics": {
+    "A": {
+      "compliance": {
+        "mean": 0.6666666666666666,
+        "min": 0.5,
+        "max": 0.75,
+        "spread": 0.25
+      },
+      "outcome": {
+        "mean": 0.0,
+        "min": 0.0,
+        "max": 0.0,
+        "spread": 0.0
+      },
+      "tokens": {
+        "mean": 62274.0,
+        "min": 56377.0,
+        "max": 68793.0,
+        "spread": 12416.0
+      },
+      "duration_s": {
+        "mean": 199.75398615333333,
+        "min": 183.421083667,
+        "max": 224.211520782,
+        "spread": 40.790437115
+      }
+    },
+    "B": {
+      "compliance": {
+        "mean": 1.0,
+        "min": 1.0,
+        "max": 1.0,
+        "spread": 0.0
+      },
+      "outcome": {
+        "mean": 1.0,
+        "min": 1.0,
+        "max": 1.0,
+        "spread": 0.0
+      },
+      "tokens": {
+        "mean": 83904.66666666667,
+        "min": 77995.0,
+        "max": 87935.0,
+        "spread": 9940.0
+      },
+      "duration_s": {
+        "mean": 287.1342239713333,
+        "min": 253.625095744,
+        "max": 315.569410065,
+        "spread": 61.94431432100001
+      }
+    },
+    "C": {
+      "compliance": {
+        "mean": 0.4166666666666667,
+        "min": 0.25,
+        "max": 0.5,
+        "spread": 0.25
+      },
+      "outcome": {
+        "mean": 0.0,
+        "min": 0.0,
+        "max": 0.0,
+        "spread": 0.0
+      },
+      "tokens": {
+        "mean": 101025.66666666667,
+        "min": 85273.0,
+        "max": 119669.0,
+        "spread": 34396.0
+      },
+      "duration_s": {
+        "mean": 364.05159788833333,
+        "min": 303.294316488,
+        "max": 413.31529052,
+        "spread": 110.02097403200003
+      }
+    }
+  },
+  "signals": {
+    "B_vs_A": {
+      "compliance": "better",
+      "outcome": "better",
+      "tokens": "worse",
+      "duration_s": "worse"
+    },
+    "C_vs_A": {
+      "compliance": "noise",
+      "outcome": "noise",
+      "tokens": "worse",
+      "duration_s": "worse"
+    }
+  },
+  "verdict": "promote",
+  "synthesis": "Judged by gpt-6.2-sol over API. B beats A on compliance (1.0 vs 0.67) and outcome (3/3 vs 0/3); the upgrade model does not close the gap (C 0.42, 0/3). The gap is criterion 3: every B run showed a verify journey failing on a deliberate break, no A or C run did. Same result as the Opus-judged run at 8626075. Cost: B uses 35% more tokens and 44% more time than A; C uses 62% more tokens for less. No isolation violations."
+}

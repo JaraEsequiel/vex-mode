@@ -1,0 +1,11 @@
+name: check
+on:
+  push:
+  pull_request:
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      # add the toolchain and dependency steps scripts/check needs here
+      - run: ./scripts/check

@@ -155,6 +155,13 @@ class RunTest(unittest.TestCase):
         upstream = subprocess.run(["git", "-C", str(wt), "rev-parse", "--abbrev-ref", "@{u}"], capture_output=True)
         self.assertNotEqual(upstream.returncode, 0)
 
+    def test_agent_never_sees_api_keys(self):
+        os.environ["OPENAI_API_KEY"] = "sk-secret-456"
+        self.addCleanup(os.environ.pop, "OPENAI_API_KEY", None)
+        self.run_it("env", open_pr=False)
+        leaked = [p for p in self.state.rglob("leak.txt") if "sk-secret-456" in p.read_text()]
+        self.assertEqual(leaked, [])
+
     def test_agy_failure_keeps_worktree_and_fails(self):
         self.assertEqual(self.run_it("fail"), 1)
         self.assertEqual(len(self.worktrees()), 1)
@@ -190,6 +197,7 @@ class PromptAndUnitsTest(unittest.TestCase):
         self.assertIn("ExecStart=/usr/bin/python3 /r/scripts/scheduled_correct.py run --repo /r", service)
         self.assertIn("Environment=PATH=/m/bin:/usr/bin", service)
         self.assertIn("Environment=VEX_AGY=/m/bin/agy", service)
+        self.assertNotIn("EnvironmentFile", service)  # judges.py reads secrets.env itself; agents must not inherit keys
         self.assertIn("OnCalendar=Sun *-*-* 03:00:00", timer)
         self.assertIn("Persistent=true", timer)
 

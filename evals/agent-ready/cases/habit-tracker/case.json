@@ -1,0 +1,7 @@
+{
+  "runs": 3,
+  "candidate_model": "gemini-4-neon-medium",
+  "upgrade_model": "gemini-4-neon-high",
+  "workdir": "habit-tracker",
+  "timeout_s": 1800
+}

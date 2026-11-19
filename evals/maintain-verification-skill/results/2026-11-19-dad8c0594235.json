@@ -1,0 +1,7 @@
+{
+  "kind": "waiver",
+  "skill": "maintain-verification-skill",
+  "tree_sha256": "dad8c05942357bc6038a7f526e602416a04f013a888942e72d81afdfc02a8493",
+  "date": "2026-11-19",
+  "reason": "Vendored from pstack; adapted for agy's workspace skill path and to replay recorded Breaks for journeys a pass changes (#1271). Manual-only (disable-model-invocation) and it needs an existing verify skill with a feature map, which no eval case seeds yet. Not exercised in M4."
+}

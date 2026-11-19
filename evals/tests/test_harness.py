@@ -11,7 +11,6 @@ FIX = HERE / "fixtures"
 CASE = {
     "candidate_model": "gemini-4-neon-medium",
     "upgrade_model": "gemini-4-neon-high",
-    "judge_model": "claude-opus-5-5-high",
 }
 
 
@@ -48,7 +47,7 @@ class TranscriptTest(unittest.TestCase):
 
 class ArmsTest(unittest.TestCase):
     def test_arms_fixed_order_and_levers(self):
-        a, b, c = arms.build_arms(CASE, "base123", "head456")
+        a, b, c = arms.build_arms(CASE, "base123", "head456", "claude-opus-5-5-high")
         self.assertEqual([x.label for x in (a, b, c)], ["A", "B", "C"])
         self.assertEqual((a.model, b.model), (CASE["candidate_model"],) * 2)
         self.assertNotEqual(a.plugin_ref, b.plugin_ref)
@@ -57,9 +56,9 @@ class ArmsTest(unittest.TestCase):
 
     def test_judge_family_must_differ(self):
         with self.assertRaises(ValueError):
-            arms.build_arms(dict(CASE, judge_model="gemini-4-argon-high"), "a", "b")
+            arms.build_arms(CASE, "a", "b", "gemini-4-argon-high")
         with self.assertRaises(ValueError):
-            arms.build_arms(dict(CASE, upgrade_model="claude-opus-5-5-high"), "a", "b")
+            arms.build_arms(dict(CASE, upgrade_model="gpt-6.2-astra"), "a", "b", "gpt-6.2-sol")
 
 
 class IsolationTest(unittest.TestCase):
@@ -107,6 +106,29 @@ class IsolationHardeningTest(unittest.TestCase):
             self.assertTrue(isolation.violations(t, **self.roots(), home=Path("/home/u"), cache=Path("/cache")), cmd)
         ok = transcript.Transcript(commands=["python3 invoices.py inv-1042.csv", "git diff HEAD~1"])
         self.assertEqual(isolation.violations(ok, **self.roots(), home=Path("/home/u"), cache=Path("/cache")), [])
+
+
+class IsolationFalsePositiveTest(unittest.TestCase):
+    """Commands from the M4 agent-ready eval that only touched their own workdir."""
+    def check(self, cmd):
+        roots = dict(plugin_root=Path("/plug/vex-mode"), forbidden=[Path("/cache/vex-mode"), Path("/repo")],
+                     workdir=Path("/cache/vex-work/ab12/habit-tracker"), work_root=Path("/cache/vex-work"),
+                     home=Path("/home/u"), cache=Path("/cache"))
+        return isolation.violations(transcript.Transcript(commands=[cmd]), **roots)
+
+    def test_own_workdir_path_is_allowed(self):
+        self.assertEqual(self.check("cd .agents && printf '{\"cwd\":\"/cache/vex-work/ab12/habit-tracker\"}' | python3 hook.py"), [])
+
+    def test_cd_then_relative_path_is_resolved(self):
+        self.assertEqual(self.check("cd .agents && python3 ../scripts/stop_check.py"), [])
+        self.assertTrue(self.check("cd .. && cat ../cd34/habit-tracker/habits.py"))
+
+    def test_shell_expansions_are_not_resolved_as_paths(self):
+        self.assertEqual(self.check("printf '%s' \"$(pwd)/..\""), [])
+
+    def test_other_workdir_and_markers_still_flagged(self):
+        for cmd in ("cat /cache/vex-work/cd34/habit-tracker/habits.py", "ls ../../", "cat ~/.cache/vex-mode/runs/x"):
+            self.assertTrue(self.check(cmd), cmd)
 
 
 class StatsTest(unittest.TestCase):

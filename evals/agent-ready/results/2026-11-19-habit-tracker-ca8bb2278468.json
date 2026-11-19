@@ -1,0 +1,239 @@
+{
+  "kind": "eval",
+  "skill": "agent-ready",
+  "tree_sha256": "ca8bb227846883c09d30298683dfd248691f13045f1e731a8cb95fd1b611e539",
+  "date": "2026-11-19",
+  "case": "habit-tracker",
+  "run_dir": "/home/vex/.cache/vex-mode/runs/20261119-112048-870168",
+  "arms": {
+    "A": {
+      "model": "gemini-4-neon-medium",
+      "plugin_ref": "248cc5714ce4ce3bee59e8afca5df467f9d4acaf",
+      "tree_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "runs": [
+        {
+          "slot": 8,
+          "status": "SUCCESS",
+          "invalid": null,
+          "outcome": 0,
+          "compliance": 0.25,
+          "tokens": 57143,
+          "duration_s": 204.748213066,
+          "reads": 6,
+          "commands": 5,
+          "label": "R8"
+        },
+        {
+          "slot": 7,
+          "status": "SUCCESS",
+          "invalid": null,
+          "outcome": 0,
+          "compliance": 0.25,
+          "tokens": 58699,
+          "duration_s": 178.607248496,
+          "reads": 6,
+          "commands": 7,
+          "label": "R3"
+        },
+        {
+          "slot": 2,
+          "status": "SUCCESS",
+          "invalid": null,
+          "outcome": 0,
+          "compliance": 0.25,
+          "tokens": 63109,
+          "duration_s": 216.86153315,
+          "reads": 6,
+          "commands": 6,
+          "label": "R9"
+        }
+      ]
+    },
+    "B": {
+      "model": "gemini-4-neon-medium",
+      "plugin_ref": "8626075ad10ea70e47a11611ff12935df9706574",
+      "tree_sha256": "ca8bb227846883c09d30298683dfd248691f13045f1e731a8cb95fd1b611e539",
+      "runs": [
+        {
+          "slot": 3,
+          "status": "SUCCESS",
+          "invalid": null,
+          "outcome": 1,
+          "compliance": 1.0,
+          "tokens": 75707,
+          "duration_s": 224.876171518,
+          "reads": 8,
+          "commands": 12,
+          "label": "R6"
+        },
+        {
+          "slot": 4,
+          "status": "SUCCESS",
+          "invalid": null,
+          "outcome": 1,
+          "compliance": 1.0,
+          "tokens": 69088,
+          "duration_s": 275.59682377,
+          "reads": 9,
+          "commands": 9,
+          "label": "R5"
+        },
+        {
+          "slot": 6,
+          "status": "SUCCESS",
+          "invalid": null,
+          "outcome": 1,
+          "compliance": 1.0,
+          "tokens": 81639,
+          "duration_s": 274.719874395,
+          "reads": 8,
+          "commands": 10,
+          "label": "R2"
+        }
+      ]
+    },
+    "C": {
+      "model": "gemini-4-neon-high",
+      "plugin_ref": "248cc5714ce4ce3bee59e8afca5df467f9d4acaf",
+      "tree_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "runs": [
+        {
+          "slot": 1,
+          "status": "SUCCESS",
+          "invalid": null,
+          "outcome": 0,
+          "compliance": 0.5,
+          "tokens": 78393,
+          "duration_s": 334.051998577,
+          "reads": 6,
+          "commands": 8,
+          "label": "R7"
+        },
+        {
+          "slot": 5,
+          "status": "SUCCESS",
+          "invalid": null,
+          "outcome": 0,
+          "compliance": 0.5,
+          "tokens": 86461,
+          "duration_s": 321.084361221,
+          "reads": 6,
+          "commands": 9,
+          "label": "R4"
+        },
+        {
+          "slot": 9,
+          "status": "SUCCESS",
+          "invalid": null,
+          "outcome": 0,
+          "compliance": 0.5,
+          "tokens": 89293,
+          "duration_s": 447.786288247,
+          "reads": 8,
+          "commands": 7,
+          "label": "R1"
+        }
+      ]
+    }
+  },
+  "judge": {
+    "model": "claude-opus-5-5-high",
+    "error": null
+  },
+  "metrics": {
+    "A": {
+      "compliance": {
+        "mean": 0.25,
+        "min": 0.25,
+        "max": 0.25,
+        "spread": 0.0
+      },
+      "outcome": {
+        "mean": 0.0,
+        "min": 0.0,
+        "max": 0.0,
+        "spread": 0.0
+      },
+      "tokens": {
+        "mean": 59650.333333333336,
+        "min": 57143.0,
+        "max": 63109.0,
+        "spread": 5966.0
+      },
+      "duration_s": {
+        "mean": 200.0723315706667,
+        "min": 178.607248496,
+        "max": 216.86153315,
+        "spread": 38.254284654
+      }
+    },
+    "B": {
+      "compliance": {
+        "mean": 1.0,
+        "min": 1.0,
+        "max": 1.0,
+        "spread": 0.0
+      },
+      "outcome": {
+        "mean": 1.0,
+        "min": 1.0,
+        "max": 1.0,
+        "spread": 0.0
+      },
+      "tokens": {
+        "mean": 75478.0,
+        "min": 69088.0,
+        "max": 81639.0,
+        "spread": 12551.0
+      },
+      "duration_s": {
+        "mean": 258.39762322766666,
+        "min": 224.876171518,
+        "max": 275.59682377,
+        "spread": 50.72065225200001
+      }
+    },
+    "C": {
+      "compliance": {
+        "mean": 0.5,
+        "min": 0.5,
+        "max": 0.5,
+        "spread": 0.0
+      },
+      "outcome": {
+        "mean": 0.0,
+        "min": 0.0,
+        "max": 0.0,
+        "spread": 0.0
+      },
+      "tokens": {
+        "mean": 84715.66666666667,
+        "min": 78393.0,
+        "max": 89293.0,
+        "spread": 10900.0
+      },
+      "duration_s": {
+        "mean": 367.64088268166665,
+        "min": 321.084361221,
+        "max": 447.786288247,
+        "spread": 126.70192702600002
+      }
+    }
+  },
+  "signals": {
+    "B_vs_A": {
+      "compliance": "better",
+      "outcome": "better",
+      "tokens": "worse",
+      "duration_s": "worse"
+    },
+    "C_vs_A": {
+      "compliance": "better",
+      "outcome": "noise",
+      "tokens": "worse",
+      "duration_s": "worse"
+    }
+  },
+  "verdict": "promote",
+  "synthesis": "B beats A on compliance (1.0 vs 0.25) and outcome (3/3 vs 0/3); the upgrade model (C) does not close the gap (0.5, 0/3). Every B run copied the tested Stop-hook template, wrote a feature map with recorded Breaks (#1271), and showed both the check and a verify journey failing on a deliberate break; no A or C run showed a verify journey failing (rubric 3). A and C did write a check and a Stop hook that catch the hidden break; they fail the outcome only on the missing feature map, so part of the outcome gap is the skill's own format. Cost: B uses 27% more tokens and 29% more time than A, C uses 42% more tokens for less. No isolation violations. Valid only with hooks/activate.py injecting the skill (8626075): without it, B never loaded the skill (first run, discarded)."
+}

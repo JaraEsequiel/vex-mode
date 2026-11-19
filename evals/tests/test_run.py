@@ -1,4 +1,5 @@
 import json
+import re
 import os
 import subprocess
 import sys
@@ -10,13 +11,13 @@ HERE = Path(__file__).resolve().parent
 sys.path.insert(0, str(HERE.parent))
 
 import run
-from harness import judge
+from harness import judge, judges
+from test_judges import FakeAPI, openai_reply
 
 CASE = {
     "runs": 2,
     "candidate_model": "gemini-4-neon-medium",
     "upgrade_model": "gemini-4-neon-high",
-    "judge_model": "claude-opus-5-5-high",
     "workdir": "ledger-app",
     "timeout_s": 60,
 }
@@ -64,8 +65,11 @@ class RunTest(unittest.TestCase):
             "FAKE_HOME": str(self.home),
             "FAKE_AGY_MODE": "ok",
             "FAKE_PARENT": str(os.getpid()),
+            "VEX_JUDGE_PROVIDER": "agy",
+            "VEX_JUDGE_MODEL": "claude-opus-5-5-high",
+            "VEX_SECRETS": str(tmp / "no-secrets.env"),
         }
-        self.old = {k: os.environ.get(k) for k in [*self.env, "FAKE_PEEK"]}
+        self.old = {k: os.environ.get(k) for k in [*self.env, "FAKE_PEEK", "OPENAI_API_KEY", "VEX_OPENAI_BASE_URL"]}
         os.environ.update(self.env)
 
     def tearDown(self):
@@ -130,6 +134,89 @@ class RunTest(unittest.TestCase):
         missing = [r for arm in "ABC" for r in result["arms"][arm]["runs"] if r["compliance"] is None]
         self.assertEqual(len(missing), 1)
         self.assertTrue(any(result["metrics"][arm]["compliance"] is None for arm in "ABC"))
+
+    def test_large_judge_prompt_goes_through_a_file(self):
+        os.environ["FAKE_AGY_MODE"] = "big"
+        result = json.loads(self.run_eval().read_text())
+        self.assertIsNone(result["judge"]["error"])
+        self.assertGreater(len((Path(result["run_dir"]) / "judge-prompt.md").read_text().encode()), judges.INLINE_MAX)
+        self.assertTrue((Path(result["run_dir"]) / "review/judge-prompt.md").is_file())  # agy -p reads only its workspace
+        sizes = [int(n) for n in (self.home / "judge-args.log").read_text().split()]
+        self.assertTrue(all(n < 2000 for n in sizes), sizes)
+
+    def test_judge_launch_failure_still_writes_result(self):
+        real = judges.subprocess.run
+
+        def no_judge(cmd, *a, **kw):
+            if "--json-schema" in cmd:
+                raise OSError(7, "Argument list too long", "agy")
+            return real(cmd, *a, **kw)
+
+        judges.subprocess.run = no_judge
+        try:
+            result = json.loads(self.run_eval().read_text())
+        finally:
+            judges.subprocess.run = real
+        self.assertIn("could not start the judge", result["judge"]["error"])
+        self.assertTrue(all(r["outcome"] == 1 for arm in "ABC" for r in result["arms"][arm]["runs"]))
+
+    def openai_judge(self):
+        api = FakeAPI()
+        self.addCleanup(api.close)
+
+        def grade(req):
+            labels = re.findall(r"^## (R\d+)$", req["body"]["input"][0]["content"], re.M)
+            runs = [{"label": l, "criteria": [{"name": "c1", "pass": True, "note": "ok"}]} for l in labels]
+            return 200, {}, openai_reply(json.dumps({"runs": runs}))
+        api.handler = grade
+        os.environ.update({"VEX_JUDGE_PROVIDER": "openai", "VEX_JUDGE_MODEL": "gpt-6.2-sol",
+                           "VEX_OPENAI_BASE_URL": api.url, "OPENAI_API_KEY": "sk-secret-123"})
+        return api
+
+    def test_result_records_judge_provider_and_usage(self):
+        self.openai_judge()
+        result = json.loads(self.run_eval().read_text())
+        self.assertIsNone(result["judge"]["error"])
+        self.assertEqual((result["judge"]["provider"], result["judge"]["model"]), ("openai", "gpt-6.2-sol"))
+        self.assertEqual(result["judge"]["usage"]["input"], 100)
+        self.assertTrue(all(r["compliance"] == 1.0 for arm in "ABC" for r in result["arms"][arm]["runs"]))
+
+    def test_key_never_written(self):
+        self.openai_judge()
+        path = self.run_eval()
+        run_dir = Path(json.loads(path.read_text())["run_dir"])
+        leaks = [p for p in [path, *run_dir.rglob("*")] if p.is_file() and b"sk-secret-123" in p.read_bytes()]
+        self.assertEqual(leaks, [])
+
+    def test_candidates_never_see_api_keys(self):
+        self.openai_judge()
+        os.environ["FAKE_AGY_MODE"] = "env"
+        path = self.run_eval()
+        run_dir = Path(json.loads(path.read_text())["run_dir"])
+        leaks = [p for p in [path, *run_dir.rglob("*")] if p.is_file() and b"sk-secret-123" in p.read_bytes()]
+        self.assertEqual(leaks, [])
+
+    def test_rejudge_refuses_a_same_family_judge(self):
+        path = self.run_eval()
+        os.environ.update({"VEX_JUDGE_PROVIDER": "agy", "VEX_JUDGE_MODEL": "gemini-4-argon-high"})
+        with self.assertRaises(run.EvalError) as ctx:
+            run.rejudge(path)
+        self.assertIn("family", str(ctx.exception))
+
+    def test_reading_the_secrets_file_invalidates_a_run(self):
+        os.environ["FAKE_AGY_MODE"] = "peek"
+        os.environ["FAKE_PEEK"] = os.environ["VEX_SECRETS"]
+        result = json.loads(self.run_eval().read_text())
+        self.assertTrue(all(r["invalid"] for arm in "ABC" for r in result["arms"][arm]["runs"]))
+
+    def test_missing_key_fails_before_runs(self):
+        os.environ.update({"VEX_JUDGE_PROVIDER": "openai", "VEX_JUDGE_MODEL": "gpt-6.2-sol"})
+        os.environ.pop("OPENAI_API_KEY", None)
+        with self.assertRaises(run.EvalError) as ctx:
+            self.run_eval()
+        self.assertIn("OPENAI_API_KEY", str(ctx.exception))
+        self.assertFalse((self.home / "candidates").exists())
+        self.assertEqual(self.installed(), "original install")
 
     def test_judge_sees_committed_changes(self):
         os.environ["FAKE_AGY_MODE"] = "commit"
