@@ -69,6 +69,24 @@
       "pending_refs": []
     },
     {
+      "path": "skills/show-me-your-work/SKILL.md",
+      "upstream_path": "pstack/skills/show-me-your-work/SKILL.md",
+      "upstream_sha256": "ec29326ac20515f2941198205bec615320a55b21659692e19650530dbf217bde",
+      "pending_refs": []
+    },
+    {
+      "path": "skills/show-me-your-work/references/decision-log-template.tsv",
+      "upstream_path": "pstack/skills/show-me-your-work/references/decision-log-template.tsv",
+      "upstream_sha256": "6779378006a2f5225e8c06deb84f1d913fb532041ebbb6e50d94600bfe3f4b76",
+      "pending_refs": []
+    },
+    {
+      "path": "skills/show-me-your-work/scripts/log.sh",
+      "upstream_path": "pstack/skills/show-me-your-work/scripts/log.sh",
+      "upstream_sha256": "a65a4bc5fb7cdeadbdb7b7ff1ca4682f4d9c42420942b2977cd17b46c4ac338e",
+      "pending_refs": []
+    },
+    {
       "path": "skills/vex-mode/SKILL.md",
       "upstream_path": "pstack/skills/poteto-mode/SKILL.md",
       "upstream_sha256": "67fd2c54fd25ebfae1e46db62c4b2e54f806a7ea9dfb6c83922de37e9b9635ea",
