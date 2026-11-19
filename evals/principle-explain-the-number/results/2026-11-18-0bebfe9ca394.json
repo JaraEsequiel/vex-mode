@@ -1,0 +1,7 @@
+{
+  "kind": "waiver",
+  "skill": "principle-explain-the-number",
+  "tree_sha256": "0bebfe9ca394111b67c66f3ed7a9191f22e4c05719bdcd26aa5cb38b7d0476db",
+  "date": "2026-11-18",
+  "reason": "Vendored from pstack with one sentence removed (the benchmark-checklist link). The vex-mode router lists it under Principles, so any /vex-mode run that measures a number may apply it, and the eval playbook names it for reading eval results. No eval case isolates it yet: its effect only shows inside a measuring task, which no case covers. The harness applies its rules (spread and noise in evals/harness/stats.py)."
+}

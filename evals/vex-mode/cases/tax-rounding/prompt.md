@@ -1,0 +1,1 @@
+/vex-mode A customer just emailed about invoice INV-1042: one item at $10.00, and with our 8.25% tax we charged them $10.82. Their accountant says it should be $10.83. The export is in inv-1042.csv. Can you fix it?
