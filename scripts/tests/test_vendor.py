@@ -40,5 +40,26 @@ class VendorTest(unittest.TestCase):
         self.assertEqual(files[0]["pending_refs"], [])
 
 
+    def test_records_upstream_commit_and_keeps_refs(self):
+        import subprocess
+        up, src, repo = setup()
+        env = dict(GIT_AUTHOR_NAME="t", GIT_AUTHOR_EMAIL="t@t", GIT_COMMITTER_NAME="t", GIT_COMMITTER_EMAIL="t@t")
+        import os
+        for args in (["init", "-q"], ["add", "-A"], ["commit", "-qm", "a"]):
+            subprocess.run(["git", "-C", str(up), *args], check=True, capture_output=True, env=dict(os.environ, **env))
+        head = subprocess.run(["git", "-C", str(up), "rev-parse", "HEAD"], capture_output=True, text=True).stdout.strip()
+        dest = repo / "skills/vex-mode/worker.md"
+        vendor.vendor(up, "pstack/skills/poteto-mode/worker.md", dest, repo)
+        lock = json.loads((repo / "vendor.lock").read_text())
+        lock["files"][0].update(adapted=True, removed_refs=["arena"], pending_refs=["tdd"])
+        (repo / "vendor.lock").write_text(json.dumps(lock))
+        vendor.vendor(up, "pstack/skills/poteto-mode/worker.md", dest, repo)
+        item = json.loads((repo / "vendor.lock").read_text())["files"][0]
+        self.assertEqual(item["upstream_commit"], head)
+        self.assertEqual(item["removed_refs"], ["arena"])
+        self.assertEqual(item["pending_refs"], ["tdd"])
+        self.assertNotIn("adapted", item)  # a fresh copy is verbatim until the adapt commit
+
+
 if __name__ == "__main__":
     unittest.main()

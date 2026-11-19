@@ -31,6 +31,13 @@ class CheckVendorTest(unittest.TestCase):
         errors = check_vendor.run(root)
         self.assertTrue(any("sha256" in e for e in errors), errors)
 
+    def test_upstream_commit_must_be_a_sha(self):
+        good = dict(entry(SKILL), adapted=True, upstream_commit="a" * 40)
+        self.assertEqual(check_vendor.run(make_repo({SKILL: "x"}, lock(files=[good]))), [])
+        bad = dict(entry(SKILL), adapted=True, upstream_commit="main")
+        errors = check_vendor.run(make_repo({SKILL: "x"}, lock(files=[bad])))
+        self.assertTrue(any("upstream_commit" in e for e in errors), errors)
+
     def test_unadapted_file_must_match_upstream_sha(self):
         import hashlib
         good = hashlib.sha256(b"x").hexdigest()

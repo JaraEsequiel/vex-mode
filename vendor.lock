@@ -8,48 +8,55 @@
       "path": "skills/correct/SKILL.md",
       "upstream_path": "pstack/skills/correct/SKILL.md",
       "upstream_sha256": "e347045d00c967a0b831ef883cc6ac79d21329aa10b5968637df95de7febf0ba",
-      "pending_refs": []
+      "pending_refs": [],
+      "upstream_commit": "35a90942a7f02e1ebbc2443643179815f2147954"
     },
     {
       "path": "skills/create-verification-skill/SKILL.md",
       "upstream_path": "pstack/skills/create-verification-skill/SKILL.md",
       "upstream_sha256": "d353973547bf8ad8977eca645f4cd4feaed0d32f4b43d1448f906b0a76c4d694",
       "pending_refs": [],
-      "adapted": true
+      "adapted": true,
+      "upstream_commit": "35a90942a7f02e1ebbc2443643179815f2147954"
     },
     {
       "path": "skills/create-verification-skill/references/feature-map-example/README.md",
       "upstream_path": "pstack/skills/create-verification-skill/references/feature-map-example/README.md",
       "upstream_sha256": "cb7bd782cf89968a4ba3d58a5151db837430db92d19a6f52a906973b77b516ba",
       "pending_refs": [],
-      "adapted": true
+      "adapted": true,
+      "upstream_commit": "35a90942a7f02e1ebbc2443643179815f2147954"
     },
     {
       "path": "skills/create-verification-skill/references/feature-map-example/create-note.md",
       "upstream_path": "pstack/skills/create-verification-skill/references/feature-map-example/create-note.md",
       "upstream_sha256": "644a44c74f35d38c2feb7cd05a0121fdebbb623e8dc376c185b565a581d1ccf7",
       "pending_refs": [],
-      "adapted": true
+      "adapted": true,
+      "upstream_commit": "35a90942a7f02e1ebbc2443643179815f2147954"
     },
     {
       "path": "skills/create-verification-skill/references/feature-map-example/search.md",
       "upstream_path": "pstack/skills/create-verification-skill/references/feature-map-example/search.md",
       "upstream_sha256": "6e87b9e7f2791a7776ba1bb83f371cd285c306c67f19d245cc4dd6ca3015c823",
       "pending_refs": [],
-      "adapted": true
+      "adapted": true,
+      "upstream_commit": "35a90942a7f02e1ebbc2443643179815f2147954"
     },
     {
       "path": "skills/maintain-verification-skill/SKILL.md",
       "upstream_path": "pstack/skills/maintain-verification-skill/SKILL.md",
       "upstream_sha256": "515c0eaa054b3f6be1b1fb06f2c2f173c80fddb58bbcac57576f89c479bc68e8",
       "pending_refs": [],
-      "adapted": true
+      "adapted": true,
+      "upstream_commit": "35a90942a7f02e1ebbc2443643179815f2147954"
     },
     {
       "path": "skills/principle-encode-lessons-in-structure/SKILL.md",
       "upstream_path": "pstack/skills/principle-encode-lessons-in-structure/SKILL.md",
       "upstream_sha256": "228963799189f481827d6f28065f278bc2008ffa37030b1234cbd5814d36b9e9",
-      "pending_refs": []
+      "pending_refs": [],
+      "upstream_commit": "35a90942a7f02e1ebbc2443643179815f2147954"
     },
     {
       "path": "skills/principle-explain-the-number/SKILL.md",
@@ -59,62 +66,72 @@
       "removed_refs": [
         "benchmark-checklist"
       ],
-      "adapted": true
+      "adapted": true,
+      "upstream_commit": "35a90942a7f02e1ebbc2443643179815f2147954"
     },
     {
       "path": "skills/principle-fix-root-causes/SKILL.md",
       "upstream_path": "pstack/skills/principle-fix-root-causes/SKILL.md",
       "upstream_sha256": "79afd7e67d8951203231f6f1ccfc7b4a1f30d8d6cdb68e92755c80012414dbeb",
-      "pending_refs": []
+      "pending_refs": [],
+      "upstream_commit": "35a90942a7f02e1ebbc2443643179815f2147954"
     },
     {
       "path": "skills/principle-laziness-protocol/SKILL.md",
       "upstream_path": "pstack/skills/principle-laziness-protocol/SKILL.md",
       "upstream_sha256": "1be6e7a435f26a75a76eb848b9c3d611b9977d0f5822361753244da25ca3ca45",
-      "pending_refs": []
+      "pending_refs": [],
+      "upstream_commit": "35a90942a7f02e1ebbc2443643179815f2147954"
     },
     {
       "path": "skills/principle-model-the-domain/SKILL.md",
       "upstream_path": "pstack/skills/principle-model-the-domain/SKILL.md",
       "upstream_sha256": "97c6214dc6a18b93177dda6429185a8640878b36ddee6ec9400c23a0eb9be2d8",
-      "pending_refs": []
+      "pending_refs": [],
+      "upstream_commit": "35a90942a7f02e1ebbc2443643179815f2147954"
     },
     {
       "path": "skills/principle-never-block-on-the-human/SKILL.md",
       "upstream_path": "pstack/skills/principle-never-block-on-the-human/SKILL.md",
       "upstream_sha256": "05030a7a083c337676f793881b4e93cd218e8f1dd676529f56e6ac1d3efb8d1f",
-      "pending_refs": []
+      "pending_refs": [],
+      "upstream_commit": "35a90942a7f02e1ebbc2443643179815f2147954"
     },
     {
       "path": "skills/principle-prove-it-works/SKILL.md",
       "upstream_path": "pstack/skills/principle-prove-it-works/SKILL.md",
       "upstream_sha256": "3d6c482e341974cfcb8d19ebf66fb1d4274d8673af35e36d3c231a6aa9e03f25",
-      "pending_refs": []
+      "pending_refs": [],
+      "upstream_commit": "35a90942a7f02e1ebbc2443643179815f2147954"
     },
     {
       "path": "skills/principle-separate-before-serializing-shared-state/SKILL.md",
       "upstream_path": "pstack/skills/principle-separate-before-serializing-shared-state/SKILL.md",
       "upstream_sha256": "2e5625d686b657e0b607c329fd8043bf50261b808239308fe4c6776e2817e95a",
-      "pending_refs": []
+      "pending_refs": [],
+      "upstream_commit": "35a90942a7f02e1ebbc2443643179815f2147954"
     },
     {
       "path": "skills/principle-sequence-verifiable-units/SKILL.md",
       "upstream_path": "pstack/skills/principle-sequence-verifiable-units/SKILL.md",
       "upstream_sha256": "ab0cc331cf317c07bb0ed6dd13ee9f618338b36e4e851521977bc5c4a8d429e1",
-      "pending_refs": []
+      "pending_refs": [],
+      "upstream_commit": "35a90942a7f02e1ebbc2443643179815f2147954"
     },
     {
       "path": "skills/principle-subtract-before-you-add/SKILL.md",
       "upstream_path": "pstack/skills/principle-subtract-before-you-add/SKILL.md",
       "upstream_sha256": "8c93bb9d1a7f38e2ef37655d93f0e790fa59903105af3d500cc8a663ebe45f3f",
-      "pending_refs": []
+      "pending_refs": [],
+      "upstream_commit": "35a90942a7f02e1ebbc2443643179815f2147954"
     },
     {
       "path": "skills/reflect/SKILL.md",
       "upstream_path": "pstack/skills/reflect/SKILL.md",
       "upstream_sha256": "6f6952f91514dc86257830da93a446c732a1af906f6acd5e5783dc587a29031e",
       "pending_refs": [],
-      "adapted": true
+      "adapted": true,
+      "upstream_commit": "35a90942a7f02e1ebbc2443643179815f2147954"
     },
     {
       "path": "skills/show-me-your-work/SKILL.md",
@@ -125,19 +142,22 @@
       "removed_refs": [
         "unslop",
         "poteto-mode"
-      ]
+      ],
+      "upstream_commit": "35a90942a7f02e1ebbc2443643179815f2147954"
     },
     {
       "path": "skills/show-me-your-work/references/decision-log-template.tsv",
       "upstream_path": "pstack/skills/show-me-your-work/references/decision-log-template.tsv",
       "upstream_sha256": "6779378006a2f5225e8c06deb84f1d913fb532041ebbb6e50d94600bfe3f4b76",
-      "pending_refs": []
+      "pending_refs": [],
+      "upstream_commit": "35a90942a7f02e1ebbc2443643179815f2147954"
     },
     {
       "path": "skills/show-me-your-work/scripts/log.sh",
       "upstream_path": "pstack/skills/show-me-your-work/scripts/log.sh",
       "upstream_sha256": "a65a4bc5fb7cdeadbdb7b7ff1ca4682f4d9c42420942b2977cd17b46c4ac338e",
-      "pending_refs": []
+      "pending_refs": [],
+      "upstream_commit": "35a90942a7f02e1ebbc2443643179815f2147954"
     },
     {
       "path": "skills/vex-mode/SKILL.md",
@@ -187,7 +207,8 @@
         "technical-writing",
         "unslop"
       ],
-      "adapted": true
+      "adapted": true,
+      "upstream_commit": "35a90942a7f02e1ebbc2443643179815f2147954"
     },
     {
       "path": "skills/vex-mode/playbooks/bug-fix.md",
@@ -200,7 +221,8 @@
         "architect",
         "interrogate"
       ],
-      "adapted": true
+      "adapted": true,
+      "upstream_commit": "35a90942a7f02e1ebbc2443643179815f2147954"
     },
     {
       "path": "skills/vex-mode/playbooks/eval.md",
@@ -210,7 +232,8 @@
       "removed_refs": [
         "arena"
       ],
-      "adapted": true
+      "adapted": true,
+      "upstream_commit": "35a90942a7f02e1ebbc2443643179815f2147954"
     },
     {
       "path": "skills/vex-mode/playbooks/feature.md",
@@ -222,7 +245,8 @@
         "arena",
         "interrogate"
       ],
-      "adapted": true
+      "adapted": true,
+      "upstream_commit": "35a90942a7f02e1ebbc2443643179815f2147954"
     },
     {
       "path": "skills/vex-mode/playbooks/opening-a-pr.md",
@@ -232,13 +256,15 @@
       "removed_refs": [
         "playbooks/babysit.md"
       ],
-      "adapted": true
+      "adapted": true,
+      "upstream_commit": "35a90942a7f02e1ebbc2443643179815f2147954"
     },
     {
       "path": "skills/vex-mode/worker.md",
       "upstream_path": "pstack/skills/poteto-mode/worker.md",
       "upstream_sha256": "d051060527ab1649fb1e69d1e7d416950264f9955c3de3635c0d63569f1b90d8",
-      "pending_refs": []
+      "pending_refs": [],
+      "upstream_commit": "35a90942a7f02e1ebbc2443643179815f2147954"
     }
   ],
   "original": [
