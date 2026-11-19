@@ -414,14 +414,25 @@ flowchart LR
 </li>
 <li>Un prompt que parezca una petición real.
 </li>
-<li>Un juez ciego de otra familia de modelos <a class="s p" href="#P-eval">P-eval:21</a>.
+<li>Un juez ciego de otra familia de modelos, llamado por API <a class="s p" href="#P-eval">P-eval:21</a> <a class="s vex" href="#VEX">VEX</a>.
 </li>
 <li>La cadena se verifica con los transcripts, no con lo que el agente dice de sí mismo <a class="s p" href="#P-eval">P-eval:22</a>.
 </li></ul>
 </li>
-<li><b>El juez usa solo modelos de agy y es de otra familia</b> <a class="s vex" href="#VEX">VEX</a> <a class="s p" href="#P-eval">P-eval:21</a>. agy 1.5.11 ofrece Gemini, Claude y GPT-OSS <a class="s a" href="#A-cli">A-cli</a>, así que la desviación prevista para una sola familia ya no hace falta. El arnés rechaza un juez de la misma familia que los candidatos.
+<li><b>El juez es de otra familia y se llama por API, no por agy</b> <a class="s vex" href="#VEX">VEX</a> <a class="s p" href="#P-eval">P-eval:21</a>. Los candidatos siguen corriendo con <code>agy -p</code>; el juez no es un agente, solo lee el material y devuelve el veredicto, así que va directo a la API del proveedor <a class="s vex" href="#VEX">VEX</a>.
+<ul>
+<li><b>Configurable:</b> <code>evals/judge.json</code> (versionado) fija <code>provider</code> (<code>openai</code>, <code>anthropic</code> o <code>agy</code>), <code>model</code> y <code>effort</code>. <code>VEX_JUDGE_PROVIDER</code> y <code>VEX_JUDGE_MODEL</code> lo pisan para una corrida puntual. Por defecto: <code>openai</code>, <code>gpt-6.2-sol</code>, effort <code>medium</code> <a class="s vex" href="#VEX">VEX</a>.
 </li>
-<li><b>Transcripts:</b> cada ejecución se guarda con <code>agy -p --output-format stream-json</code>. Ese formato registra cada <code>read_file</code> y <code>run_command</code> con su ruta, y el uso de tokens <a class="s a" href="#A-cli">A-cli</a>. El juez devuelve un veredicto estructurado con <code>--json-schema</code> <a class="s a" href="#A-cli">A-cli</a>.
+<li><b>API key:</b> nunca en el repo. Se lee de la variable del proveedor (<code>OPENAI_API_KEY</code>, <code>ANTHROPIC_API_KEY</code>) o, si no está, de <code>~/.config/vex-mode/secrets.env</code> (permisos 600), que también usa el timer semanal <a class="s vex" href="#VEX">VEX</a> <a class="s mia" href="#MIA">MÍA</a>.
+</li>
+<li><b>Por qué salió de agy:</b> en M4 el juez por agy falló tres veces por el harness, no por el modelo: un prompt de 213 KB como argumento (<code>E2BIG</code>), la lectura denegada fuera de su workspace y la cuota de Claude agotada <a class="s a" href="#A-probe-m4">A-probe-m4</a> (<code>docs/decisions/2026-11-19-m4-eval.md</code>).
+</li>
+<li><b>Salida estructurada:</b> OpenAI Responses API con <code>text.format</code> <code>json_schema</code> y <code>strict</code> <a class="s a" href="#A-openai-so">A-openai-so</a>; Anthropic Messages API con <code>output_config.format</code> <a class="s a" href="#A-anthropic">A-anthropic</a>. El arnés igual valida cada etiqueta y criterio (§8.2, <code>judge.check_verdict</code>).
+</li>
+<li>El arnés rechaza un juez de la misma familia que los candidatos.
+</li></ul>
+</li>
+<li><b>Transcripts:</b> cada ejecución se guarda con <code>agy -p --output-format stream-json</code>. Ese formato registra cada <code>read_file</code> y <code>run_command</code> con su ruta, y el uso de tokens <a class="s a" href="#A-cli">A-cli</a>. El juez devuelve un veredicto estructurado con el JSON schema de la API de su proveedor.
 </li>
 <li><b>Tres medidas por ejecución, no solo cumplimiento</b> <a class="s i" href="#I-1178">I-1178</a> <a class="s vex" href="#VEX">VEX</a>:
 <ol>
@@ -469,7 +480,7 @@ flowchart LR
 <li><b>Exención explícita:</b> un resultado de tipo <code>waiver</code> con motivo, para cambios donde un eval no mide nada (por ejemplo, una skill que solo dirige el propio eval). La exención queda visible en el PR y la aceptas o rechazas tú <a class="s mia" href="#MIA">MÍA</a>.
 </li></ul>
 </li>
-<li><b>Formato de un caso:</b> <code>evals/&lt;skill&gt;/cases/&lt;caso&gt;/</code> con <code>prompt.md</code> (lo que vería el candidato), <code>rubric.md</code> (solo para el juez), <code>project/</code> (el proyecto que se copia al candidato), <code>check.py</code> (la comprobación de resultado) y <code>case.json</code> (modelos y número de ejecuciones). Un check estructural impide palabras delatoras en <code>prompt.md</code>, en <code>project/</code> y en los nombres de directorio que ve el candidato <a class="s p" href="#P-eval">P-eval:7</a>.
+<li><b>Formato de un caso:</b> <code>evals/&lt;skill&gt;/cases/&lt;caso&gt;/</code> con <code>prompt.md</code> (lo que vería el candidato), <code>rubric.md</code> (solo para el juez), <code>project/</code> (el proyecto que se copia al candidato), <code>check.py</code> (la comprobación de resultado) y <code>case.json</code> (modelos de los candidatos y número de ejecuciones; el juez es global, en <code>evals/judge.json</code>). Un check estructural impide palabras delatoras en <code>prompt.md</code>, en <code>project/</code> y en los nombres de directorio que ve el candidato <a class="s p" href="#P-eval">P-eval:7</a>.
 </li></ul>
 <h3 id="s8-3">8.3 Verificación de cada proyecto → en cada repo de proyecto</h3>
 <ul>
@@ -653,6 +664,8 @@ flowchart LR
   <tr id="A-hooks-doc"><td><a class="s a" href="#A-hooks-doc">A-hooks-doc</a></td><td>agy 1.5.12, <code>~/.gemini/antigravity-cli/builtin/skills/agy-customizations/docs/hooks.md</code>: contrato de cada evento; <code>PostToolUse</code> espera <code>{}</code>; <code>Stop</code> acepta <code>{&quot;decision&quot;:&quot;continue&quot;,&quot;reason&quot;:…}</code></td></tr>
   <tr id="A-probe-m4"><td><a class="s a" href="#A-probe-m4">A-probe-m4</a></td><td>agy 1.5.12, probado el 2026-11-19: un <code>.agents/hooks.json</code> de workspace se carga en <code>agy -p</code>, el hook corre con cwd en <code>.agents/</code>, <code>PostToolUse</code> se dispara en cada herramienta y la razón de un <code>Stop</code> con <code>continue</code> llega al agente</td></tr>
   <tr id="A-probe-slash"><td><a class="s a" href="#A-probe-slash">A-probe-slash</a></td><td>agy 1.5.12, probado el 2026-11-19: una skill de workspace se expande con <code>/&lt;nombre&gt;</code> (también con <code>disable-model-invocation</code>); la de un plugin no, el modelo lee su <code>SKILL.md</code> si lo decide</td></tr>
+  <tr id="A-openai-so"><td><a class="s a" href="#A-openai-so">A-openai-so</a></td><td>OpenAI, leído el 2026-11-19: <code>gpt-6.2-sol</code> (contexto 1.05M, salida 128k) soporta Responses API (<code>POST /v1/responses</code>), structured outputs (<code>text.format</code> <code>json_schema</code>, <code>strict</code>: todo objeto con <code>additionalProperties: false</code> y todas las propiedades en <code>required</code>) y reasoning effort <code>minimal</code>–<code>max</code>; <a href="https://developers.openai.com/api/docs/guides/structured-outputs">https://developers.openai.com/api/docs/guides/structured-outputs</a></td></tr>
+  <tr id="A-anthropic"><td><a class="s a" href="#A-anthropic">A-anthropic</a></td><td>Anthropic, skill <code>claude-api</code> (2026-11-03): Messages API, <code>output_config.format</code> para JSON schema, precios por modelo</td></tr>
   <tr id="T-robson"><td><a class="s t" href="#T-robson">T-robson</a></td><td>Barnaby Robson, "On pstack" (2026-10-05): <a href="https://barnabyrobson.org/on-pstack/">https://barnabyrobson.org/on-pstack/</a></td></tr>
   <tr id="AUD"><td><a class="s aud" href="#AUD">AUD</a></td><td>La auditoría de esta sesión: 3 auditores (diseño, evidencia, Claude Code) y 2 refutadores</td></tr>
   <tr id="VEX"><td><a class="s vex" href="#VEX">VEX</a></td><td>Decisiones tuyas en esta conversación</td></tr>

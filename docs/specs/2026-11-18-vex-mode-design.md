@@ -225,10 +225,15 @@ flowchart LR
 - **Método** (el de pstack):
   - Entornos sanitizados.
   - Un prompt que parezca una petición real.
-  - Un juez ciego de otra familia de modelos `[P-eval:21]`.
+  - Un juez ciego de otra familia de modelos, llamado por API `[P-eval:21]` `[VEX]`.
   - La cadena se verifica con los transcripts, no con lo que el agente dice de sí mismo `[P-eval:22]`.
-- **El juez usa solo modelos de agy y es de otra familia** `[VEX]` `[P-eval:21]`. agy 1.5.11 ofrece Gemini, Claude y GPT-OSS `[A-cli]`, así que la desviación prevista para una sola familia ya no hace falta. El arnés rechaza un juez de la misma familia que los candidatos.
-- **Transcripts:** cada ejecución se guarda con `agy -p --output-format stream-json`. Ese formato registra cada `read_file` y `run_command` con su ruta, y el uso de tokens `[A-cli]`. El juez devuelve un veredicto estructurado con `--json-schema` `[A-cli]`.
+- **El juez es de otra familia y se llama por API, no por agy** `[VEX]` `[P-eval:21]`. Los candidatos siguen corriendo con `agy -p`; el juez no es un agente, solo lee el material y devuelve el veredicto, así que va directo a la API del proveedor `[VEX]`.
+  - **Configurable:** `evals/judge.json` (versionado) fija `provider` (`openai`, `anthropic` o `agy`), `model` y `effort`. `VEX_JUDGE_PROVIDER` y `VEX_JUDGE_MODEL` lo pisan para una corrida puntual. Por defecto: `openai`, `gpt-6.2-sol`, effort `medium` `[VEX]`.
+  - **API key:** nunca en el repo. Se lee de la variable del proveedor (`OPENAI_API_KEY`, `ANTHROPIC_API_KEY`) o, si no está, de `~/.config/vex-mode/secrets.env` (permisos 600), que también usa el timer semanal `[VEX]` `[MÍA]`.
+  - **Por qué salió de agy:** en M4 el juez por agy falló tres veces por el harness, no por el modelo: un prompt de 213 KB como argumento (`E2BIG`), la lectura denegada fuera de su workspace y la cuota de Claude agotada `[A-probe-m4]` (`docs/decisions/2026-11-19-m4-eval.md`).
+  - **Salida estructurada:** OpenAI Responses API con `text.format` `json_schema` y `strict` `[A-openai-so]`; Anthropic Messages API con `output_config.format` `[A-anthropic]`. El arnés igual valida cada etiqueta y criterio (§8.2, `judge.check_verdict`).
+  - El arnés rechaza un juez de la misma familia que los candidatos.
+- **Transcripts:** cada ejecución se guarda con `agy -p --output-format stream-json`. Ese formato registra cada `read_file` y `run_command` con su ruta, y el uso de tokens `[A-cli]`. El juez devuelve un veredicto estructurado con el JSON schema de la API de su proveedor.
 - **Tres medidas por ejecución, no solo cumplimiento** `[I-1178]` `[VEX]`:
   1. **Cumplimiento:** la rúbrica de 3 a 6 criterios, calificada por el juez `[P-eval:17]`.
   2. **Resultado:** un script de comprobación del caso, que se ejecuta en el directorio del candidato después de la ejecución y nunca se le muestra.
@@ -250,7 +255,7 @@ flowchart LR
   - El hash cubre **toda la carpeta de la skill** (`SKILL.md`, playbooks y archivos auxiliares), no solo `SKILL.md`, porque los playbooks también cambian el comportamiento `[MÍA]`.
   - CI calcula qué skills cambiaron respecto de `main` y exige, para cada una, un resultado con el hash actual.
   - **Exención explícita:** un resultado de tipo `waiver` con motivo, para cambios donde un eval no mide nada (por ejemplo, una skill que solo dirige el propio eval). La exención queda visible en el PR y la aceptas o rechazas tú `[MÍA]`.
-- **Formato de un caso:** `evals/<skill>/cases/<caso>/` con `prompt.md` (lo que vería el candidato), `rubric.md` (solo para el juez), `project/` (el proyecto que se copia al candidato), `check.py` (la comprobación de resultado) y `case.json` (modelos y número de ejecuciones). Un check estructural impide palabras delatoras en `prompt.md`, en `project/` y en los nombres de directorio que ve el candidato `[P-eval:7]`.
+- **Formato de un caso:** `evals/<skill>/cases/<caso>/` con `prompt.md` (lo que vería el candidato), `rubric.md` (solo para el juez), `project/` (el proyecto que se copia al candidato), `check.py` (la comprobación de resultado) y `case.json` (modelos de los candidatos y número de ejecuciones; el juez es global, en `evals/judge.json`). Un check estructural impide palabras delatoras en `prompt.md`, en `project/` y en los nombres de directorio que ve el candidato `[P-eval:7]`.
 
 ### 8.3 Verificación de cada proyecto → en cada repo de proyecto
 - vex-mode trae `create-verification-skill`, que genera en cada proyecto un `verify-<app>` con estas partes: launch, doctor, drive, evidence, cleanup y un feature map `[P-verify:3]` `[P-verify:34]`.
@@ -396,6 +401,8 @@ Cada hito termina en un estado verificable antes de empezar el siguiente `[P-mod
 | `A-hooks-doc` | agy 1.5.12, `~/.gemini/antigravity-cli/builtin/skills/agy-customizations/docs/hooks.md`: contrato de cada evento; `PostToolUse` espera `{}`; `Stop` acepta `{"decision":"continue","reason":…}` |
 | `A-probe-m4` | agy 1.5.12, probado el 2026-11-19: un `.agents/hooks.json` de workspace se carga en `agy -p`, el hook corre con cwd en `.agents/`, `PostToolUse` se dispara en cada herramienta y la razón de un `Stop` con `continue` llega al agente |
 | `A-probe-slash` | agy 1.5.12, probado el 2026-11-19: una skill de workspace se expande con `/<nombre>` (también con `disable-model-invocation`); la de un plugin no, el modelo lee su `SKILL.md` si lo decide |
+| `A-openai-so` | OpenAI, leído el 2026-11-19: `gpt-6.2-sol` (contexto 1.05M, salida 128k) soporta Responses API (`POST /v1/responses`), structured outputs (`text.format` `json_schema`, `strict`: todo objeto con `additionalProperties: false` y todas las propiedades en `required`) y reasoning effort `minimal`–`max`; https://developers.openai.com/api/docs/guides/structured-outputs |
+| `A-anthropic` | Anthropic, skill `claude-api` (2026-11-03): Messages API, `output_config.format` para JSON schema, precios por modelo |
 | `T-robson` | Barnaby Robson, "On pstack" (2026-10-05): https://barnabyrobson.org/on-pstack/ |
 | `AUD` | La auditoría de esta sesión: 3 auditores (diseño, evidencia, Claude Code) y 2 refutadores |
 | `VEX` | Decisiones tuyas en esta conversación |
