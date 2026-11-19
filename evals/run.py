@@ -105,6 +105,9 @@ def _outcome(case_dir: Path, work: Path, record: Path) -> int:
     return 1 if r.returncode == 0 else 0
 
 
+JUDGE_INLINE_MAX = 100_000
+
+
 def _judge(records: dict, materials: dict[int, str], rubric: str, judge_model: str, run_dir: Path,
            rng: random.Random) -> str | None:
     """One blinded pass over every valid run; sets each run's label and compliance. Returns the judge error.
@@ -119,6 +122,10 @@ def _judge(records: dict, materials: dict[int, str], rubric: str, judge_model: s
     (run_dir / "schema.json").write_text(json.dumps(judge.SCHEMA))
     judge_dir = run_dir / "review"
     judge_dir.mkdir(exist_ok=True)
+    if len(prompt.encode()) > JUDGE_INLINE_MAX:  # one argv string is capped at 128 KiB on Linux
+        prompt = (f"Read the file {run_dir / 'judge-prompt.md'} in full and do exactly what it asks. "
+                  "Your answer must follow the JSON schema you were given.")
+    launch_error = None
     try:
         out = subprocess.run([*build_plugin.agy_command(), "-p", prompt, "--model", judge_model,
                               "--output-format", "json", "--json-schema", str(run_dir / "schema.json")],
@@ -126,9 +133,11 @@ def _judge(records: dict, materials: dict[int, str], rubric: str, judge_model: s
         stdout = out.stdout
     except subprocess.TimeoutExpired:
         stdout = ""
+    except OSError as e:
+        stdout, launch_error = "", f"could not start the judge: {e}"
     (run_dir / "judge.json").write_text(stdout)
     (run_dir / "labels.json").write_text(json.dumps({labels[s]: s for s in order}, indent=2))
-    verdict, error = judge.parse_output(stdout) if stdout else (None, "judge timed out or printed nothing")
+    verdict, error = judge.parse_output(stdout) if stdout else (None, launch_error or "judge timed out or printed nothing")
     expected = [labels[s] for s in order]
     n = judge.criteria_count(rubric)
     problems = judge.label_problems(verdict or {"runs": []}, expected, n)

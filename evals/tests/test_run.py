@@ -131,6 +131,25 @@ class RunTest(unittest.TestCase):
         self.assertEqual(len(missing), 1)
         self.assertTrue(any(result["metrics"][arm]["compliance"] is None for arm in "ABC"))
 
+    def test_large_judge_prompt_goes_through_a_file(self):
+        os.environ["FAKE_AGY_MODE"] = "big"
+        result = json.loads(self.run_eval().read_text())
+        self.assertIsNone(result["judge"]["error"])
+        self.assertGreater(len((Path(result["run_dir"]) / "judge-prompt.md").read_text()), 131072)
+        sizes = [int(n) for n in (self.home / "judge-args.log").read_text().split()]
+        self.assertTrue(all(n < 2000 for n in sizes), sizes)
+
+    def test_judge_launch_failure_still_writes_result(self):
+        os.environ["FAKE_AGY_MODE"] = "big"
+        old = run.JUDGE_INLINE_MAX
+        run.JUDGE_INLINE_MAX = 10 ** 8
+        try:
+            result = json.loads(self.run_eval().read_text())
+        finally:
+            run.JUDGE_INLINE_MAX = old
+        self.assertIn("could not start the judge", result["judge"]["error"])
+        self.assertTrue(all(r["outcome"] == 1 for arm in "ABC" for r in result["arms"][arm]["runs"]))
+
     def test_judge_sees_committed_changes(self):
         os.environ["FAKE_AGY_MODE"] = "commit"
         result = json.loads(self.run_eval().read_text())

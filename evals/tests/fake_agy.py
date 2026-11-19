@@ -38,6 +38,11 @@ def main(argv: list[str]) -> int:
         return 0
     prompt = argv[argv.index("-p") + 1]
     if "--json-schema" in argv:
+        with open(HOME / "judge-args.log", "a") as log:
+            log.write(f"{len(prompt)}\n")
+        ref = re.match(r"Read the file (\S+) in full", prompt)
+        if ref:
+            prompt = Path(ref.group(1)).read_text()
         labels = re.findall(r"^## (R\d+)$", prompt, re.M)
         if MODE == "badjudge":
             labels = labels[:-1]
@@ -67,7 +72,7 @@ def main(argv: list[str]) -> int:
         emit({"event": "step_update", "step_update": {"step_type": "tool", "state": "DONE",
               "tool_info": {"name": "read_file", "parameters": {"Path": os.environ["FAKE_PEEK"]}}}})
     if MODE not in ("noop", "trail"):
-        Path("app.py").write_text("fixed\n")
+        Path("app.py").write_text("fixed\n" + ("x = 1\n" * 60000 if MODE == "big" else ""))
     if MODE in ("commit", "commit-trail"):
         import subprocess
         env = dict(os.environ, GIT_AUTHOR_NAME="a", GIT_AUTHOR_EMAIL="a@a", GIT_COMMITTER_NAME="a", GIT_COMMITTER_EMAIL="a@a")
