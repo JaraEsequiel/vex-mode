@@ -5,6 +5,12 @@
   },
   "files": [
     {
+      "path": "skills/correct/SKILL.md",
+      "upstream_path": "pstack/skills/correct/SKILL.md",
+      "upstream_sha256": "e347045d00c967a0b831ef883cc6ac79d21329aa10b5968637df95de7febf0ba",
+      "pending_refs": []
+    },
+    {
       "path": "skills/principle-encode-lessons-in-structure/SKILL.md",
       "upstream_path": "pstack/skills/principle-encode-lessons-in-structure/SKILL.md",
       "upstream_sha256": "228963799189f481827d6f28065f278bc2008ffa37030b1234cbd5814d36b9e9",
@@ -66,6 +72,12 @@
       "path": "skills/principle-subtract-before-you-add/SKILL.md",
       "upstream_path": "pstack/skills/principle-subtract-before-you-add/SKILL.md",
       "upstream_sha256": "8c93bb9d1a7f38e2ef37655d93f0e790fa59903105af3d500cc8a663ebe45f3f",
+      "pending_refs": []
+    },
+    {
+      "path": "skills/reflect/SKILL.md",
+      "upstream_path": "pstack/skills/reflect/SKILL.md",
+      "upstream_sha256": "6f6952f91514dc86257830da93a446c732a1af906f6acd5e5783dc587a29031e",
       "pending_refs": []
     },
     {
