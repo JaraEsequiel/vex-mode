@@ -3,5 +3,5 @@
   "skill": "architect",
   "tree_sha256": "16c2db2b4511fe0d4c920c912425603bbf5fb4afe007659b5b8e38ed35fa3b56",
   "date": "2026-11-19",
-  "reason": "Vendored from pstack@e58dd04; one sentence removed (it sends large designs to arena, which is not vendored). Reached through bug-fix step 3 and feature step 2; the tax-rounding eval of the same PR exercises bug-fix. No case calls /architect on its own."
+  "reason": "Vendored from pstack@e58dd04; one sentence removed (it sends large designs to arena, which is not vendored). Reached through bug-fix step 3 and feature step 2; the tax-rounding eval of the same PR may reach it through bug-fix; reads did not predict outcomes there. No case calls /architect on its own."
 }

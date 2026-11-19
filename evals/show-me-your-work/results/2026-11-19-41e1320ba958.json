@@ -1,0 +1,7 @@
+{
+  "kind": "waiver",
+  "skill": "show-me-your-work",
+  "tree_sha256": "41e1320ba9581fff2e8124e1131d547ffc73732f269aff23f2e9db2fa3fb5030",
+  "date": "2026-11-19",
+  "reason": "Restores one upstream parenthetical, \"(the **unslop** skill applies to log text too)\", now that unslop is vendored; the rest of the skill is unchanged from the previous waiver. Manual-only skill; no case measures log prose."
+}

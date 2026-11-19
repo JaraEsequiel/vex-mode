@@ -3,5 +3,5 @@
   "skill": "tdd",
   "tree_sha256": "c0e3c506e8021b5682189e16a81287779b3da1eb2ba77d5803f64dc059bfe5f4",
   "date": "2026-11-19",
-  "reason": "Vendored verbatim from pstack@e58dd04. Manual-only (disable-model-invocation); the bug-fix playbook step 5 sends the agent to it, so the tax-rounding eval of the same PR (vex-mode) exercises it through the playbook. No case calls /tdd on its own."
+  "reason": "Vendored verbatim from pstack@e58dd04. Manual-only (disable-model-invocation); the bug-fix playbook step 5 sends the agent to it, so the tax-rounding eval of the same PR (vex-mode) may reach it through the playbook; reads did not predict outcomes there. No case calls /tdd on its own."
 }

@@ -24,6 +24,14 @@ def run(root: Path) -> list[str]:
             errors.append(f"vendor.lock: {path}: upstream_sha256 is not 64 hex chars")
         if "upstream_commit" in item and not COMMIT.match(str(item["upstream_commit"])):
             errors.append(f"vendor.lock: {path}: upstream_commit is not a 40-hex git sha")
+        for ref in item.get("removed_refs", []):
+            if "/" not in ref and ((root / "skills" / ref / "SKILL.md").is_file()
+                                   or (root / "skills" / f"principle-{ref}" / "SKILL.md").is_file()):
+                errors.append(f"vendor.lock: {path}: removed_refs lists '{ref}', which is now vendored; "
+                              "restore the upstream text that names it and drop it from removed_refs")
+        additions = item.get("local_additions", [])
+        if not (isinstance(additions, list) and all(isinstance(a, str) and a for a in additions)):
+            errors.append(f"vendor.lock: {path}: local_additions must be a list of non-empty strings")
         if not item.get("upstream_path"):
             errors.append(f"vendor.lock: {path}: upstream_path missing")
         local = root / path

@@ -151,7 +151,6 @@
       "pending_refs": [],
       "adapted": true,
       "removed_refs": [
-        "unslop",
         "poteto-mode"
       ],
       "upstream_commit": "35a90942a7f02e1ebbc2443643179815f2147954"
@@ -248,7 +247,10 @@
         "interrogate"
       ],
       "adapted": true,
-      "upstream_commit": "35a90942a7f02e1ebbc2443643179815f2147954"
+      "upstream_commit": "35a90942a7f02e1ebbc2443643179815f2147954",
+      "local_additions": [
+        "Step 5: \"Keep the public contract: the regression test calls the code the way its existing callers do, with the same argument types, and the fix changes an interface only when the ticket asks for it.\" Evidence: docs/decisions/2026-11-19-skills-batch-a.md"
+      ]
     },
     {
       "path": "skills/vex-mode/playbooks/eval.md",

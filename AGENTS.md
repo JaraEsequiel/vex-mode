@@ -41,7 +41,7 @@ python3 -m unittest discover -s checks/tests \
 Never rewrite what pstack (or another source) already has.
 
 1. `python3 scripts/vendor.py <upstream_root> <upstream_path> <dest>` for each file. Commit only that, as `vendor: copy <thing> from pstack@<sha>`.
-2. In a separate commit `adapt: <thing> for antigravity`, make only the edits Antigravity needs: paths, model slugs, tool names, renames, removing references to skills not vendored yet. In `vendor.lock`, set `"adapted": true` on that file (unadapted files must stay byte-identical to upstream), list removed references in `removed_refs` (what to restore when that skill is vendored), and keep in `pending_refs` only references still in the text that point to skills not vendored yet.
+2. In a separate commit `adapt: <thing> for antigravity`, make only the edits Antigravity needs: paths, model slugs, tool names, renames, removing references to skills not vendored yet. In `vendor.lock`, set `"adapted": true` on that file (unadapted files must stay byte-identical to upstream), list removed references in `removed_refs` (what to restore when that skill is vendored), and keep in `pending_refs` only references still in the text that point to skills not vendored yet. When a skill named in `removed_refs` gets vendored, restore the upstream text that names it in the same change. Anything we add that upstream does not have goes in `local_additions` with a pointer to its evidence, so a later reconciliation keeps it.
 
 A new file that has no upstream goes under `original` in `vendor.lock`.
 
@@ -62,6 +62,7 @@ If an eval was killed before it restored the user's plugin, the next eval refuse
 | Rule | Enforced by |
 |---|---|
 | Files from pstack are copied verbatim and recorded | `checks/check_vendor.py` `scripts/vendor.py` |
+| A removed reference is restored when its skill is vendored; our additions to copied files are recorded | `checks/check_vendor.py` `checks/tests/test_check_vendor.py` |
 | Files copied from pstack are compared with upstream every week | `scripts/upstream_drift.py` `.github/workflows/upstream-drift.yml` |
 | Skill name matches folder, description present | `checks/check_skills.py` |
 | No dangling skill, playbook or link references | `checks/check_skills.py` |
