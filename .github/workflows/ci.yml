@@ -9,6 +9,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
       - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
@@ -17,6 +19,7 @@ jobs:
           python3 -m unittest discover -s checks/tests -v
           python3 -m unittest discover -s scripts/tests -v
           python3 -m unittest discover -s hooks/tests -v
+          python3 -m unittest discover -s evals/tests -v
       - name: Structural checks
         run: python3 checks/run.py
       - name: Install agy
