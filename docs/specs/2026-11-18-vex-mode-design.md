@@ -23,7 +23,7 @@ El repo es **AI-faced**: lo mantiene y lo mejora la propia IA `[VEX]`. La idea v
 
 **Por qué no instalar pstack tal cual.** La auditoría mostró tres cosas `[AUD]`:
 - Las ideas son buenas: diseño 7/10 tras la refutación.
-- La ejecución falla, porque las reglas son prosa que los agentes ignoran. En 18 ejecuciones el agente leyó 0 veces los archivos de principios `[I-726]` `[I-864]`.
+- La ejecución falla, porque las reglas son prosa que los agentes ignoran. En 18 ejecuciones el agente leyó 0 veces los archivos de principios `[I-726]`. En otro programa con 93 delegados, solo 5 leyeron `no-comments` `[I-864]`.
 - No hay evidencia publicada de que funcione: 2/10.
 
 vex-mode toma las ideas y corrige la ejecución con estructura. Es la regla de la propia poteto: *"think about how you can make that a deterministic check instead of adding another line to your rules"* `[T-teamday]` `[P-encode]`.
@@ -87,7 +87,9 @@ vex-mode/
 │   └── agent-ready/          § 10   prepara otros repos
 ├── hooks.json + hooks/       § 7.1  hooks del modo
 ├── checks/                   § 8.1  checks estructurales (deterministas)
-├── evals/<skill>/            § 8.2  evals de comportamiento (fuera de skills/)
+├── evals/<skill>/            § 8.2  casos y resultados de evals (fuera de skills/)
+├── evals/run.py              § 8.2  arnés que ejecuta candidatos y juez con agy -p
+├── scripts/build_plugin.py   § 8.2  exporta solo las partes del plugin para instalar
 ├── vendor.lock               § 6.6  procedencia de lo copiado de pstack
 ├── LICENSES/pstack-MIT.txt   § 6.6
 ├── docs/
@@ -118,7 +120,7 @@ vex-mode/
 ### 6.3 Router `vex-mode`
 - Elige un playbook y copia sus pasos a la lista de tareas `[P-mode:108]`.
 - Si una duda se resuelve ejecutando algo, se prototipa en lugar de preguntar `[P-mode]` (non-negotiables).
-- **Lista de lecturas explícita por playbook.** Cada playbook nombra los archivos exactos que hay que leer. Es lo único que demostró subir el cumplimiento: 65 de 93 delegados leyeron cuando se les nombró `[I-864]` `[AUD]`.
+- **Lista de lecturas explícita por playbook.** Cada playbook nombra los archivos exactos que hay que leer. Es lo que demostró subir las lecturas: con una lista incondicional al inicio de cada playbook, 68 de 72 ejecuciones leyeron un principio, frente a 0 de 72 sin ella `[I-726]`. Nombrar la lectura en el kickoff hizo que 65 de 93 delegados leyeran el adaptador `[I-864]`. Leer no prueba calidad: nadie calificó las respuestas `[I-726]`.
 - **Playbooks iniciales:** M1 empieza con 2, bug-fix y feature `[VEX]`. Los siguientes candidatos son investigation, refactoring y opening-a-pr. Se añaden solo cuando su patrón se repita 2 veces `[MÍA]`, con el criterio de *"a class counts once it has happened twice"* `[P-correct:15]`.
 - **Sin skills de planificación por defecto.** *"the best spec is code"* `[P-readme:270]`.
 
@@ -199,19 +201,44 @@ El mecanismo exacto del hook `Stop` (qué cuenta como evidencia) se prototipa an
   - Presupuesto de tamaño por skill `[P-authoring:10]` `[MÍA]`.
 
 ### 8.2 Evals de comportamiento → `evals/<skill>/` en vex-mode, fuera de `skills/`
+
+*Revisado el 2026-11-18 tras releer las fuentes (§13) y probar agy 1.5.11 `[A-cli]`.*
+
+- **Para qué:** *"A skill is a process you measure, and then you make shorter."* `[T-robson]`. Un eval es *"a unit test for an agent"* `[T-talk]` `[T-maily]`.
 - **Por qué fuera de la carpeta de la skill:** el candidato no puede ver ningún directorio, archivo o prompt con `eval`, `test`, `judge`, `rubric`… `[P-eval:7]`. La carpeta de una skill es lo que el agente carga, así que una rúbrica guardada ahí contamina el resultado.
-- **Método:** se toma el de pstack.
+- **Qué se reutiliza:** el playbook `eval.md` se copia tal cual de pstack y se adapta a agy `[P-eval]` `[VEX]`.
+  - Sus pasos 4 y 5 delegan en `arena` (fases B y C) para lanzar candidatos y juez `[P-eval:20-21]`. En agy esas dos fases las ejecuta un arnés determinista, `evals/run.py`, con `agy -p`, porque así el modelo de cada candidato queda fijado por flag (`--model`) `[A-cli]` `[MÍA]`.
+  - `arena` no se copia en M2. La referencia queda en `removed_refs` para restaurarla cuando se traiga como skill de diseño `[MÍA]`.
+  - `principle-explain-the-number` se copia, porque fija cómo leer el número de un eval: cuántas ejecuciones, la dispersión y si la diferencia supera el ruido `[P-explain]`.
+- **Método** (el de pstack):
   - Entornos sanitizados.
   - Un prompt que parezca una petición real.
   - Un juez ciego de otra familia de modelos `[P-eval:21]`.
   - La cadena se verifica con los transcripts, no con lo que el agente dice de sí mismo `[P-eval:22]`.
-- **El juez usa solo modelos de agy** `[VEX]`.
-  - Si `agy models` ofrece más de una familia, el juez es de una familia distinta a la del candidato `[P-eval:21]`.
-  - Si solo hay una familia, el juez usa otro modelo o tamaño de esa familia y el resultado lo declara como limitación. Es una desviación documentada en §11.
-  - Los evals corren en local con tu sesión de agy, no en CI. CI solo comprueba el hash (ver más abajo) `[MÍA]`.
-- **Mejora sobre pstack:** se guarda cada resultado. pstack no publica ninguno `[AUD]`.
-- **Política de CI (aprobada `[VEX]`):** un PR que modifica una skill tiene que incluir un resultado de eval reciente para esa versión. Los evals no se ejecutan en cada PR, por costo.
-  - Mecanismo propuesto: cada resultado registra el hash del `SKILL.md` evaluado, y CI compara ese hash con el actual `[MÍA]`.
+- **El juez usa solo modelos de agy y es de otra familia** `[VEX]` `[P-eval:21]`. agy 1.5.11 ofrece Gemini, Claude y GPT-OSS `[A-cli]`, así que la desviación prevista para una sola familia ya no hace falta. El arnés rechaza un juez de la misma familia que los candidatos.
+- **Transcripts:** cada ejecución se guarda con `agy -p --output-format stream-json`. Ese formato registra cada `read_file` y `run_command` con su ruta, y el uso de tokens `[A-cli]`. El juez devuelve un veredicto estructurado con `--json-schema` `[A-cli]`.
+- **Tres medidas por ejecución, no solo cumplimiento** `[I-1178]` `[VEX]`:
+  1. **Cumplimiento:** la rúbrica de 3 a 6 criterios, calificada por el juez `[P-eval:17]`.
+  2. **Resultado:** un script de comprobación del caso, que se ejecuta en el directorio del candidato después de la ejecución y nunca se le muestra.
+  3. **Costo:** tokens y duración, tomados del evento `result` del transcript.
+- **Una sola palanca por comparación** `[I-1178]`. Cada caso corre tres brazos:
+  - A: la skill base (la de `main`).
+  - B: la variante.
+  - C: la base con un modelo mejor (línea base de "solo cambiar de modelo").
+  - A↔B cambia solo la skill; A↔C cambia solo el modelo. El arnés construye los brazos; el caso no puede definir otros.
+- **Lectura del número** `[P-explain]`: por defecto 3 ejecuciones por brazo. El resultado guarda la media y la dispersión de cada medida, y marca una diferencia como ruido cuando la dispersión es mayor que el efecto.
+- **Aislamiento del candidato** `[I-877]` `[A-cli]`:
+  - agy carga los plugins globalmente, y `--settings` no puede apagarlos por sesión `[A-cli]`. Además, el hook de activación inyecta rutas absolutas del plugin instalado. Por eso cada brazo **instala su variante del plugin** antes de sus ejecuciones, y el arnés reinstala la original al terminar, también si falla.
+  - `agy plugin install <dir>` copia la carpeta entera, incluidos `.git`, `docs/` y `evals/` `[A-cli]`. Un candidato podría leer las rúbricas. Por eso se instala siempre desde `scripts/build_plugin.py`, que exporta solo las partes del plugin (`plugin.json`, `skills/`, `agents/`, `rules/`, `hooks.json`, `hooks/`, `LICENSES/`).
+  - Antes de calificar, el arnés verifica en el transcript qué copia se leyó: toda lectura de archivos de la skill debe venir del plugin instalado con el hash del brazo. Si no, la ejecución se invalida.
+  - Los proyectos de los candidatos viven en un directorio de trabajo con nombre de proyecto, fuera del repo.
+- **Los evals corren en local** con tu sesión de agy, no en CI. CI solo comprueba el hash `[MÍA]`.
+- **Mejora sobre pstack:** se guarda cada resultado. pstack no publica ninguno `[AUD]`. Se versiona un resumen JSON por eval en `evals/<skill>/results/`; los transcripts completos quedan en local, por tamaño y privacidad `[MÍA]`.
+- **Política de CI (aprobada `[VEX]`):** un PR que modifica una skill tiene que incluir un resultado de eval para esa versión. Los evals no se ejecutan en cada PR, por costo.
+  - El hash cubre **toda la carpeta de la skill** (`SKILL.md`, playbooks y archivos auxiliares), no solo `SKILL.md`, porque los playbooks también cambian el comportamiento `[MÍA]`.
+  - CI calcula qué skills cambiaron respecto de `main` y exige, para cada una, un resultado con el hash actual.
+  - **Exención explícita:** un resultado de tipo `waiver` con motivo, para cambios donde un eval no mide nada (por ejemplo, una skill que solo dirige el propio eval). La exención queda visible en el PR y la aceptas o rechazas tú `[MÍA]`.
+- **Formato de un caso:** `evals/<skill>/cases/<caso>/` con `prompt.md` (lo que vería el candidato), `rubric.md` (solo para el juez), `project/` (el proyecto que se copia al candidato), `check.py` (la comprobación de resultado) y `case.json` (modelos y número de ejecuciones). Un check estructural impide palabras delatoras en `prompt.md`, en `project/` y en los nombres de directorio que ve el candidato `[P-eval:7]`.
 
 ### 8.3 Verificación de cada proyecto → en cada repo de proyecto
 - vex-mode trae `create-verification-skill`, que genera en cada proyecto un `verify-<app>` con estas partes: launch, doctor, drive, evidence, cleanup y un feature map `[P-verify:3]` `[P-verify:34]`.
@@ -252,7 +279,7 @@ Cada hito termina en un estado verificable antes de empezar el siguiente `[P-mod
   - `checks/` y CI con `agy plugin validate --strict`.
   - Router `vex-mode` con 2 playbooks (bug-fix y feature) y `worker.md` + `vex-agent`.
   - Hooks del modo, con la marca de activación.
-- **M2 — Evals:** el arnés de evals (§8.2) y la política de hash en CI.
+- **M2 — Evals:** `eval.md` y `principle-explain-the-number` copiados de pstack, el arnés `evals/run.py`, `scripts/build_plugin.py`, el primer caso real y la política de hash en CI (§8.2).
 - **M3 — Auto-mejora:** `correct`, `reflect`, `show-me-your-work` y el disparo programado (§9).
 - **M4 — Otros repos:** `create-verification-skill` y `agent-ready` (§10).
 
@@ -262,7 +289,8 @@ Cada hito termina en un estado verificable antes de empezar el siguiente `[P-mod
 |---|---|---|
 | Hooks en lugar de prosa para lecturas, autonomía y verificación | Los agentes ignoran las lecturas pedidas en prosa | `[I-726]` `[I-864]` `[T-teamday]` |
 | Núcleo mínimo siempre activo (`rules/AGENTS.md`) + pausa ante lo irreversible siempre activa. El resto solo con `/vex-mode` | Mantiene la activación manual de pstack, pero la seguridad no depende de acordarse | `[P-mode:4]` `[VEX]` |
-| El juez de evals puede ser de la misma familia que el candidato si agy solo ofrece una | Elegiste usar solo modelos de agy | `[P-eval:21]` `[VEX]` |
+| Cada eval mide cumplimiento, resultado y costo, con una palanca por comparación y una línea base de cambio de modelo | Aprobar solo por cumplimiento dejó pasar un cambio caro que apenas mejoraba el resultado | `[I-1178]` `[VEX]` |
+| Las fases B y C de `arena` las ejecuta un arnés determinista con `agy -p`, no subagentes | En agy el modelo de cada candidato se fija por flag, y el aislamiento exige instalar cada variante | `[P-eval:20-21]` `[I-877]` `[A-cli]` `[MÍA]` |
 | Auto-mejora programada | pstack la dispara a mano | `[P-correct]` `[VEX]` |
 | Evals guardados y exigidos en CI | pstack no publica evidencia | `[AUD]` `[VEX]` |
 | Sin la regla de citar principios en cada respuesta | Se cumple solo en apariencia | `[I-726]` |
@@ -272,7 +300,6 @@ Cada hito termina en un estado verificable antes de empezar el siguiente `[P-mod
 
 - Qué principios entran exactamente (§6.5), con el criterio indicado.
 - El mecanismo del hook `Stop` (§7.1), que se decide con un prototipo.
-- El formato del resultado de eval y el hash (§8.2).
 - Los modelos por rol, según lo que ofrezca `agy models` después de iniciar sesión.
 - El idioma de las skills. Propuesta mía: el texto que lee el agente en inglés, que es el idioma de las fuentes que reutilizamos, y la documentación para humanos en español `[MÍA]`.
 
@@ -292,18 +319,24 @@ Cada hito termina en un estado verificable antes de empezar el siguiente `[P-mod
 | `P-smyw` | `pstack/skills/show-me-your-work/SKILL.md` |
 | `P-automate` | `pstack/skills/automate-me/SKILL.md` |
 | `P-readme` | `pstack/README.md` |
+| `P-explain` | `pstack/skills/principle-explain-the-number/SKILL.md` |
+| `P-arena` | `pstack/skills/arena/SKILL.md` |
 | `P-license` | `pstack/LICENSE` (MIT, Copyright (c) 2026 Lauren Tan) |
 | `T-talk` | Transcripción de "SpaceX AI Engineer Lauren Tan: Part 1": https://sozai.app/transcript/spacex-ai-engineer-lauren-tan-part-1/ |
 | `T-teamday` | https://www.teamday.ai/ai/lauren-tan-spacexsi-grok-bot-11000-agent-prs-lint-rules |
 | `T-redreamality` | https://redreamality.com/blog/lauren-tan-poteto-trust-before-parallel/ |
 | `T-maily` | https://maily.so/seanlee/posts/92zene88zep |
-| `I-726` | https://github.com/cursor/plugins/issues/726 (abierto): 0 de 18 ejecuciones leyeron los principios |
-| `I-864` | https://github.com/cursor/plugins/issues/864 (abierto): 65 de 93 delegados leyeron cuando se les nombró la lectura |
-| `I-1270` | https://github.com/cursor/plugins/issues/1270 (abierto): poteto-agent cae en silencio a Opus 5 |
+| `I-726` | https://github.com/cursor/plugins/issues/726 (abierto): 0 de 18 ejecuciones leyeron los principios. Seguimiento del 2026-10-19: 0/72 sin cambios, 68/72 con lista incondicional al inicio de cada playbook, 71/72 con bloqueo duro |
+| `I-864` | https://github.com/cursor/plugins/issues/864 (abierto): 65 de 93 delegados leyeron el adaptador cuando el kickoff nombró las lecturas; solo 5 de 93 leyeron `no-comments` |
+| `I-1270` | https://github.com/cursor/plugins/issues/1270 (abierto): poteto-agent cae en silencio a Opus 5 por un slug inválido; arreglo en el PR #1273 |
+| `I-877` | https://github.com/cursor/plugins/issues/877 (abierto): aislar la copia del plugin y el estado de usuario de cada candidato; comprobar qué copia se cargó |
+| `I-1178` | https://github.com/cursor/plugins/issues/1178 (cerrado, abierto en el repo equivocado): un cambio aprobado por cumplimiento (5/5 frente a 0/5) apenas movió el resultado (0,916 frente a 0,897) y costó casi el triple; propone medir resultado y costo, una palanca por comparación y una línea base de cambio de modelo |
 | `A-plugin` | agy 1.5.11, documentación embebida: estructura de plugin (`plugin.json`, `skills/`, `agents/`, `rules/AGENTS.md`, `hooks.json`) |
 | `A-skills` | agy 1.5.11: skills globales en `~/.gemini/config/skills/<name>/SKILL.md` y de workspace en `.agents/skills/` |
 | `A-hooks` | agy 1.5.11: `hooks.json`, eventos y ubicaciones (global, plugin, `<workspace>/.agents/hooks.json`) |
 | `A-validate` | `agy plugin validate --help` |
+| `A-cli` | agy 1.5.11, probado el 2026-11-18: `agy models` (familias Gemini, Claude y GPT-OSS); `agy -p --output-format stream-json` registra cada herramienta con sus parámetros y el uso de tokens; `--json-schema`; `--settings` rechaza `plugins`; una skill en `.agents/skills/` del workspace reemplaza a la del plugin global; `agy plugin install` copia la carpeta entera |
+| `T-robson` | Barnaby Robson, "On pstack" (2026-10-05): https://barnabyrobson.org/on-pstack/ |
 | `AUD` | La auditoría de esta sesión: 3 auditores (diseño, evidencia, Claude Code) y 2 refutadores |
 | `VEX` | Decisiones tuyas en esta conversación |
 | `MÍA` | Propuesta del asistente, corregible |
