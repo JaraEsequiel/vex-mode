@@ -135,18 +135,23 @@ class RunTest(unittest.TestCase):
         os.environ["FAKE_AGY_MODE"] = "big"
         result = json.loads(self.run_eval().read_text())
         self.assertIsNone(result["judge"]["error"])
-        self.assertGreater(len((Path(result["run_dir"]) / "judge-prompt.md").read_text()), 131072)
+        self.assertGreater(len((Path(result["run_dir"]) / "judge-prompt.md").read_text().encode()), run.JUDGE_INLINE_MAX)
         sizes = [int(n) for n in (self.home / "judge-args.log").read_text().split()]
         self.assertTrue(all(n < 2000 for n in sizes), sizes)
 
     def test_judge_launch_failure_still_writes_result(self):
-        os.environ["FAKE_AGY_MODE"] = "big"
-        old = run.JUDGE_INLINE_MAX
-        run.JUDGE_INLINE_MAX = 10 ** 8
+        real = run.subprocess.run
+
+        def no_judge(cmd, *a, **kw):
+            if "--json-schema" in cmd:
+                raise OSError(7, "Argument list too long", "agy")
+            return real(cmd, *a, **kw)
+
+        run.subprocess.run = no_judge
         try:
             result = json.loads(self.run_eval().read_text())
         finally:
-            run.JUDGE_INLINE_MAX = old
+            run.subprocess.run = real
         self.assertIn("could not start the judge", result["judge"]["error"])
         self.assertTrue(all(r["outcome"] == 1 for arm in "ABC" for r in result["arms"][arm]["runs"]))
 
