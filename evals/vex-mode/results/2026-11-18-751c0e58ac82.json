@@ -1,0 +1,239 @@
+{
+  "kind": "eval",
+  "skill": "vex-mode",
+  "tree_sha256": "751c0e58ac82caead441a8eaf1f4c95e14a1ffce203e61f7e898288a17249a18",
+  "date": "2026-11-18",
+  "case": "tax-rounding",
+  "run_dir": "/home/vex/.cache/vex-mode/runs/20261118-221441-180861",
+  "arms": {
+    "A": {
+      "model": "gemini-4-neon-medium",
+      "plugin_ref": "8754bd7976a42c2e45534f350a19ac60f0970902",
+      "tree_sha256": "539ae35e6a18211399af1edcb9b9e8c645306f7f5000a16809b47f0797a30408",
+      "runs": [
+        {
+          "slot": 7,
+          "status": "SUCCESS",
+          "invalid": null,
+          "outcome": 1,
+          "compliance": 1.0,
+          "tokens": 84175,
+          "duration_s": 216.647982574,
+          "reads": 19,
+          "commands": 6,
+          "label": "R1"
+        },
+        {
+          "slot": 5,
+          "status": "SUCCESS",
+          "invalid": null,
+          "outcome": 0,
+          "compliance": 1.0,
+          "tokens": 66325,
+          "duration_s": 263.709087927,
+          "reads": 17,
+          "commands": 7,
+          "label": "R3"
+        },
+        {
+          "slot": 2,
+          "status": "SUCCESS",
+          "invalid": null,
+          "outcome": 1,
+          "compliance": 1.0,
+          "tokens": 84139,
+          "duration_s": 268.06589073,
+          "reads": 19,
+          "commands": 7,
+          "label": "R4"
+        }
+      ]
+    },
+    "B": {
+      "model": "gemini-4-neon-medium",
+      "plugin_ref": "d8011148f534e844bea9c31db257f960470bed85",
+      "tree_sha256": "751c0e58ac82caead441a8eaf1f4c95e14a1ffce203e61f7e898288a17249a18",
+      "runs": [
+        {
+          "slot": 6,
+          "status": "SUCCESS",
+          "invalid": null,
+          "outcome": 1,
+          "compliance": 1.0,
+          "tokens": 61807,
+          "duration_s": 219.975698673,
+          "reads": 18,
+          "commands": 4,
+          "label": "R5"
+        },
+        {
+          "slot": 4,
+          "status": "SUCCESS",
+          "invalid": null,
+          "outcome": 1,
+          "compliance": 1.0,
+          "tokens": 73050,
+          "duration_s": 257.371130763,
+          "reads": 17,
+          "commands": 4,
+          "label": "R7"
+        },
+        {
+          "slot": 8,
+          "status": "SUCCESS",
+          "invalid": null,
+          "outcome": 1,
+          "compliance": 1.0,
+          "tokens": 64474,
+          "duration_s": 218.399662528,
+          "reads": 19,
+          "commands": 5,
+          "label": "R2"
+        }
+      ]
+    },
+    "C": {
+      "model": "gemini-4-neon-high",
+      "plugin_ref": "8754bd7976a42c2e45534f350a19ac60f0970902",
+      "tree_sha256": "539ae35e6a18211399af1edcb9b9e8c645306f7f5000a16809b47f0797a30408",
+      "runs": [
+        {
+          "slot": 9,
+          "status": "SUCCESS",
+          "invalid": null,
+          "outcome": 1,
+          "compliance": 1.0,
+          "tokens": 118484,
+          "duration_s": 513.932200221,
+          "reads": 20,
+          "commands": 5,
+          "label": "R6"
+        },
+        {
+          "slot": 1,
+          "status": "SUCCESS",
+          "invalid": null,
+          "outcome": 1,
+          "compliance": 1.0,
+          "tokens": 155510,
+          "duration_s": 634.161637791,
+          "reads": 19,
+          "commands": 8,
+          "label": "R9"
+        },
+        {
+          "slot": 3,
+          "status": "SUCCESS",
+          "invalid": null,
+          "outcome": 1,
+          "compliance": 1.0,
+          "tokens": 141589,
+          "duration_s": 532.547868478,
+          "reads": 19,
+          "commands": 10,
+          "label": "R8"
+        }
+      ]
+    }
+  },
+  "judge": {
+    "model": "claude-opus-5-5-high",
+    "error": null
+  },
+  "metrics": {
+    "A": {
+      "compliance": {
+        "mean": 1.0,
+        "min": 1.0,
+        "max": 1.0,
+        "spread": 0.0
+      },
+      "outcome": {
+        "mean": 0.6666666666666666,
+        "min": 0.0,
+        "max": 1.0,
+        "spread": 1.0
+      },
+      "tokens": {
+        "mean": 78213.0,
+        "min": 66325.0,
+        "max": 84175.0,
+        "spread": 17850.0
+      },
+      "duration_s": {
+        "mean": 249.47432041033332,
+        "min": 216.647982574,
+        "max": 268.06589073,
+        "spread": 51.41790815599998
+      }
+    },
+    "B": {
+      "compliance": {
+        "mean": 1.0,
+        "min": 1.0,
+        "max": 1.0,
+        "spread": 0.0
+      },
+      "outcome": {
+        "mean": 1.0,
+        "min": 1.0,
+        "max": 1.0,
+        "spread": 0.0
+      },
+      "tokens": {
+        "mean": 66443.66666666667,
+        "min": 61807.0,
+        "max": 73050.0,
+        "spread": 11243.0
+      },
+      "duration_s": {
+        "mean": 231.91549732133333,
+        "min": 218.399662528,
+        "max": 257.371130763,
+        "spread": 38.971468235
+      }
+    },
+    "C": {
+      "compliance": {
+        "mean": 1.0,
+        "min": 1.0,
+        "max": 1.0,
+        "spread": 0.0
+      },
+      "outcome": {
+        "mean": 1.0,
+        "min": 1.0,
+        "max": 1.0,
+        "spread": 0.0
+      },
+      "tokens": {
+        "mean": 138527.66666666666,
+        "min": 118484.0,
+        "max": 155510.0,
+        "spread": 37026.0
+      },
+      "duration_s": {
+        "mean": 560.2139021633334,
+        "min": 513.932200221,
+        "max": 634.161637791,
+        "spread": 120.22943756999996
+      }
+    }
+  },
+  "signals": {
+    "B_vs_A": {
+      "compliance": "noise",
+      "outcome": "noise",
+      "tokens": "noise",
+      "duration_s": "noise"
+    },
+    "C_vs_A": {
+      "compliance": "noise",
+      "outcome": "noise",
+      "tokens": "worse",
+      "duration_s": "worse"
+    }
+  },
+  "verdict": "promote",
+  "synthesis": "No regression from the M2 change (Eval playbook + Explain the Number line). B vs A is noise on every metric at n=3: compliance 1.0 vs 1.0, outcome 1.0 vs 0.67 (spread 1.0; one A run changed invoice_total to require Decimal and broke float callers, which the judge passed and the hidden check caught), tokens 66k vs 78k, time 232s vs 249s. The upgrade arm C (neon-high) matched B on quality at about 2x tokens and 2.3x time, so a bigger model buys nothing here. The case does not exercise the Eval playbook itself, so this result shows no harm, not a benefit."
+}

@@ -1,0 +1,7 @@
+{
+  "kind": "waiver",
+  "skill": "principle-explain-the-number",
+  "tree_sha256": "0bebfe9ca394111b67c66f3ed7a9191f22e4c05719bdcd26aa5cb38b7d0476db",
+  "date": "2026-11-18",
+  "reason": "Vendored from pstack with one sentence removed (benchmark-checklist link). It is read only from the eval playbook when an eval's numbers are interpreted, so there is no agent behavior to measure on its own; its rules are exercised by evals/harness/stats.py and every eval result."
+}
