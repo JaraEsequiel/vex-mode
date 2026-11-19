@@ -14,9 +14,11 @@
       "path": "skills/principle-explain-the-number/SKILL.md",
       "upstream_path": "pstack/skills/principle-explain-the-number/SKILL.md",
       "upstream_sha256": "e6a3f00991f4949cf18a0b5c77dd3126ca4402b8553f88c9c7905e577512676e",
-      "pending_refs": [
-        "../benchmark-checklist/SKILL.md"
-      ]
+      "pending_refs": [],
+      "removed_refs": [
+        "benchmark-checklist"
+      ],
+      "adapted": true
     },
     {
       "path": "skills/principle-fix-root-causes/SKILL.md",
@@ -83,7 +85,6 @@
         "playbooks/autopilot-full.md",
         "playbooks/autopilot-stack.md",
         "playbooks/babysit.md",
-        "playbooks/eval.md",
         "playbooks/hillclimb.md",
         "playbooks/investigation.md",
         "playbooks/multi-phase-plan.md",
@@ -102,7 +103,6 @@
         "principle-build-the-lever",
         "principle-exhaust-the-design-space",
         "principle-experience-first",
-        "principle-explain-the-number",
         "principle-foundational-thinking",
         "principle-guard-the-context-window",
         "principle-make-operations-idempotent",
@@ -136,9 +136,11 @@
       "path": "skills/vex-mode/playbooks/eval.md",
       "upstream_path": "pstack/skills/poteto-mode/playbooks/eval.md",
       "upstream_sha256": "369bfda8bf305fb57bf4cabada7862c41dc21f1dc0ad7993cfcd29d0a4d99a68",
-      "pending_refs": [
+      "pending_refs": [],
+      "removed_refs": [
         "arena"
-      ]
+      ],
+      "adapted": true
     },
     {
       "path": "skills/vex-mode/playbooks/feature.md",
