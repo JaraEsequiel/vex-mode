@@ -3,5 +3,6 @@
   "candidate_model": "gemini-4-neon-medium",
   "upgrade_model": "gemini-4-neon-high",
   "workdir": "invoices",
-  "timeout_s": 900
+  "timeout_s": 900,
+  "quality": true
 }

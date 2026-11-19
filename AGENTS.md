@@ -14,7 +14,7 @@ This repo is an Antigravity plugin: Vex's working mode for agents, built on psta
 - `agents/vex-agent.md`: the subagent definition.
 - `hooks.json` + `hooks/`: mode hooks (activation, irreversible pause, stop gate).
 - `checks/`: deterministic structural checks. `checks/run.py` runs all of them.
-- `evals/`: `run.py` (the eval harness), `harness/` (`judges.py` calls the judge over API), `judge.json` (judge provider, model, effort), and per skill `evals/<skill>/cases/` and `results/`. Never inside `skills/`: a candidate must not see them.
+- `evals/`: `run.py` (the eval harness), `harness/` (`judges.py` calls the judge over API; `quality.py` and `quality_judge.py` measure code quality on passing runs, design §8.2.1), `judge.json` (judge provider, model, effort), and per skill `evals/<skill>/cases/` and `results/`. Never inside `skills/`: a candidate must not see them.
 - `scripts/vendor.py`: copies pstack files verbatim and records provenance (including the upstream commit of each file).
 - `scripts/upstream_drift.py`: compares every copied file with pstack upstream; a weekly workflow keeps one issue, "pstack upstream drift", in step. An adapted file that changed upstream is reconciled by re-applying the upstream diff, then `--accept`; never by re-copying it.
 - `scripts/build_plugin.py`: exports only the plugin's parts; install with `--install`, never `agy plugin install` on the repo.
@@ -86,6 +86,8 @@ If an eval was killed before it restored the user's plugin, the next eval refuse
 | `agy -p` is written last in skills and rules (it takes the next word as the prompt) | `checks/check_skills.py` `checks/tests/test_check_skills.py` |
 | The generated Stop hook never loops, never blocks a clean finish, a cancel or an error, and treats a check that can't run or hangs as a failure | `skills/agent-ready/templates/check_on_stop.py` `scripts/tests/test_check_on_stop.py` |
 | The design's HTML matches its Markdown | `scripts/render_design.py` `scripts/tests/test_render_design.py` |
+| Quality is measured only on runs that pass; promote is refused when outcome or a blocking quality measure is worse or errored | `evals/run.py` `checks/check_evals.py` `evals/tests/test_run.py` `checks/tests/test_check_evals.py` |
+| Every blocking deterministic quality measure scores a planted worse patch worse than the good fix | `evals/harness/quality.py` `evals/tests/test_quality.py` |
 | A PreToolUse hook with no opinion prints nothing (`{}` denies the tool) | `hooks/tests/test_irreversible.py` `docs/decisions/2026-11-18-hook-probe.md` |
 
 When you are corrected for a mistake, add a row here together with its enforcer in the same change. A rule that nothing enforces is a repeat waiting to happen.

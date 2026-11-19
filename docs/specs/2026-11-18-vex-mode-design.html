@@ -52,6 +52,8 @@ a.s.i{color:var(--c-i);border-color:rgba(248,113,113,.45);background:rgba(248,11
 a.s.a{color:var(--c-a);border-color:rgba(52,211,153,.45);background:rgba(52,211,153,.1)}
 a.s.aud{color:var(--c-aud);border-color:rgba(251,146,60,.45);background:rgba(251,146,60,.1)}
 a.s.vex{color:var(--c-vex);border-color:rgba(251,191,36,.5);background:rgba(251,191,36,.12)}
+a.s.r{color:#5eead4;border-color:rgba(94,234,212,.45);background:rgba(94,234,212,.1)}
+a.s.run{color:#f9a8d4;border-color:rgba(249,168,212,.45);background:rgba(249,168,212,.1)}
 a.s.mia{color:var(--c-mia);border-color:rgba(148,163,184,.45);background:rgba(148,163,184,.1);border-style:dashed}
 a.s:hover{filter:brightness(1.3)}
 .legend{display:flex;flex-wrap:wrap;gap:8px 16px;font-size:.88rem;color:var(--muted);align-items:center}
@@ -100,7 +102,7 @@ footer{color:var(--muted);font-size:.85rem;border-top:1px solid var(--border);ma
   <h1><span>vex-mode</span> — un modo de trabajo para agentes sobre Antigravity</h1>
   <div class="meta">
     <span><b>Fecha</b> 2026-11-18 · actualizado 2026-11-19</span>
-    <span><b>Estado</b> aprobado e implementado: M1 a M4 (PRs #1 a #4). Cada hito corrigió este documento tras releer sus fuentes.</span>
+    <span><b>Estado</b> aprobado e implementado: M1 a M4 (PRs #1 a #4). M5 (calidad del código, §8.2.1) aprobado e implementado; evidencia en <code>docs/decisions/2026-11-19-m5-quality.md</code>. Cada hito corrigió este documento tras releer sus fuentes.</span>
     <span><b>Repo</b> <code>~/Projects/VexOs/Code/Repos/vex-mode</code>, privado en GitHub (<code>JaraEsequiel/vex-mode</code>). Este archivo vive en <code>docs/specs/</code>; el HTML se genera con <code>python3 scripts/render_design.py</code>.</span>
   </div>
   <div class="card" style="margin-top:18px">
@@ -438,13 +440,15 @@ flowchart LR
 </li>
 <li><b>Transcripts:</b> cada ejecución se guarda con <code>agy -p --output-format stream-json</code>. Ese formato registra cada <code>read_file</code> y <code>run_command</code> con su ruta, y el uso de tokens <a class="s a" href="#A-cli">A-cli</a>. El juez devuelve un veredicto estructurado con el JSON schema de la API de su proveedor.
 </li>
-<li><b>Tres medidas por ejecución, no solo cumplimiento</b> <a class="s i" href="#I-1178">I-1178</a> <a class="s vex" href="#VEX">VEX</a>:
+<li><b>Cuatro medidas por ejecución, no solo cumplimiento</b> <a class="s i" href="#I-1178">I-1178</a> <a class="s vex" href="#VEX">VEX</a>:
 <ol>
 <li><b>Cumplimiento:</b> la rúbrica de 3 a 6 criterios, calificada por el juez <a class="s p" href="#P-eval">P-eval:17</a>.
 </li>
 <li><b>Resultado:</b> un script de comprobación del caso, que se ejecuta en el directorio del candidato después de la ejecución y nunca se le muestra.
 </li>
 <li><b>Costo:</b> tokens y duración, tomados del evento <code>result</code> del transcript.
+</li>
+<li><b>Calidad:</b> solo sobre las ejecuciones que pasan el resultado (§8.2.1, M5).
 </li></ol>
 </li>
 <li><b>Una sola palanca por comparación</b> <a class="s i" href="#I-1178">I-1178</a>. Cada caso corre tres brazos:
@@ -485,6 +489,182 @@ flowchart LR
 </li></ul>
 </li>
 <li><b>Formato de un caso:</b> <code>evals/&lt;skill&gt;/cases/&lt;caso&gt;/</code> con <code>prompt.md</code> (lo que vería el candidato), <code>rubric.md</code> (solo para el juez), <code>project/</code> (el proyecto que se copia al candidato), <code>check.py</code> (la comprobación de resultado) y <code>case.json</code> (modelos de los candidatos y número de ejecuciones; el juez es global, en <code>evals/judge.json</code>). Un check estructural impide palabras delatoras en <code>prompt.md</code>, en <code>project/</code> y en los nombres de directorio que ve el candidato <a class="s p" href="#P-eval">P-eval:7</a>.
+</li></ul>
+<h3 id="s8-2-1">8.2.1 Calidad del código (M5)</h3>
+<p><i>Agregado el 2026-11-19 tras releer las fuentes <code>[R-…]</code> (§13) y medir los diffs de la corrida <code>20261119-145054-789891</code> <a class="s run" href="#RUN">RUN</a>.</i></p>
+<ul>
+<li><b>Para qué:</b> pasar el check no alcanza. En 296 PRs que pasaban el grader de SWE-bench, cuatro mantenedores que no sabían el origen mergearon en promedio 24,2 puntos menos (error estándar 2,7). Entre los motivos de rechazo está <i>"The code is verbose, does not conform to standards"</i> <a class="s r" href="#R-metr">R-metr</a>. Hay parches que pasan los tests y aun así degradan una firma pública o ponen la lógica en el nivel equivocado <a class="s r" href="#R-milestone">R-milestone</a>.
+</li>
+<li><b>Criterios</b> <a class="s vex" href="#VEX">VEX</a>: el menor código necesario, reutilizar, nada de sobreingeniería ni comentarios, nada de AI slop, seguridad y código simple.
+</li>
+<li><b>Solo entre las ejecuciones que funcionan</b> <a class="s vex" href="#VEX">VEX</a>:
+<ul>
+<li>En <code>tax-rounding</code>, el parche más chico (B, 5 a 6 líneas) era el roto: pasaba todo a <code>Decimal</code> y rompía a quien llamaba con <code>float</code> <a class="s run" href="#RUN">RUN</a>. Medir "menos código" por separado premia la solución rota.
+</li>
+<li>La calidad de una ejecución se calcula solo si es válida y su <code>outcome</code> es 1. La de un brazo resume esas ejecuciones y es <code>null</code> si ninguna pasa.
+</li></ul>
+</li>
+<li><b>Comparación entre brazos, sin parche de referencia</b> <a class="s vex" href="#VEX">VEX</a>:
+<ul>
+<li>A↔B ya es una comparación relativa, así que ningún caso necesita un <code>reference.diff</code>.
+</li>
+<li>La razón de desvío contra una referencia <a class="s r" href="#R-l2c">R-l2c</a> se descarta por tres motivos: alguien tendría que escribir la referencia, ese autor sería otro sesgo y el paper no define cómo cuenta |Δ|.
+</li></ul>
+</li>
+<li><b>Solo biblioteca estándar</b> <a class="s vex" href="#VEX">VEX</a>: <code>ast</code>, <code>tokenize</code> y <code>difflib</code>. No se usan <code>bandit</code>, <code>ruff</code> ni <code>ast-grep</code>. El costo es que las reglas son nuestras y nadie las validó fuera de este repo.
+</li>
+<li><b>Qué se mide.</b> Lo hace <code>evals/harness/quality.py</code> a partir de <code>project/</code> del caso y el diff guardado de cada ejecución, así que también se recalcula sobre corridas viejas. Las medidas de código leen solo archivos <code>.py</code>.
+</li></ul>
+<table>
+  <tr><th>Medida</th><th>Cómo</th><th>Criterio</th><th>Fuente</th><th>Mejor</th><th>¿Bloquea?</th></tr>
+  <tr><td><code>prod_lines</code></td><td>Líneas agregadas más borradas fuera de los tests</td><td>menor código</td><td><a class="s r" href="#R-trim">R-trim</a> (len(P))</td><td>menos</td><td>sí</td></tr>
+  <tr><td><code>test_lines</code></td><td>Lo mismo en tests (<code>test_*.py</code>, <code>*_test.py</code>, <code>tests/</code>)</td><td>—</td><td><a class="s run" href="#RUN">RUN</a></td><td>—</td><td>no, informativa</td></tr>
+</table>
+<p>Un script que el candidato deja suelto (<code>repro.py</code>, <code>debug_*.py</code>) cuenta como producción y, como el check no lo usa, como removible. TRIM encontró que los scripts de reproducción sueltos son el 49,6 % de las líneas removibles <a class="s r" href="#R-trim">R-trim</a>. Reproducir el error no exige dejar el archivo en el proyecto <a class="s mia" href="#MIA">MÍA</a>.</p>
+<table>
+  <tr><th><code>removable_lines</code></th><th>Líneas de producción que se pueden revertir sin que falle el <code>check.py</code> oculto (ver abajo)</th><th>menor código, slop</th><th><a class="s r" href="#R-trim">R-trim</a></th><th>menos</th><th>sí</th></tr>
+  <tr><td><code>verbosity</code></td><td>(Líneas agregadas que marca una regla ∪ líneas clonadas) ÷ líneas agregadas de producción</td><td>AI slop</td><td><a class="s r" href="#R-slopcode">R-slopcode</a></td><td>menos</td><td>sí</td></tr>
+  <tr><td><code>comments_added</code></td><td>Comentarios <code>#</code> en líneas agregadas (<code>tokenize</code>)</td><td>sin comentarios</td><td><a class="s vex" href="#VEX">VEX</a></td><td>0</td><td>sí</td></tr>
+  <tr><td><code>docstrings_added</code></td><td>Docstrings nuevos</td><td>—</td><td><a class="s mia" href="#MIA">MÍA</a></td><td>—</td><td>no, informativa</td></tr>
+  <tr><td><code>security_findings</code></td><td>Hallazgos nuevos de las reglas de seguridad (después menos antes)</td><td>seguridad</td><td><a class="s r" href="#R-anthropic">R-anthropic</a> <a class="s r" href="#R-patchbench">R-patchbench</a></td><td>0</td><td>sí</td></tr>
+  <tr><td><code>judge_reuse</code>, <code>judge_simplicity</code>, <code>judge_contract</code></td><td>Votos del juez de calidad (ver abajo)</td><td>reutilizar, simplicidad</td><td><a class="s r" href="#R-anthropic">R-anthropic</a> <a class="s r" href="#R-l2c">R-l2c</a> <a class="s r" href="#R-milestone">R-milestone</a></td><td>más</td><td>sí</td></tr>
+</table>
+<ul>
+<li><b><code>removable_lines</code>, al estilo TRIM</b> <a class="s r" href="#R-trim">R-trim</a>:
+<ul>
+<li>Según TRIM, CodeSlop = len(parche) − len(parche mínimo que sigue cumpliendo la tarea), con los tests como oráculo. TRIM quita entre 17,9 % y 32,9 % de los parches de agentes.
+</li>
+<li>Acá el oráculo es el <code>check.py</code> oculto, que corre en milisegundos. Se hace una pasada por bloque de <code>difflib</code> y otra por línea (TRIM-NG, O(n) corridas del check), siempre de atrás hacia adelante. Una unidad se revierte solo si el check sigue pasando.
+</li>
+<li>Cubre solo producción: el check nunca ejercita los tests del candidato, que siempre saldrían "removibles".
+</li>
+<li>Límite: la medida no puede ser mejor que el check. Si el check es débil, cuenta como removible código que sí sirve.
+</li></ul>
+</li>
+<li><b>Complejidad:</b>
+<ul>
+<li>CC se calcula con <code>ast</code>, con las reglas de radon <a class="s r" href="#R-slopcode">R-slopcode</a>, y se pondera por √SLOC, igual que la masa de SlopCodeBench.
+</li>
+<li>La erosión del paper solo suma funciones con CC &gt; 10, así que en un parche chico da 0 siempre <a class="s run" href="#RUN">RUN</a>. Por eso se usa la variación de la masa. La erosión completa queda para el caso de varias etapas.
+</li></ul>
+</li>
+<li><b>Verbosidad:</b>
+<ul>
+<li>Las 137 reglas de SlopCodeBench no aparecen publicadas en el paper, que solo remite a scbench.ai <a class="s r" href="#R-slopcode">R-slopcode</a>.
+</li>
+<li>Escribimos un juego chico a partir de sus ejemplos y de los nuestros <a class="s mia" href="#MIA">MÍA</a>:
+<ul>
+<li>una lista armada con un bucle y <code>append</code> que podría ser una comprensión;
+</li>
+<li>una guarda de lista vacía antes de iterar;
+</li>
+<li>un nombre intermedio que se usa una sola vez y se devuelve;
+</li>
+<li><code>== True</code>, <code>== False</code> o <code>len(x) == 0</code>;
+</li>
+<li>un <code>else</code> después de <code>return</code>;
+</li>
+<li>un <code>except</code> que solo hace <code>pass</code>.
+</li></ul>
+</li>
+<li>Clones: ventanas de 3 líneas normalizadas que se repiten en el archivo.
+</li></ul>
+</li>
+<li><b>Seguridad</b> <a class="s mia" href="#MIA">MÍA</a>:
+<ul>
+<li>Las reglas en AST marcan:
+<ul>
+<li><code>eval</code> y <code>exec</code>;
+</li>
+<li><code>shell=True</code>, <code>os.system</code> y <code>os.popen</code>;
+</li>
+<li><code>pickle.loads</code> y <code>marshal.loads</code>;
+</li>
+<li><code>yaml.load</code> sin <code>SafeLoader</code>;
+</li>
+<li><code>verify=False</code>, <code>CERT_NONE</code> y <code>_create_unverified_context</code>;
+</li>
+<li><code>tempfile.mktemp</code>;
+</li>
+<li><code>hashlib.md5</code> y <code>hashlib.sha1</code>;
+</li>
+<li>un literal asignado a un nombre que contiene <code>key</code>, <code>secret</code>, <code>token</code> o <code>password</code>.
+</li></ul>
+</li>
+<li>Anthropic pone el análisis estático de seguridad como segunda capa <a class="s r" href="#R-anthropic">R-anthropic</a>. PatchBench muestra que una sola validación sobreestima mucho: la tasa de éxito pasa de más de 97 % a "roughly half" con validación semántica <a class="s r" href="#R-patchbench">R-patchbench</a>. Estas reglas son un piso, no una prueba.
+</li></ul>
+</li>
+<li><b>Juez de calidad:</b>
+<ul>
+<li><b>Una dimensión por llamada.</b> Anthropic: <i>"grade each dimension with an isolated LLM-as-judge"</i> <a class="s r" href="#R-anthropic">R-anthropic</a>. RuVerBench: con 4 o 5 rúbricas en una llamada, todos los modelos pierden puntaje, a menudo dos dígitos <a class="s r" href="#R-ruver">R-ruver</a>.
+</li>
+<li><b>Tres dimensiones:</b>
+<ul>
+<li><code>reuse</code>: ¿usa lo que el proyecto ya tenía en vez de duplicar su lógica? <a class="s vex" href="#VEX">VEX</a>
+</li>
+<li><code>simplicity</code>: ¿es el cambio más simple que resuelve el pedido, sin abstracciones, configuración ni generalidad que nadie pidió? <a class="s vex" href="#VEX">VEX</a> <a class="s r" href="#R-l2c">R-l2c</a> (Q3: <i>"code conciseness and absence of over-engineering"</i>)
+</li>
+<li><code>contract</code>: ¿quien ya llamaba a lo que cambió sigue funcionando (firmas, tipos aceptados y devueltos), salvo que el pedido exigiera otra cosa? <a class="s r" href="#R-milestone">R-milestone</a> (<i>API Signature Degradation</i>)
+</li></ul>
+</li>
+<li><b>Qué recibe cada llamada:</b>
+<ul>
+<li>Todos los parches que pasan, ciegos y con etiquetas mezcladas, como el juez de cumplimiento.
+</li>
+<li>Los archivos originales que tocaron, para poder juzgar la reutilización.
+</li>
+<li>Así son 9 llamadas por eval y no 81 <a class="s mia" href="#MIA">MÍA</a>. RuVerBench mide el costo de juntar rúbricas en una llamada, no el de juntar ejecuciones.
+</li></ul>
+</li>
+<li><b>Respuesta:</b> <code>pass</code>, <code>fail</code> o <code>unknown</code> (<i>"return 'Unknown' when it doesn't have enough information"</i>) <a class="s r" href="#R-anthropic">R-anthropic</a>. RuVerBench fuerza respuestas binarias; elegimos la salida de Anthropic y contamos <code>unknown</code> como voto ausente <a class="s mia" href="#MIA">MÍA</a>.
+</li>
+<li><b>Votos:</b> 3 por dimensión. Una ejecución saca <code>pass</code> o <code>fail</code> solo si al menos 2 votos coinciden; con <code>pass, unknown, unknown</code> o <code>pass, fail, unknown</code> queda <code>null</code> <a class="s mia" href="#MIA">MÍA</a>. Según RuVerBench, la mejora llega <i>"mostly … within three to five votes"</i>, y votar <i>"reinforces the wrong label"</i> cuando el juez acierta menos de la mitad <a class="s r" href="#R-ruver">R-ruver</a>. Si no hay mayoría, o todos los votos son <code>unknown</code>, el resultado es <code>null</code>. Como votar no corrige un error sistemático, el juez se calibra después (abajo).
+</li>
+<li><b>Qué juez:</b> el mismo de cumplimiento (<code>evals/judge.json</code>, hoy <code>gpt-6.2-sol</code>), de otra familia <a class="s vex" href="#VEX">VEX</a>. Ningún modelo Claude.
+</li></ul>
+</li>
+<li><b>Cómo se lee:</b>
+<ul>
+<li>Cada medida guarda media y dispersión por brazo, y su señal B↔A y C↔A con la regla de §8.2 <a class="s p" href="#P-explain">P-explain</a>.
+</li>
+<li>Una señal de calidad necesita al menos 2 ejecuciones con valor (que pasaron, y en el juez, que no quedaron en <code>null</code>) en cada brazo. Si no las hay, vale <code>&quot;few&quot;</code> y no bloquea <a class="s mia" href="#MIA">MÍA</a>. Con una sola ejecución la dispersión es 0, y cualquier diferencia contaría como efecto.
+</li>
+<li>Si una medida no se pudo calcular (el check se colgó, una llamada del juez falló o devolvió etiquetas de más o de menos), su señal vale <code>&quot;error&quot;</code> y el motivo queda en <code>quality.errors</code> del resultado <a class="s mia" href="#MIA">MÍA</a>. Un error de calidad no invalida el resultado, porque 1 llamada fallida de 9 no justifica tirar 9 ejecuciones. Bloquea <code>promote</code> hasta que <code>rejudge</code> lo resuelva. Así, una API inestable no saca la calidad de la decisión en silencio.
+</li></ul>
+</li>
+<li><b>Cómo entra en el veredicto</b> <a class="s vex" href="#VEX">VEX</a>:
+<ul>
+<li><code>run.py verdict … promote</code> se rechaza si <code>signals.B_vs_A</code> marca <code>worse</code> en <code>outcome</code>, o <code>worse</code> o <code>&quot;error&quot;</code> en una medida que bloquea. <code>reject</code> e <code>inconclusive</code> no cambian. Es la regla "promover solo si ni el resultado ni la calidad empeoran", puesta como estructura y no como prosa.
+</li>
+<li><code>checks/check_evals.py</code> aplica la misma regla en CI a todo resultado con <code>promote</code>, para que editar el JSON a mano no la saltee. También exige las medidas de calidad en los resultados de casos con calidad fechados desde 2026-11-20 <a class="s mia" href="#MIA">MÍA</a>. Los resultados anteriores no las tienen y no se pueden recalcular: una corrida no guardó <code>diffs/</code> y la otra ya no existe. Esos quedan como están.
+</li></ul>
+</li>
+<li><b>Qué casos la usan:</b>
+<ul>
+<li><code>case.json</code> la activa con <code>&quot;quality&quot;: true</code>. <code>tax-rounding</code> la activa.
+</li>
+<li><code>habit-tracker</code> todavía no, porque su salida son sobre todo plantillas copiadas y ahí "menos código" no mide nada <a class="s mia" href="#MIA">MÍA</a>.
+</li></ul>
+</li>
+<li><b><code>rejudge</code></b> recalcula también la calidad (medidas y juez) sin correr de nuevo.
+</li>
+<li><b>Costo:</b> el check corre unas O(líneas del parche) veces por ejecución, y el juez hace 9 llamadas más por eval.
+</li>
+<li><b>Evaluar la evaluación</b> <a class="s vex" href="#VEX">VEX</a>:
+<ul>
+<li><b>En M5, parches plantados:</b> cada medida que bloquea tiene un test con el arreglo correcto de <code>tax-rounding</code> y una versión empeorada a propósito: con comentarios, con código muerto, con <code>shell=True</code>, duplicada o con una abstracción de más. La versión empeorada tiene que puntuar peor (es la idea de exigir una rotura deliberada por medida <a class="s i" href="#I-1271">I-1271</a>). El juez se prueba con respuestas falsas, sin llamar a la API.
+</li>
+<li><b>Después de M5:</b> calibrar el juez de calidad contra vos con parches de las corridas guardadas calificados a mano <a class="s r" href="#R-anthropic">R-anthropic</a> (<i>"closely calibrated with human experts"</i>), y un caso de varias etapas para medir degradación <a class="s r" href="#R-slopcode">R-slopcode</a>. Según SlopCodeBench, pedir calidad en el prompt baja el punto de partida pero no la velocidad de degradación.
+</li></ul>
+</li>
+<li><b>No-objetivos:</b>
+<ul>
+<li>No reemplaza leer los diffs y los transcripts (<i>"You won't know if your graders are working well unless you read the transcripts"</i>) <a class="s r" href="#R-anthropic">R-anthropic</a>.
+</li>
+<li>No produce un puntaje único.
+</li>
+<li>No mide el estilo del repo.
+</li></ul>
 </li></ul>
 <h3 id="s8-3">8.3 Verificación de cada proyecto → en cada repo de proyecto</h3>
 <ul>
@@ -596,6 +776,8 @@ flowchart LR
 <li><b>M3 — Auto-mejora:</b> <code>correct</code>, <code>reflect</code> y <code>show-me-your-work</code> copiados de pstack y adaptados, el disparador de <code>show-me-your-work</code> en el router, el guardián de merge en el hook de pausa, <code>scripts/scheduled_correct.py</code> con su timer, y la evidencia de evals del propio PR (§9).
 </li>
 <li><b>M4 — Otros repos:</b> <code>create-verification-skill</code> y <code>maintain-verification-skill</code> copiados de pstack y adaptados (#1271), <code>agent-ready</code> con su plantilla de hook <code>Stop</code>, y un eval real de <code>agent-ready</code> sobre un repo de muestra (§8.3, §10).
+</li>
+<li><b>M5 — Calidad del código:</b> la cuarta medida de los evals, solo sobre ejecuciones que pasan; el juez de calidad por dimensión con votos; el bloqueo de <code>promote</code> si el resultado o la calidad empeoran; y los parches plantados que prueban cada medida (§8.2.1).
 </li></ul>
 <h2 id="s11"><span class="n">11</span>Desviaciones de pstack (documentadas a propósito)</h2>
 <table>
@@ -673,6 +855,15 @@ flowchart LR
   <tr id="T-robson"><td><a class="s t" href="#T-robson">T-robson</a></td><td>Barnaby Robson, "On pstack" (2026-10-05): <a href="https://barnabyrobson.org/on-pstack/">https://barnabyrobson.org/on-pstack/</a></td></tr>
   <tr id="AUD"><td><a class="s aud" href="#AUD">AUD</a></td><td>La auditoría de esta sesión: 3 auditores (diseño, evidencia, Claude Code) y 2 refutadores</td></tr>
   <tr id="VEX"><td><a class="s vex" href="#VEX">VEX</a></td><td>Decisiones tuyas en esta conversación</td></tr>
+  <tr id="R-anthropic"><td><a class="s r" href="#R-anthropic">R-anthropic</a></td><td>Anthropic, "Demystifying evals for AI agents" (2026-01-09), releído el 2026-11-19: tres capas (tests, análisis estático, rúbrica de un juez), un juez aislado por dimensión, la salida "Unknown", calibrar contra humanos, leer transcripts; <a href="https://www.anthropic.com/engineering/demystifying-evals-for-ai-agents">https://www.anthropic.com/engineering/demystifying-evals-for-ai-agents</a></td></tr>
+  <tr id="R-metr"><td><a class="s r" href="#R-metr">R-metr</a></td><td>METR, "Many SWE-bench-Passing PRs Would Not Be Merged into Main" (2026-03-10): 4 mantenedores, 296 PRs revisados sin saber su origen, 24,2 pp (EE 2,7) de diferencia contra el grader; el porcentaje por motivo solo está en una figura; <a href="https://metr.org/notes/2026-03-10-many-swe-bench-passing-prs-would-not-be-merged-into-main/">https://metr.org/notes/2026-03-10-many-swe-bench-passing-prs-would-not-be-merged-into-main/</a></td></tr>
+  <tr id="R-slopcode"><td><a class="s r" href="#R-slopcode">R-slopcode</a></td><td>SlopCodeBench, arXiv 2603.24755 v2: masa = CC·√SLOC, erosión con umbral CC &gt; 10, verbosidad = (líneas marcadas por reglas ∪ clones) ÷ LOC; los agentes son 2,3× más verbosos y 2,0× más erosionados que el código humano; <a href="https://arxiv.org/abs/2603.24755">https://arxiv.org/abs/2603.24755</a></td></tr>
+  <tr id="R-trim"><td><a class="s r" href="#R-trim">R-trim</a></td><td>TRIM, arXiv 2607.18161: CodeSlop = len(AP) − len(AP*), con len = líneas agregadas más borradas y los tests como oráculo; entre 17,9 % y 32,9 % removible; <a href="https://arxiv.org/abs/2607.18161">https://arxiv.org/abs/2607.18161</a></td></tr>
+  <tr id="R-l2c"><td><a class="s r" href="#R-l2c">R-l2c</a></td><td>Learning to Commit, arXiv 2603.26664: desvío de líneas (\</td><td>Δ̂\</td><td>− \</td><td>Δk\</td><td>)/\</td><td>Δk\</td><td>sin definir \</td><td>Δ\</td><td>; juez por pares en 4 dimensiones (Q3: concisión y sobreingeniería), no validado contra humanos; <a href="https://arxiv.org/abs/2603.26664">https://arxiv.org/abs/2603.26664</a></td></tr>
+  <tr id="R-milestone"><td><a class="s r" href="#R-milestone">R-milestone</a></td><td>SWE-Milestone, arXiv 2603.13428 v4, Apéndice C.1: anti-patrones que pasan los tests (responsabilidad mal ubicada, arreglos a escopetazos, degradación de firmas de API), de forma cualitativa, sin conteos; <a href="https://arxiv.org/abs/2603.13428">https://arxiv.org/abs/2603.13428</a></td></tr>
+  <tr id="R-patchbench"><td><a class="s r" href="#R-patchbench">R-patchbench</a></td><td>PatchBench, arXiv 2609.04075: los tres mejores agentes pasan más del 97 % con un PoC, entre 75 % y 82 % con varios y "roughly half" con validación semántica; <a href="https://arxiv.org/abs/2609.04075">https://arxiv.org/abs/2609.04075</a></td></tr>
+  <tr id="R-ruver"><td><a class="s r" href="#R-ruver">R-ruver</a></td><td>RuVerBench, arXiv 2606.29920 v2: jueces con ruido en código agéntico, votar rinde con retornos decrecientes (3 a 5 votos) y empeora si el juez acierta menos de la mitad; con 4 o 5 rúbricas por llamada todos pierden; <a href="https://arxiv.org/abs/2606.29920">https://arxiv.org/abs/2606.29920</a></td></tr>
+  <tr id="RUN"><td><a class="s run" href="#RUN">RUN</a></td><td>Corrida <code>20261119-145054-789891</code> de <code>tax-rounding</code> (<code>~/.cache/vex-mode/runs/</code>), medida el 2026-11-19: los 4 parches que pasan tienen unas 10 líneas de producción casi idénticas y entre 38 y 113 líneas de tests</td></tr>
   <tr id="MIA"><td><a class="s mia" href="#MIA">MÍA</a></td><td>Propuesta del asistente, corregible</td></tr>
 </table>
 <p><b>Nota sobre la fiabilidad de las fuentes:</b> las <code>T-…</code> son transcripciones automáticas o reseñas de terceros, no textos de la autora. Las <code>P-…</code> son la fuente primaria.</p>

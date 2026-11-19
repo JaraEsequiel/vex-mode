@@ -63,3 +63,15 @@ def banned_hits(text: str) -> list[str]:
 
     tokens = re.findall(r"[A-Z]?[a-z]+|[A-Z]+(?![a-z])", text)
     return sorted({t.lower() for t in tokens if t.lower().startswith(BANNED)})
+
+
+QUALITY_BLOCKING = ("prod_lines", "removable_lines", "complexity_delta", "verbosity", "comments_added",
+                    "security_findings", "judge_reuse", "judge_simplicity", "judge_contract")
+QUALITY_ALL = QUALITY_BLOCKING + ("test_lines", "docstrings_added")
+
+
+def promote_blockers(result: dict) -> list[str]:
+    """Why a result may not be promoted (design §8.2.1): outcome worse, or a blocking quality measure worse or errored."""
+    s = (result.get("signals") or {}).get("B_vs_A") or {}
+    out = ["outcome worse"] if s.get("outcome") == "worse" else []
+    return out + [f"{n} {s[n]}" for n in QUALITY_BLOCKING if s.get(n) in ("worse", "error")]

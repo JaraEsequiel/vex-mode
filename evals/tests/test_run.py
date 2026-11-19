@@ -14,6 +14,9 @@ import run
 from harness import judge, judges
 from test_judges import FakeAPI, openai_reply
 
+sys.path.insert(0, str(HERE.parents[1] / "checks"))
+from _util import QUALITY_ALL  # noqa: E402
+
 CASE = {
     "runs": 2,
     "candidate_model": "gemini-4-neon-medium",
@@ -295,6 +298,118 @@ class RunTest(unittest.TestCase):
         (self.repo / "skills/x/SKILL.md").write_text("dirty")
         with self.assertRaises(run.EvalError):
             self.run_eval()
+
+    def enable_quality(self):
+        case = dict(CASE, quality=True)
+        (self.repo / "evals/x/cases/c1/case.json").write_text(json.dumps(case))
+        git(self.repo, "commit", "-qam", "quality on")
+
+    def passing(self, result):
+        return [r for a in "ABC" for r in result["arms"][a]["runs"] if r["outcome"] == 1]
+
+    def test_quality_only_on_passing_runs(self):
+        self.enable_quality()
+        os.environ["FAKE_AGY_MODE"] = "failB"
+        result = json.loads(self.run_eval().read_text())
+        self.assertTrue(all("quality" not in r for r in result["arms"]["B"]["runs"]))
+        self.assertTrue(all("quality" in r for a in "AC" for r in result["arms"][a]["runs"]))
+        self.assertEqual(result["signals"]["B_vs_A"]["prod_lines"], "few")
+        self.assertIsNone(result["metrics"]["B"]["prod_lines"])
+
+    def test_quality_measures_recorded(self):
+        self.enable_quality()
+        result = json.loads(self.run_eval().read_text())
+        self.assertTrue(result["quality"]["enabled"])
+        self.assertEqual(result["quality"]["errors"], [])
+        for r in self.passing(result):
+            self.assertEqual(set(r["quality"]), set(QUALITY_ALL))
+            self.assertEqual(r["quality"]["prod_lines"], 2)
+            self.assertEqual(r["quality"]["judge_reuse"], 1.0)
+        self.assertEqual(result["metrics"]["A"]["prod_lines"]["mean"], 2.0)
+        self.assertEqual(result["signals"]["B_vs_A"]["prod_lines"], "noise")
+        self.assertEqual(run.main(["verdict", str(self.repo / "evals/x/results" / next(
+            p.name for p in (self.repo / "evals/x/results").iterdir())), "promote", "same quality"]), 0)
+
+    def test_quality_judge_error_blocks_promote(self):
+        self.enable_quality()
+        api = self.openai_judge()
+        compliance = api.handler
+
+        def handler(req):
+            if "## Q1" in req["body"]["input"][0]["content"]:
+                return 400, {}, {"error": {"message": "bad request"}}
+            return compliance(req)
+        api.handler = handler
+        path = self.run_eval()
+        result = json.loads(path.read_text())
+        self.assertIsNone(result["judge"]["error"])
+        self.assertEqual(len(result["quality"]["errors"]), 9)
+        self.assertEqual(result["signals"]["B_vs_A"]["judge_reuse"], "error")
+        with self.assertRaises(run.EvalError) as ctx:
+            run.set_verdict(path, "promote", "looks fine")
+        self.assertIn("judge_reuse error", str(ctx.exception))
+        run.set_verdict(path, "reject", "quality judge failed")
+
+    def test_promote_refused_when_outcome_worse(self):
+        path = self.run_eval()
+        result = json.loads(path.read_text())
+        result["signals"]["B_vs_A"]["outcome"] = "worse"
+        path.write_text(json.dumps(result))
+        with self.assertRaises(run.EvalError) as ctx:
+            run.set_verdict(path, "promote", "x")
+        self.assertIn("outcome worse", str(ctx.exception))
+        run.set_verdict(path, "reject", "x")
+        self.assertEqual(json.loads(path.read_text())["verdict"], "reject")
+
+    def test_case_without_quality_has_none(self):
+        result = json.loads(self.run_eval().read_text())
+        self.assertFalse(result["quality"]["enabled"])
+        self.assertTrue(all("quality" not in r for a in "ABC" for r in result["arms"][a]["runs"]))
+        self.assertNotIn("prod_lines", result["signals"]["B_vs_A"])
+
+    def test_saved_diff_is_never_truncated(self):
+        os.environ["FAKE_AGY_MODE"] = "big"
+        result = json.loads(self.run_eval().read_text())
+        run_dir = Path(result["run_dir"])
+        diff = next((run_dir / "diffs").glob("*.diff")).read_text()
+        self.assertGreater(len(diff), run.DIFF_LIMIT)
+        self.assertNotIn("[diff truncated]", diff)
+        self.assertIn("[diff truncated]", (run_dir / "judge-prompt.md").read_text())
+
+    def test_rejudge_recomputes_quality(self):
+        self.enable_quality()
+        path = self.run_eval()
+        before = json.loads(path.read_text())
+        self.assertEqual(run.main(["rejudge", str(path)]), 0)
+        after = json.loads(path.read_text())
+        self.assertEqual([r.get("quality") for r in self.passing(after)], [r.get("quality") for r in self.passing(before)])
+        self.assertTrue(after["quality"]["enabled"])
+
+    def test_diff_keeps_trailing_context_and_ignores_user_prefixes(self):
+        work = self.home / "w"
+        write(work, {"a.py": "x = 1\ny = 2\n\n\n"})
+        for args in (["init", "-q"], ["config", "diff.mnemonicPrefix", "true"], ["add", "-A"], ["commit", "-qm", "i"]):
+            git(work, *args)
+        (work / "a.py").write_text("x = 3\ny = 2\n\n\n")
+        diff = run._diff(work)
+        self.assertTrue(diff.startswith("diff --git a/a.py b/a.py"), diff[:40])
+        self.assertTrue(diff.endswith(" \n"), repr(diff[-20:]))
+
+    def test_quality_survives_unreadable_project_file(self):
+        case = self.repo / "evals/x/cases/c1"
+        (case / "project/data.bin").write_bytes(b"\xff\xfe\x00binary")
+        run_dir = self.cache / "qrun"
+        (run_dir / "diffs").mkdir(parents=True)
+        (run_dir / "diffs/1.diff").write_text("diff --git a/data.bin b/data.bin\nBinary files differ\n")
+        records = {"A": {"runs": [{"slot": 1, "invalid": None, "outcome": 1}]}}
+        real = run.quality_judge.grade
+        run.quality_judge.grade = lambda patches, context, *a: ({s: {} for s in patches}, [], {})
+        try:
+            rec = run._quality(records, case, {"quality": True}, "fix it", {}, run_dir, __import__("random").Random(1))
+        finally:
+            run.quality_judge.grade = real
+        self.assertTrue(rec["errors"])
+        self.assertTrue(records["A"]["runs"][0]["quality_errors"])
 
     def test_verdict_subcommand_sets_fields(self):
         path = self.run_eval()

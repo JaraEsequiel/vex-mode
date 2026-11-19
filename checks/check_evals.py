@@ -8,7 +8,7 @@ import re
 import subprocess
 from pathlib import Path
 
-from _util import banned_hits, model_family, skill_tree_sha256
+from _util import QUALITY_ALL, banned_hits, model_family, promote_blockers, skill_tree_sha256
 
 NOT_SKILLS = {"harness", "tests", "__pycache__"}
 CASE_FILES = ("prompt.md", "rubric.md", "check.py", "case.json")
@@ -18,6 +18,8 @@ VERDICTS = ("promote", "reject", "inconclusive")
 SHA = re.compile(r"^[0-9a-f]{64}$")
 DATE = re.compile(r"^\d{4}-\d{2}-\d{2}$")
 SLUG = re.compile(r"^[a-z0-9-]+$")
+SIGNALS = ("better", "worse", "noise", "few", "error")
+QUALITY_SINCE = "2026-11-20"  # results before M5 have no quality and cannot get it (design §8.2.1)
 
 
 def _skill_dirs(root: Path) -> list[Path]:
@@ -55,6 +57,8 @@ def _case_errors(case: Path, rel: str) -> list[str]:
         for key in ("candidate_model", "upgrade_model"):
             if not (isinstance(cfg.get(key), str) and cfg[key]):
                 errors.append(f"{rel}/case.json: {key} is required")
+        if "quality" in cfg and not isinstance(cfg["quality"], bool):
+            errors.append(f"{rel}/case.json: quality must be true or false")
         if "judge_model" in cfg:
             errors.append(f"{rel}/case.json: judge_model is gone; the judge is set once in evals/judge.json")
         workdir = cfg.get("workdir")
@@ -96,7 +100,7 @@ def judge_config_errors(root: Path) -> list[str]:
     return errors
 
 
-def _result_errors(result: dict, skill: str, rel: str) -> list[str]:
+def _result_errors(result: dict, skill: str, rel: str, root: Path) -> list[str]:
     errors = []
     kind = result.get("kind")
     if kind not in ("eval", "waiver"):
@@ -127,6 +131,23 @@ def _result_errors(result: dict, skill: str, rel: str) -> list[str]:
             value = (metrics.get(arm) or {}).get(m)
             if not (isinstance(value, dict) and all(k in value for k in ("mean", "min", "max", "spread"))):
                 errors.append(f"{rel}: metrics.{arm}.{m} is missing")
+    try:
+        case_cfg = json.loads((root / "evals" / skill / "cases" / str(result.get("case")) / "case.json").read_text())
+    except (OSError, ValueError):
+        case_cfg = {}
+    if case_cfg.get("quality") is True and str(result.get("date", "")) >= QUALITY_SINCE:
+        if not (result.get("quality") or {}).get("enabled"):
+            errors.append(f"{rel}: the case measures quality; this result has none (design §8.2.1)")
+        for arm in ARMS:
+            for m in QUALITY_ALL:
+                if m not in (metrics.get(arm) or {}):
+                    errors.append(f"{rel}: metrics.{arm}.{m} is missing")
+        b_vs_a = (result.get("signals") or {}).get("B_vs_A") or {}
+        for m in QUALITY_ALL:
+            if b_vs_a.get(m) not in SIGNALS:
+                errors.append(f"{rel}: signals.B_vs_A.{m} must be one of {SIGNALS}")
+    if result.get("verdict") == "promote" and (blockers := promote_blockers(result)):
+        errors.append(f"{rel}: promote refused: {'; '.join(blockers)}")
     if result.get("verdict") not in VERDICTS:
         errors.append(f"{rel}: no verdict; read every output, then run `python3 evals/run.py verdict`")
     if not (isinstance(result.get("synthesis"), str) and result["synthesis"].strip()):
@@ -157,7 +178,7 @@ def layout_errors(root: Path) -> list[str]:
             if result is None:
                 errors.append(f"{prel}: invalid JSON")
             else:
-                errors += _result_errors(result, d.name, prel)
+                errors += _result_errors(result, d.name, prel, root)
     return errors
 
 
@@ -199,7 +220,7 @@ def policy_errors(root: Path, base: str) -> list[str]:
         sha = skill_tree_sha256(root / "skills" / skill)
         ok = [
             p for p, r in _load_results(root / "evals" / skill)
-            if r is not None and r.get("tree_sha256") == sha and not _result_errors(r, skill, "")
+            if r is not None and r.get("tree_sha256") == sha and not _result_errors(r, skill, "", root)
         ]
         if not ok:
             errors.append(

@@ -1,7 +1,7 @@
 # vex-mode — Documento de diseño
 
 - **Fecha:** 2026-11-18 · actualizado 2026-11-19
-- **Estado:** aprobado e implementado: M1 a M4 (PRs #1 a #4). Cada hito corrigió este documento tras releer sus fuentes.
+- **Estado:** aprobado e implementado: M1 a M4 (PRs #1 a #4). M5 (calidad del código, §8.2.1) aprobado e implementado; evidencia en `docs/decisions/2026-11-19-m5-quality.md`. Cada hito corrigió este documento tras releer sus fuentes.
 - **Repo:** `~/Projects/VexOs/Code/Repos/vex-mode`, privado en GitHub (`JaraEsequiel/vex-mode`). Este archivo vive en `docs/specs/`; el HTML se genera con `python3 scripts/render_design.py`.
 
 **Cómo leer las fuentes.** Cada decisión lleva su fuente entre corchetes. La tabla del final (§13) define cada código. Las etiquetas son:
@@ -11,6 +11,8 @@
 - `[A-…]`: documentación de Antigravity embebida en agy 1.5.11.
 - `[AUD]`: la auditoría con agentes y refutadores de esta sesión.
 - `[VEX]`: decisión tuya en esta conversación.
+- `[R-…]`: artículos e investigación (papers y notas de 2026), releídos el 2026-11-19.
+- `[RUN]`: datos medidos en una corrida de eval guardada.
 - `[MÍA]`: propuesta mía, corregible, sin fuente externa.
 
 ---
@@ -236,10 +238,11 @@ flowchart LR
   - **Salida estructurada:** OpenAI Responses API con `text.format` `json_schema` y `strict` `[A-openai-so]`; Anthropic Messages API con `output_config.format` `[A-anthropic]`. El arnés igual valida cada etiqueta y criterio (§8.2, `judge.check_verdict`).
   - El arnés rechaza un juez de la misma familia que los candidatos.
 - **Transcripts:** cada ejecución se guarda con `agy -p --output-format stream-json`. Ese formato registra cada `read_file` y `run_command` con su ruta, y el uso de tokens `[A-cli]`. El juez devuelve un veredicto estructurado con el JSON schema de la API de su proveedor.
-- **Tres medidas por ejecución, no solo cumplimiento** `[I-1178]` `[VEX]`:
+- **Cuatro medidas por ejecución, no solo cumplimiento** `[I-1178]` `[VEX]`:
   1. **Cumplimiento:** la rúbrica de 3 a 6 criterios, calificada por el juez `[P-eval:17]`.
   2. **Resultado:** un script de comprobación del caso, que se ejecuta en el directorio del candidato después de la ejecución y nunca se le muestra.
   3. **Costo:** tokens y duración, tomados del evento `result` del transcript.
+  4. **Calidad:** solo sobre las ejecuciones que pasan el resultado (§8.2.1, M5).
 - **Una sola palanca por comparación** `[I-1178]`. Cada caso corre tres brazos:
   - A: la skill base (la de `main`).
   - B: la variante.
@@ -258,6 +261,97 @@ flowchart LR
   - CI calcula qué skills cambiaron respecto de `main` y exige, para cada una, un resultado con el hash actual.
   - **Exención explícita:** un resultado de tipo `waiver` con motivo, para cambios donde un eval no mide nada (por ejemplo, una skill que solo dirige el propio eval). La exención queda visible en el PR y la aceptas o rechazas tú `[MÍA]`.
 - **Formato de un caso:** `evals/<skill>/cases/<caso>/` con `prompt.md` (lo que vería el candidato), `rubric.md` (solo para el juez), `project/` (el proyecto que se copia al candidato), `check.py` (la comprobación de resultado) y `case.json` (modelos de los candidatos y número de ejecuciones; el juez es global, en `evals/judge.json`). Un check estructural impide palabras delatoras en `prompt.md`, en `project/` y en los nombres de directorio que ve el candidato `[P-eval:7]`.
+
+### 8.2.1 Calidad del código (M5)
+
+*Agregado el 2026-11-19 tras releer las fuentes `[R-…]` (§13) y medir los diffs de la corrida `20261119-145054-789891` `[RUN]`.*
+
+- **Para qué:** pasar el check no alcanza. En 296 PRs que pasaban el grader de SWE-bench, cuatro mantenedores que no sabían el origen mergearon en promedio 24,2 puntos menos (error estándar 2,7). Entre los motivos de rechazo está *"The code is verbose, does not conform to standards"* `[R-metr]`. Hay parches que pasan los tests y aun así degradan una firma pública o ponen la lógica en el nivel equivocado `[R-milestone]`.
+- **Criterios** `[VEX]`: el menor código necesario, reutilizar, nada de sobreingeniería ni comentarios, nada de AI slop, seguridad y código simple.
+- **Solo entre las ejecuciones que funcionan** `[VEX]`:
+  - En `tax-rounding`, el parche más chico (B, 5 a 6 líneas) era el roto: pasaba todo a `Decimal` y rompía a quien llamaba con `float` `[RUN]`. Medir "menos código" por separado premia la solución rota.
+  - La calidad de una ejecución se calcula solo si es válida y su `outcome` es 1. La de un brazo resume esas ejecuciones y es `null` si ninguna pasa.
+- **Comparación entre brazos, sin parche de referencia** `[VEX]`:
+  - A↔B ya es una comparación relativa, así que ningún caso necesita un `reference.diff`.
+  - La razón de desvío contra una referencia `[R-l2c]` se descarta por tres motivos: alguien tendría que escribir la referencia, ese autor sería otro sesgo y el paper no define cómo cuenta |Δ|.
+- **Solo biblioteca estándar** `[VEX]`: `ast`, `tokenize` y `difflib`. No se usan `bandit`, `ruff` ni `ast-grep`. El costo es que las reglas son nuestras y nadie las validó fuera de este repo.
+- **Qué se mide.** Lo hace `evals/harness/quality.py` a partir de `project/` del caso y el diff guardado de cada ejecución, así que también se recalcula sobre corridas viejas. Las medidas de código leen solo archivos `.py`.
+
+| Medida | Cómo | Criterio | Fuente | Mejor | ¿Bloquea? |
+|---|---|---|---|---|---|
+| `prod_lines` | Líneas agregadas más borradas fuera de los tests | menor código | `[R-trim]` (len(P)) | menos | sí |
+| `test_lines` | Lo mismo en tests (`test_*.py`, `*_test.py`, `tests/`) | — | `[RUN]` | — | no, informativa |
+
+Un script que el candidato deja suelto (`repro.py`, `debug_*.py`) cuenta como producción y, como el check no lo usa, como removible. TRIM encontró que los scripts de reproducción sueltos son el 49,6 % de las líneas removibles `[R-trim]`. Reproducir el error no exige dejar el archivo en el proyecto `[MÍA]`.
+| `removable_lines` | Líneas de producción que se pueden revertir sin que falle el `check.py` oculto (ver abajo) | menor código, slop | `[R-trim]` | menos | sí |
+| `complexity_delta` | Σ CC(f)·√SLOC(f) sobre las funciones de los archivos tocados, después menos antes | sobreingeniería, simplicidad | `[R-slopcode]` (masa) | menos | sí |
+| `verbosity` | (Líneas agregadas que marca una regla ∪ líneas clonadas) ÷ líneas agregadas de producción | AI slop | `[R-slopcode]` | menos | sí |
+| `comments_added` | Comentarios `#` en líneas agregadas (`tokenize`) | sin comentarios | `[VEX]` | 0 | sí |
+| `docstrings_added` | Docstrings nuevos | — | `[MÍA]` | — | no, informativa |
+| `security_findings` | Hallazgos nuevos de las reglas de seguridad (después menos antes) | seguridad | `[R-anthropic]` `[R-patchbench]` | 0 | sí |
+| `judge_reuse`, `judge_simplicity`, `judge_contract` | Votos del juez de calidad (ver abajo) | reutilizar, simplicidad | `[R-anthropic]` `[R-l2c]` `[R-milestone]` | más | sí |
+
+- **`removable_lines`, al estilo TRIM** `[R-trim]`:
+  - Según TRIM, CodeSlop = len(parche) − len(parche mínimo que sigue cumpliendo la tarea), con los tests como oráculo. TRIM quita entre 17,9 % y 32,9 % de los parches de agentes.
+  - Acá el oráculo es el `check.py` oculto, que corre en milisegundos. Se hace una pasada por bloque de `difflib` y otra por línea (TRIM-NG, O(n) corridas del check), siempre de atrás hacia adelante. Una unidad se revierte solo si el check sigue pasando.
+  - Cubre solo producción: el check nunca ejercita los tests del candidato, que siempre saldrían "removibles".
+  - Límite: la medida no puede ser mejor que el check. Si el check es débil, cuenta como removible código que sí sirve.
+- **Complejidad:**
+  - CC se calcula con `ast`, con las reglas de radon `[R-slopcode]`, y se pondera por √SLOC, igual que la masa de SlopCodeBench.
+  - La erosión del paper solo suma funciones con CC > 10, así que en un parche chico da 0 siempre `[RUN]`. Por eso se usa la variación de la masa. La erosión completa queda para el caso de varias etapas.
+- **Verbosidad:**
+  - Las 137 reglas de SlopCodeBench no aparecen publicadas en el paper, que solo remite a scbench.ai `[R-slopcode]`.
+  - Escribimos un juego chico a partir de sus ejemplos y de los nuestros `[MÍA]`:
+    - una lista armada con un bucle y `append` que podría ser una comprensión;
+    - una guarda de lista vacía antes de iterar;
+    - un nombre intermedio que se usa una sola vez y se devuelve;
+    - `== True`, `== False` o `len(x) == 0`;
+    - un `else` después de `return`;
+    - un `except` que solo hace `pass`.
+  - Clones: ventanas de 3 líneas normalizadas que se repiten en el archivo.
+- **Seguridad** `[MÍA]`:
+  - Las reglas en AST marcan:
+    - `eval` y `exec`;
+    - `shell=True`, `os.system` y `os.popen`;
+    - `pickle.loads` y `marshal.loads`;
+    - `yaml.load` sin `SafeLoader`;
+    - `verify=False`, `CERT_NONE` y `_create_unverified_context`;
+    - `tempfile.mktemp`;
+    - `hashlib.md5` y `hashlib.sha1`;
+    - un literal asignado a un nombre que contiene `key`, `secret`, `token` o `password`.
+  - Anthropic pone el análisis estático de seguridad como segunda capa `[R-anthropic]`. PatchBench muestra que una sola validación sobreestima mucho: la tasa de éxito pasa de más de 97 % a "roughly half" con validación semántica `[R-patchbench]`. Estas reglas son un piso, no una prueba.
+- **Juez de calidad:**
+  - **Una dimensión por llamada.** Anthropic: *"grade each dimension with an isolated LLM-as-judge"* `[R-anthropic]`. RuVerBench: con 4 o 5 rúbricas en una llamada, todos los modelos pierden puntaje, a menudo dos dígitos `[R-ruver]`.
+  - **Tres dimensiones:**
+    - `reuse`: ¿usa lo que el proyecto ya tenía en vez de duplicar su lógica? `[VEX]`
+    - `simplicity`: ¿es el cambio más simple que resuelve el pedido, sin abstracciones, configuración ni generalidad que nadie pidió? `[VEX]` `[R-l2c]` (Q3: *"code conciseness and absence of over-engineering"*)
+    - `contract`: ¿quien ya llamaba a lo que cambió sigue funcionando (firmas, tipos aceptados y devueltos), salvo que el pedido exigiera otra cosa? `[R-milestone]` (*API Signature Degradation*)
+  - **Qué recibe cada llamada:**
+    - Todos los parches que pasan, ciegos y con etiquetas mezcladas, como el juez de cumplimiento.
+    - Los archivos originales que tocaron, para poder juzgar la reutilización.
+    - Así son 9 llamadas por eval y no 81 `[MÍA]`. RuVerBench mide el costo de juntar rúbricas en una llamada, no el de juntar ejecuciones.
+  - **Respuesta:** `pass`, `fail` o `unknown` (*"return 'Unknown' when it doesn't have enough information"*) `[R-anthropic]`. RuVerBench fuerza respuestas binarias; elegimos la salida de Anthropic y contamos `unknown` como voto ausente `[MÍA]`.
+  - **Votos:** 3 por dimensión. Una ejecución saca `pass` o `fail` solo si al menos 2 votos coinciden; con `pass, unknown, unknown` o `pass, fail, unknown` queda `null` `[MÍA]`. Según RuVerBench, la mejora llega *"mostly … within three to five votes"*, y votar *"reinforces the wrong label"* cuando el juez acierta menos de la mitad `[R-ruver]`. Si no hay mayoría, o todos los votos son `unknown`, el resultado es `null`. Como votar no corrige un error sistemático, el juez se calibra después (abajo).
+  - **Qué juez:** el mismo de cumplimiento (`evals/judge.json`, hoy `gpt-6.2-sol`), de otra familia `[VEX]`. Ningún modelo Claude.
+- **Cómo se lee:**
+  - Cada medida guarda media y dispersión por brazo, y su señal B↔A y C↔A con la regla de §8.2 `[P-explain]`.
+  - Una señal de calidad necesita al menos 2 ejecuciones con valor (que pasaron, y en el juez, que no quedaron en `null`) en cada brazo. Si no las hay, vale `"few"` y no bloquea `[MÍA]`. Con una sola ejecución la dispersión es 0, y cualquier diferencia contaría como efecto.
+  - Si una medida no se pudo calcular (el check se colgó, una llamada del juez falló o devolvió etiquetas de más o de menos), su señal vale `"error"` y el motivo queda en `quality.errors` del resultado `[MÍA]`. Un error de calidad no invalida el resultado, porque 1 llamada fallida de 9 no justifica tirar 9 ejecuciones. Bloquea `promote` hasta que `rejudge` lo resuelva. Así, una API inestable no saca la calidad de la decisión en silencio.
+- **Cómo entra en el veredicto** `[VEX]`:
+  - `run.py verdict … promote` se rechaza si `signals.B_vs_A` marca `worse` en `outcome`, o `worse` o `"error"` en una medida que bloquea. `reject` e `inconclusive` no cambian. Es la regla "promover solo si ni el resultado ni la calidad empeoran", puesta como estructura y no como prosa.
+  - `checks/check_evals.py` aplica la misma regla en CI a todo resultado con `promote`, para que editar el JSON a mano no la saltee. También exige las medidas de calidad en los resultados de casos con calidad fechados desde 2026-11-20 `[MÍA]`. Los resultados anteriores no las tienen y no se pueden recalcular: una corrida no guardó `diffs/` y la otra ya no existe. Esos quedan como están.
+- **Qué casos la usan:**
+  - `case.json` la activa con `"quality": true`. `tax-rounding` la activa.
+  - `habit-tracker` todavía no, porque su salida son sobre todo plantillas copiadas y ahí "menos código" no mide nada `[MÍA]`.
+- **`rejudge`** recalcula también la calidad (medidas y juez) sin correr de nuevo.
+- **Costo:** el check corre unas O(líneas del parche) veces por ejecución, y el juez hace 9 llamadas más por eval.
+- **Evaluar la evaluación** `[VEX]`:
+  - **En M5, parches plantados:** cada medida que bloquea tiene un test con el arreglo correcto de `tax-rounding` y una versión empeorada a propósito: con comentarios, con código muerto, con `shell=True`, duplicada o con una abstracción de más. La versión empeorada tiene que puntuar peor (es la idea de exigir una rotura deliberada por medida `[I-1271]`). El juez se prueba con respuestas falsas, sin llamar a la API.
+  - **Después de M5:** calibrar el juez de calidad contra vos con parches de las corridas guardadas calificados a mano `[R-anthropic]` (*"closely calibrated with human experts"*), y un caso de varias etapas para medir degradación `[R-slopcode]`. Según SlopCodeBench, pedir calidad en el prompt baja el punto de partida pero no la velocidad de degradación.
+- **No-objetivos:**
+  - No reemplaza leer los diffs y los transcripts (*"You won't know if your graders are working well unless you read the transcripts"*) `[R-anthropic]`.
+  - No produce un puntaje único.
+  - No mide el estilo del repo.
 
 ### 8.3 Verificación de cada proyecto → en cada repo de proyecto
 - vex-mode trae `create-verification-skill`, que genera en cada proyecto un `verify-<app>` con estas partes: launch, doctor, drive, evidence, cleanup y un feature map `[P-verify:3]` `[P-verify:34]`.
@@ -332,6 +426,7 @@ Cada hito termina en un estado verificable antes de empezar el siguiente `[P-mod
 - **M2 — Evals:** `eval.md` y `principle-explain-the-number` copiados de pstack, el arnés `evals/run.py`, `scripts/build_plugin.py`, el primer caso real y la política de hash en CI (§8.2).
 - **M3 — Auto-mejora:** `correct`, `reflect` y `show-me-your-work` copiados de pstack y adaptados, el disparador de `show-me-your-work` en el router, el guardián de merge en el hook de pausa, `scripts/scheduled_correct.py` con su timer, y la evidencia de evals del propio PR (§9).
 - **M4 — Otros repos:** `create-verification-skill` y `maintain-verification-skill` copiados de pstack y adaptados (#1271), `agent-ready` con su plantilla de hook `Stop`, y un eval real de `agent-ready` sobre un repo de muestra (§8.3, §10).
+- **M5 — Calidad del código:** la cuarta medida de los evals, solo sobre ejecuciones que pasan; el juez de calidad por dimensión con votos; el bloqueo de `promote` si el resultado o la calidad empeoran; y los parches plantados que prueban cada medida (§8.2.1).
 
 ## 11. Desviaciones de pstack (documentadas a propósito)
 
@@ -408,6 +503,15 @@ Cada hito termina en un estado verificable antes de empezar el siguiente `[P-mod
 | `T-robson` | Barnaby Robson, "On pstack" (2026-10-05): https://barnabyrobson.org/on-pstack/ |
 | `AUD` | La auditoría de esta sesión: 3 auditores (diseño, evidencia, Claude Code) y 2 refutadores |
 | `VEX` | Decisiones tuyas en esta conversación |
+| `R-anthropic` | Anthropic, "Demystifying evals for AI agents" (2026-01-09), releído el 2026-11-19: tres capas (tests, análisis estático, rúbrica de un juez), un juez aislado por dimensión, la salida "Unknown", calibrar contra humanos, leer transcripts; https://www.anthropic.com/engineering/demystifying-evals-for-ai-agents |
+| `R-metr` | METR, "Many SWE-bench-Passing PRs Would Not Be Merged into Main" (2026-03-10): 4 mantenedores, 296 PRs revisados sin saber su origen, 24,2 pp (EE 2,7) de diferencia contra el grader; el porcentaje por motivo solo está en una figura; https://metr.org/notes/2026-03-10-many-swe-bench-passing-prs-would-not-be-merged-into-main/ |
+| `R-slopcode` | SlopCodeBench, arXiv 2603.24755 v2: masa = CC·√SLOC, erosión con umbral CC > 10, verbosidad = (líneas marcadas por reglas ∪ clones) ÷ LOC; los agentes son 2,3× más verbosos y 2,0× más erosionados que el código humano; https://arxiv.org/abs/2603.24755 |
+| `R-trim` | TRIM, arXiv 2607.18161: CodeSlop = len(AP) − len(AP*), con len = líneas agregadas más borradas y los tests como oráculo; entre 17,9 % y 32,9 % removible; https://arxiv.org/abs/2607.18161 |
+| `R-l2c` | Learning to Commit, arXiv 2603.26664: desvío de líneas (\|Δ̂\| − \|Δk\|)/\|Δk\| sin definir \|Δ\|; juez por pares en 4 dimensiones (Q3: concisión y sobreingeniería), no validado contra humanos; https://arxiv.org/abs/2603.26664 |
+| `R-milestone` | SWE-Milestone, arXiv 2603.13428 v4, Apéndice C.1: anti-patrones que pasan los tests (responsabilidad mal ubicada, arreglos a escopetazos, degradación de firmas de API), de forma cualitativa, sin conteos; https://arxiv.org/abs/2603.13428 |
+| `R-patchbench` | PatchBench, arXiv 2609.04075: los tres mejores agentes pasan más del 97 % con un PoC, entre 75 % y 82 % con varios y "roughly half" con validación semántica; https://arxiv.org/abs/2609.04075 |
+| `R-ruver` | RuVerBench, arXiv 2606.29920 v2: jueces con ruido en código agéntico, votar rinde con retornos decrecientes (3 a 5 votos) y empeora si el juez acierta menos de la mitad; con 4 o 5 rúbricas por llamada todos pierden; https://arxiv.org/abs/2606.29920 |
+| `RUN` | Corrida `20261119-145054-789891` de `tax-rounding` (`~/.cache/vex-mode/runs/`), medida el 2026-11-19: los 4 parches que pasan tienen unas 10 líneas de producción casi idénticas y entre 38 y 113 líneas de tests |
 | `MÍA` | Propuesta del asistente, corregible |
 
 **Nota sobre la fiabilidad de las fuentes:** las `T-…` son transcripciones automáticas o reseñas de terceros, no textos de la autora. Las `P-…` son la fuente primaria.
