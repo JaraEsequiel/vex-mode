@@ -1,0 +1,7 @@
+{
+  "kind": "waiver",
+  "skill": "technical-writing",
+  "tree_sha256": "953b7abcb47e58213ddf09d63f4aac5000b8b89518dbef3aa83ec9c53ab37da5",
+  "date": "2026-11-19",
+  "reason": "Vendored verbatim from pstack@e58dd04. The router's trigger applies it to docs, PR descriptions and commit messages; no case measures prose quality. The tax-rounding eval of the same PR runs with it in the router."
+}
