@@ -5,6 +5,13 @@
   },
   "files": [
     {
+      "path": "skills/architect/SKILL.md",
+      "upstream_path": "pstack/skills/architect/SKILL.md",
+      "upstream_sha256": "aea83d7aa109eb73402182701b14c289844663ad9c8f959fedbef2df66787ce0",
+      "pending_refs": [],
+      "upstream_commit": "e58dd043600587dbaf58ba315e7f2b38373eeb43"
+    },
+    {
       "path": "skills/correct/SKILL.md",
       "upstream_path": "pstack/skills/correct/SKILL.md",
       "upstream_sha256": "e347045d00c967a0b831ef883cc6ac79d21329aa10b5968637df95de7febf0ba",
@@ -160,6 +167,27 @@
       "upstream_commit": "35a90942a7f02e1ebbc2443643179815f2147954"
     },
     {
+      "path": "skills/tdd/SKILL.md",
+      "upstream_path": "pstack/skills/tdd/SKILL.md",
+      "upstream_sha256": "eeb868e2dfebee528d730a67d7b17498fac4bb85dec2e38bc5c5176aca4d5d2f",
+      "pending_refs": [],
+      "upstream_commit": "e58dd043600587dbaf58ba315e7f2b38373eeb43"
+    },
+    {
+      "path": "skills/technical-writing/SKILL.md",
+      "upstream_path": "pstack/skills/technical-writing/SKILL.md",
+      "upstream_sha256": "0a620885599cdde5a0a31fa39878144c10f61c894b56bf4a9ff779496e718b14",
+      "pending_refs": [],
+      "upstream_commit": "e58dd043600587dbaf58ba315e7f2b38373eeb43"
+    },
+    {
+      "path": "skills/unslop/SKILL.md",
+      "upstream_path": "pstack/skills/unslop/SKILL.md",
+      "upstream_sha256": "2b823fd069e031c1420180be8e0d4f5e2fd25bf2c428049e5c835c59a489b5e0",
+      "pending_refs": [],
+      "upstream_commit": "e58dd043600587dbaf58ba315e7f2b38373eeb43"
+    },
+    {
       "path": "skills/vex-mode/SKILL.md",
       "upstream_path": "pstack/skills/poteto-mode/SKILL.md",
       "upstream_sha256": "9c09f6ab6661975a5be108f925afe203e10966ee426e3d786f4d338c5b05bd9f",
@@ -265,6 +293,13 @@
       "upstream_sha256": "d051060527ab1649fb1e69d1e7d416950264f9955c3de3635c0d63569f1b90d8",
       "pending_refs": [],
       "upstream_commit": "35a90942a7f02e1ebbc2443643179815f2147954"
+    },
+    {
+      "path": "skills/why/SKILL.md",
+      "upstream_path": "pstack/skills/why/SKILL.md",
+      "upstream_sha256": "6b65b3180f1f1bd3b696d7933daf900747410c82931d220a3f57a98addb1c0fd",
+      "pending_refs": [],
+      "upstream_commit": "e58dd043600587dbaf58ba315e7f2b38373eeb43"
     }
   ],
   "original": [
