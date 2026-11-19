@@ -15,6 +15,7 @@ import fcntl
 import json
 import os
 import random
+import re
 import secrets
 import shutil
 import signal
@@ -29,9 +30,9 @@ sys.path.insert(0, str(HERE.parent / "scripts"))
 sys.path.insert(0, str(HERE.parent / "checks"))
 
 import build_plugin  # noqa: E402
-from _util import model_family, skill_tree_sha256  # noqa: E402
+from _util import QUALITY_ALL, model_family, promote_blockers, skill_tree_sha256  # noqa: E402
 from harness import arms as arms_mod  # noqa: E402
-from harness import isolation, judge, judges, stats, transcript  # noqa: E402
+from harness import isolation, judge, judges, quality, quality_judge, stats, transcript  # noqa: E402
 
 METRICS = ("compliance", "outcome", "tokens", "duration_s")
 VERDICTS = ("promote", "reject", "inconclusive")
@@ -75,12 +76,12 @@ def _diff(work: Path) -> str:
     """Everything the run changed since the project was planted, committed or not."""
     root = _git(work, "rev-list", "--max-parents=0", "HEAD", check=False).splitlines()
     subprocess.run(["git", "-C", str(work), "add", "-A"], capture_output=True)
-    text = _git(work, "diff", "--cached", root[-1] if root else "HEAD", "--", ".", ":(exclude)**/__pycache__/**",
+    return _git(work, "diff", "--cached", root[-1] if root else "HEAD", "--", ".", ":(exclude)**/__pycache__/**",
                 ":(exclude)__pycache__/**", check=False)
-    return text if len(text) <= DIFF_LIMIT else text[:DIFF_LIMIT] + "\n[diff truncated]"
 
 
 def _material(t: transcript.Transcript, diff: str) -> str:
+    diff = diff if len(diff) <= DIFF_LIMIT else diff[:DIFF_LIMIT] + "\n[diff truncated]"
     steps = "\n".join(f"{i}. {s}" for i, s in enumerate(t.steps, 1)) or "(none)"
     return (f"### Final reply\n\n{t.response.strip()}\n\n### Tool calls, in order\n\n{steps}\n\n"
             f"### Diff\n\n```diff\n{diff}\n```")
@@ -150,13 +151,57 @@ def _judge_record(cfg: dict, error: str | None, usage: dict) -> dict:
     return {"provider": cfg["provider"], "model": cfg["model"], "effort": cfg["effort"], "error": error, "usage": usage}
 
 
-def _score(records: dict) -> tuple[dict, dict]:
+def _touched(diff: str) -> set[str]:
+    return set(re.findall(r"^diff --git \S+?/(\S+) ", diff, re.M))
+
+
+def _quality(records: dict, case_dir: Path, cfg: dict, prompt: str, judge_cfg: dict, run_dir: Path,
+             rng: random.Random) -> dict:
+    """Code quality of every valid passing run (design §8.2.1): deterministic measures, then the quality judge."""
+    if not cfg.get("quality"):
+        return {"enabled": False, "errors": [], "judge_usage": {}}
+    errors, patches, runs = [], {}, {}
+    for rec in records.values():
+        for r in rec["runs"]:
+            r.pop("quality", None)
+            r.pop("quality_errors", None)
+            if r["invalid"] or r["outcome"] != 1:
+                continue
+            diff = (run_dir / "diffs" / f"{r['slot']}.diff").read_text()
+            r["quality"], r["quality_errors"] = quality.measure(case_dir / "project", diff, case_dir / "check.py")
+            errors += [f"slot {r['slot']} {name}: {why}" for name, why in r["quality_errors"].items()]
+            patches[r["slot"]], runs[r["slot"]] = diff, r
+    usage = {}
+    if patches:
+        project = case_dir / "project"
+        files = sorted(rel for diff in patches.values() for rel in _touched(diff) if (project / rel).is_file())
+        context = f"## Request\n\n{prompt}\n\n## Original files\n" + "".join(
+            f"\n### {rel}\n\n```\n{(project / rel).read_text()}\n```\n" for rel in dict.fromkeys(files))
+        values, judge_errors, usage = quality_judge.grade(patches, context, judge_cfg, run_dir, rng)
+        failed = {e.split(" ", 1)[0] for e in judge_errors}
+        for slot, r in runs.items():
+            r["quality"].update(values[slot])
+            r["quality_errors"].update({name: "quality judge vote failed" for name in failed})
+        errors += judge_errors
+    return {"enabled": True, "errors": errors, "judge_usage": usage}
+
+
+def _quality_metric(rec: dict, name: str) -> tuple[list[float], bool]:
+    runs = [r for r in rec["runs"] if "quality" in r]
+    values = [float(r["quality"][name]) for r in runs if r["quality"].get(name) is not None]
+    return values, any(name in r.get("quality_errors", {}) for r in runs)
+
+
+def _score(records: dict, with_quality: bool = False) -> tuple[dict, dict]:
     metrics = {}
     for label, rec in records.items():
         m = {}
         for name in METRICS:
             values = [r[name] for r in rec["runs"]]
             m[name] = None if any(v is None for v in values) else stats.summarize([float(v) for v in values])
+        for name in QUALITY_ALL if with_quality else ():
+            values, _ = _quality_metric(rec, name)
+            m[name] = stats.summarize(values) if values else None
         metrics[label] = m
     signals = {}
     for pair, (a, b) in {"B_vs_A": ("A", "B"), "C_vs_A": ("A", "C")}.items():
@@ -170,6 +215,17 @@ def _score(records: dict) -> tuple[dict, dict]:
                                        {"mean": -y["mean"], "spread": y["spread"]})
             else:
                 s[name] = stats.signal(x, y)
+        for name in QUALITY_ALL if with_quality else ():
+            (xs, x_err), (ys, y_err) = _quality_metric(records[a], name), _quality_metric(records[b], name)
+            if x_err or y_err:
+                s[name] = "error"
+            elif min(len(xs), len(ys)) < 2:
+                s[name] = "few"
+            else:
+                sign = -1 if name in quality.DETERMINISTIC else 1
+                x, y = metrics[a][name], metrics[b][name]
+                s[name] = stats.signal({"mean": sign * x["mean"], "spread": x["spread"]},
+                                       {"mean": sign * y["mean"], "spread": y["spread"]})
         signals[pair] = s
     return metrics, signals
 
@@ -197,11 +253,14 @@ def rejudge(path: Path) -> None:
     families = {model_family(rec["model"]) for rec in result["arms"].values()}
     if model_family(judge_cfg["model"]) in families:
         raise EvalError(f"judge {judge_cfg['model']} shares a model family with a candidate ({sorted(families)})")
+    rng = random.Random()
     with _locked():
         error, usage = _judge(result["arms"], materials, (case_dir / "rubric.md").read_text(), judge_cfg,
-                              run_dir, random.Random())
+                              run_dir, rng)
+        result["quality"] = _quality(result["arms"], case_dir, cfg, (case_dir / "prompt.md").read_text().strip(),
+                                     judge_cfg, run_dir, rng)
     result["judge"] = _judge_record(judge_cfg, error, usage)
-    result["metrics"], result["signals"] = _score(result["arms"])
+    result["metrics"], result["signals"] = _score(result["arms"], result["quality"]["enabled"])
     result["verdict"], result["synthesis"] = None, None
     path.write_text(json.dumps(result, indent=2) + "\n")
     print(f"result: {path}")
@@ -334,11 +393,12 @@ def run_eval(repo: Path, skill: str, case: str, base: str | None = None,
             restore()
 
         judge_error, judge_usage = _judge(records, materials, rubric, judge_cfg, run_dir, rng)
-    metrics, signals = _score(records)
+        quality_record = _quality(records, case_dir, cfg, prompt, judge_cfg, run_dir, rng)
+    metrics, signals = _score(records, quality_record["enabled"])
     result = {
         "kind": "eval", "skill": skill, "tree_sha256": trees["B"], "date": dt.date.today().isoformat(),
         "case": case, "run_dir": str(run_dir), "arms": records,
-        "judge": _judge_record(judge_cfg, judge_error, judge_usage),
+        "judge": _judge_record(judge_cfg, judge_error, judge_usage), "quality": quality_record,
         "metrics": metrics, "signals": signals, "verdict": None, "synthesis": None,
     }
     path.parent.mkdir(parents=True, exist_ok=True)
@@ -353,6 +413,9 @@ def set_verdict(path: Path, verdict: str, synthesis: str) -> None:
     if not synthesis.strip():
         raise EvalError("synthesis is required")
     result = json.loads(path.read_text())
+    blockers = promote_blockers(result) if verdict == "promote" else []
+    if blockers:
+        raise EvalError("promote refused: " + "; ".join(blockers))
     result["verdict"], result["synthesis"] = verdict, synthesis
     path.write_text(json.dumps(result, indent=2) + "\n")
 

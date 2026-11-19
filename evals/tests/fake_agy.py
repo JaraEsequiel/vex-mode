@@ -43,6 +43,11 @@ def main(argv: list[str]) -> int:
         ref = re.match(r"Read the file (\S+) in full", prompt)
         if ref:
             prompt = Path(ref.group(1)).read_text()
+        schema = Path(argv[argv.index("--json-schema") + 1]).read_text()
+        if '"vote"' in schema:
+            runs = [{"label": l, "vote": "pass", "note": "ok"} for l in re.findall(r"^## (Q\d+)$", prompt, re.M)]
+            print(json.dumps({"status": "SUCCESS", "structured_output": {"runs": runs}}))
+            return 0
         labels = re.findall(r"^## (R\d+)$", prompt, re.M)
         if MODE == "badjudge":
             labels = labels[:-1]
@@ -73,7 +78,9 @@ def main(argv: list[str]) -> int:
               "tool_info": {"name": "read_file", "parameters": {"Path": os.environ["FAKE_PEEK"]}}}})
     if MODE == "env":
         Path("leak.txt").write_text(os.environ.get("OPENAI_API_KEY", "") + os.environ.get("ANTHROPIC_API_KEY", ""))
-    if MODE not in ("noop", "trail"):
+    if MODE == "failB" and skill.read_text() == "v2":
+        pass
+    elif MODE not in ("noop", "trail"):
         Path("app.py").write_text("fixed\n" + ("x = 1\n" * 60000 if MODE == "big" else ""))
     if MODE in ("commit", "commit-trail"):
         import subprocess
