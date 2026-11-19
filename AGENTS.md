@@ -15,7 +15,8 @@ This repo is an Antigravity plugin: Vex's working mode for agents, built on psta
 - `hooks.json` + `hooks/`: mode hooks (activation, irreversible pause, stop gate).
 - `checks/`: deterministic structural checks. `checks/run.py` runs all of them.
 - `evals/`: `run.py` (the eval harness), `harness/` (`judges.py` calls the judge over API), `judge.json` (judge provider, model, effort), and per skill `evals/<skill>/cases/` and `results/`. Never inside `skills/`: a candidate must not see them.
-- `scripts/vendor.py`: copies pstack files verbatim and records provenance.
+- `scripts/vendor.py`: copies pstack files verbatim and records provenance (including the upstream commit of each file).
+- `scripts/upstream_drift.py`: compares every copied file with pstack upstream; a weekly workflow keeps one issue, "pstack upstream drift", in step. An adapted file that changed upstream is reconciled by re-applying the upstream diff, then `--accept`; never by re-copying it.
 - `scripts/build_plugin.py`: exports only the plugin's parts; install with `--install`, never `agy plugin install` on the repo.
 - `scripts/scheduled_correct.py`: the weekly unattended `/correct` run and its systemd timer (`install`, `run`, `uninstall`).
 - `scripts/render_design.py`: renders `docs/specs/*-design.html` from the design's Markdown (template: `scripts/design_template.html`). Edit the `.md`, then run it.
@@ -61,6 +62,7 @@ If an eval was killed before it restored the user's plugin, the next eval refuse
 | Rule | Enforced by |
 |---|---|
 | Files from pstack are copied verbatim and recorded | `checks/check_vendor.py` `scripts/vendor.py` |
+| Files copied from pstack are compared with upstream every week | `scripts/upstream_drift.py` `.github/workflows/upstream-drift.yml` |
 | Skill name matches folder, description present | `checks/check_skills.py` |
 | No dangling skill, playbook or link references | `checks/check_skills.py` |
 | Size budgets (SKILL ≤ 16 KB, rule ≤ 24 KB) | `checks/check_skills.py` |
