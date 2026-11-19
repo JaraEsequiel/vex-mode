@@ -78,7 +78,8 @@
       "path": "skills/reflect/SKILL.md",
       "upstream_path": "pstack/skills/reflect/SKILL.md",
       "upstream_sha256": "6f6952f91514dc86257830da93a446c732a1af906f6acd5e5783dc587a29031e",
-      "pending_refs": []
+      "pending_refs": [],
+      "adapted": true
     },
     {
       "path": "skills/show-me-your-work/SKILL.md",
