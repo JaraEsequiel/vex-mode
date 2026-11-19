@@ -52,7 +52,7 @@
   - `test_exports_only_plugin_parts`: a repo with `plugin.json`, `skills/x/SKILL.md`, `hooks/a.py`, `hooks/tests/t.py`, `hooks/__pycache__/a.pyc`, `evals/x/rubric.md`, `docs/d.md`, `AGENTS.md`. Assert the output set of relative files equals `{plugin.json, skills/x/SKILL.md, hooks/a.py}`.
   - `test_ref_exports_committed_content`: commit `SKILL.md` = "v1", then edit the working tree to "v2". `build(..., ref="HEAD")` gives "v1"; `build(...)` gives "v2".
   - `test_out_is_replaced`: a stale file in `out` is gone after a build.
-- [ ] **Step 2: Run** `python3 -m unittest scripts.tests.test_build_plugin -v` (from the repo root, with the same discover layout as the M1 tests). Expected: FAIL, module missing.
+- [ ] **Step 2: Run** `python3 -m unittest discover -s scripts/tests -p 'test_build_plugin.py' -v`. Expected: FAIL, module missing.
 - [ ] **Step 3: Implement `build`**: `git archive <ref> | tar -x` into a temp dir, then copy the filtered parts.
 - [ ] **Step 4: Run the tests.** Expected: 3 PASS. Then run the full M1 verify command. Expected: all green.
 - [ ] **Step 5: Reinstall the user's plugin clean:** `python3 scripts/build_plugin.py --install <scratch>/vex-mode-build`. Then `ls ~/.gemini/config/plugins/vex-mode`. Expected: no `.git`, `docs`, `checks`, `scripts` or `AGENTS.md`. `agy plugin list` shows 10 skills, 1 agent, 1 rule, 3 hooks.
