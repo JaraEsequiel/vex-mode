@@ -341,7 +341,11 @@ footer{color:var(--muted);font-size:.85rem;border-top:1px solid var(--border);ma
 <ul>
 <li>Un check en CI exige que cada skill copiada tenga su entrada en <code>vendor.lock</code>.
 </li>
-<li>Un script compara contra pstack y lista las actualizaciones disponibles upstream <a class="s mia" href="#MIA">MÍA</a>.
+<li><code>scripts/upstream_drift.py</code> compara cada archivo de <code>vendor.lock</code> contra pstack upstream y lo clasifica: sin cambios, cambiado o borrado. Si el archivo está adaptado, muestra el diff de upstream desde el commit de ese archivo, para reaplicarlo sobre la adaptación en vez de pisarla <a class="s mia" href="#MIA">MÍA</a> <a class="s vex" href="#VEX">VEX</a>.
+</li>
+<li><code>vendor.lock</code> guarda el commit de origen <b>por archivo</b> (<code>upstream_commit</code>); el commit global queda como valor por defecto de las entradas viejas <a class="s mia" href="#MIA">MÍA</a>.
+</li>
+<li>Un workflow semanal de GitHub Actions corre el script y mantiene un único issue, "pstack upstream drift": lo abre o actualiza si hay cambios y lo cierra cuando no queda ninguno. No hace fallar el CI de los PRs, porque un cambio upstream no es un error nuestro <a class="s vex" href="#VEX">VEX</a>.
 </li>
 <li>La regla entra en la tabla del <code>AGENTS.md</code> raíz con ese check como mecanismo <a class="s p" href="#P-correct">P-correct:28</a>.
 </li></ul>

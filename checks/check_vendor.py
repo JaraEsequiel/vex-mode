@@ -6,6 +6,7 @@ from pathlib import Path
 from _util import iter_files, load_lock
 
 SHA256 = re.compile(r"^[0-9a-f]{64}$")
+COMMIT = re.compile(r"^[0-9a-f]{40}$")
 
 
 def run(root: Path) -> list[str]:
@@ -21,6 +22,8 @@ def run(root: Path) -> list[str]:
             errors.append(f"vendor.lock: listed path does not exist: {path}")
         if not SHA256.match(item.get("upstream_sha256", "")):
             errors.append(f"vendor.lock: {path}: upstream_sha256 is not 64 hex chars")
+        if "upstream_commit" in item and not COMMIT.match(str(item["upstream_commit"])):
+            errors.append(f"vendor.lock: {path}: upstream_commit is not a 40-hex git sha")
         if not item.get("upstream_path"):
             errors.append(f"vendor.lock: {path}: upstream_path missing")
         local = root / path

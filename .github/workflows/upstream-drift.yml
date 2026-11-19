@@ -1,0 +1,23 @@
+name: upstream-drift
+
+on:
+  schedule:
+    - cron: "0 12 * * 1"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  issues: write
+
+jobs:
+  drift:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Compare copied files with pstack upstream
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: python3 scripts/upstream_drift.py --fetch --gh-issue

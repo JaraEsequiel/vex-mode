@@ -5,8 +5,14 @@ Usage: python3 scripts/vendor.py <upstream_root> <upstream_path> <dest>
 import hashlib
 import json
 import shutil
+import subprocess
 import sys
 from pathlib import Path
+
+
+def _head(upstream_root: Path) -> str | None:
+    r = subprocess.run(["git", "-C", str(upstream_root), "rev-parse", "HEAD"], capture_output=True, text=True)
+    return r.stdout.strip() if r.returncode == 0 else None
 
 
 def vendor(upstream_root: Path, upstream_path: str, dest: Path, repo_root: Path) -> dict:
@@ -24,6 +30,11 @@ def vendor(upstream_root: Path, upstream_path: str, dest: Path, repo_root: Path)
         "upstream_sha256": hashlib.sha256(src.read_bytes()).hexdigest(),
         "pending_refs": previous["pending_refs"] if previous else [],
     }
+    commit = _head(Path(upstream_root))
+    if commit:
+        item["upstream_commit"] = commit
+    if previous and previous.get("removed_refs"):
+        item["removed_refs"] = previous["removed_refs"]
     lock["files"] = [f for f in lock["files"] if f["path"] != rel] + [item]
     lock["files"].sort(key=lambda f: f["path"])
     lock_path.write_text(json.dumps(lock, indent=2) + "\n")

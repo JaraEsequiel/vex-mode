@@ -71,6 +71,17 @@ Dentro del repo destino, en una sesión de agy, ejecuta `/agent-ready`. Genera:
 
 Antes de entregar, rompe algo a propósito y muestra que el `check` y el hook lo detectan.
 
+## Cambios en pstack upstream
+
+Cada lunes, un workflow de GitHub compara los archivos copiados de pstack con su versión upstream y mantiene un único issue, **"pstack upstream drift"**: lo abre o lo actualiza si algo cambió y lo cierra cuando todo coincide. No hace fallar el CI de los PRs.
+
+```bash
+python3 scripts/upstream_drift.py --fetch                       # reporte local
+python3 scripts/upstream_drift.py --fetch --accept <archivo>    # marcar un archivo como reconciliado
+```
+
+Un archivo copiado tal cual se vuelve a copiar con `scripts/vendor.py`. Uno adaptado no se vuelve a copiar: se reaplica sobre nuestra adaptación el diff que muestra el reporte y después se acepta.
+
 ## Documentación
 
 - Diseño: `docs/specs/2026-11-18-vex-mode-design.md`
