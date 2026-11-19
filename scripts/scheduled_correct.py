@@ -45,7 +45,7 @@ This is the weekly unattended run on the vex-mode repo, in this worktree. Nobody
 5. Run the verify command from `AGENTS.md` before each commit.
 6. {finish}
 
-Never merge, and never push to main: the user merges.
+Never merge, and never push to main: the user merges. A command the pause hook stops is not run, and in this headless run a paused command ends this run, so commit the trail after each row you add and avoid `rm -rf` on absolute paths (keep scratch files inside this worktree, untracked).
 """
 
 
@@ -101,6 +101,22 @@ def _new_branch(repo: Path, day: str) -> str:
     return name
 
 
+def _save_trail(worktree: Path, state: Path) -> None:
+    """Keep a copy of the run's trail outside the worktree, which may be removed."""
+    for trail in (worktree / "docs/decisions").glob("*-correct.tsv"):
+        shutil.copyfile(trail, state / f"{worktree.name.removeprefix('wt-')}-correct.tsv")
+
+
+def _commit_trail(worktree: Path, open_pr: bool) -> None:
+    """A headless run can end before it commits its trail (a paused command ends the turn)."""
+    if not _git(worktree, "status", "--porcelain", "--", "docs/decisions").stdout.strip():
+        return
+    _git(worktree, "add", "--", "docs/decisions")
+    _git(worktree, "commit", "-q", "-m", "docs(decisions): commit the correct run's trail")
+    if open_pr and _git(worktree, "rev-parse", "--abbrev-ref", "@{u}", check=False).returncode == 0:
+        _git(worktree, "push", "-q")
+
+
 def run(repo: Path, *, state: Path, model: str, days: int = 7, timeout_s: int = 14400,
         open_pr: bool = True, base: str = "origin/main") -> int:
     state.mkdir(parents=True, exist_ok=True)
@@ -116,13 +132,14 @@ def run(repo: Path, *, state: Path, model: str, days: int = 7, timeout_s: int = 
         _git(repo, "fetch", "-q", "origin")
         branch = _new_branch(repo, today.isoformat())
         worktree = state / ("wt-" + branch.split("/", 1)[1])
-        _git(repo, "worktree", "add", "-q", "-b", branch, str(worktree), base)
+        _git(repo, "worktree", "add", "-q", "--no-track", "-b", branch, str(worktree), base)
         transcript = state / (worktree.name.removeprefix("wt-") + ".ndjson")
         since = (today - dt.timedelta(days=days)).isoformat()
         cmd = [*agy_command(), "--model", model, "--print-timeout", f"{timeout_s}s",
                "--output-format", "stream-json", "-p", build_prompt(since, open_pr)]
         with open(transcript, "w") as out:
             code = subprocess.run(cmd, cwd=worktree, stdout=out, stderr=subprocess.STDOUT).returncode
+        _save_trail(worktree, state)
         if code != 0 or not _finished(transcript):
             _notify(f"failed (exit {code}); worktree kept at {worktree}, transcript {transcript}")
             return 1
@@ -132,6 +149,7 @@ def run(repo: Path, *, state: Path, model: str, days: int = 7, timeout_s: int = 
             _git(repo, "branch", "-D", branch)
             _notify(f"no repeated mistake found; transcript {transcript}")
         else:
+            _commit_trail(worktree, open_pr)
             _notify(f"{ahead} commit(s) on {branch}; worktree {worktree}")
         return 0
     finally:

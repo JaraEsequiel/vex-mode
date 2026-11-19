@@ -86,6 +86,25 @@ class RunTest(unittest.TestCase):
         self.assertEqual(len(self.worktrees()), 1)
         self.assertIn("correct/", self.branches())
 
+    def test_uncommitted_trail_is_committed(self):
+        self.assertEqual(self.run_it("commit-trail"), 0)
+        wt = self.state / self.worktrees()[0]
+        self.assertIn("docs/decisions/2026-01-01-correct.tsv", git(wt, "show", "--name-only", "HEAD"))
+        self.assertEqual(git(wt, "status", "--porcelain"), "")
+        self.assertTrue(list(self.state.glob("*-correct.tsv")))
+
+    def test_trail_without_fix_is_kept_outside_the_cleaned_worktree(self):
+        self.assertEqual(self.run_it("trail"), 0)
+        self.assertEqual(self.worktrees(), [])
+        self.assertEqual(self.branches(), "")
+        self.assertTrue(list(self.state.glob("*-correct.tsv")))
+
+    def test_branch_does_not_track_main(self):
+        self.assertEqual(self.run_it("commit"), 0)
+        wt = self.state / self.worktrees()[0]
+        upstream = subprocess.run(["git", "-C", str(wt), "rev-parse", "--abbrev-ref", "@{u}"], capture_output=True)
+        self.assertNotEqual(upstream.returncode, 0)
+
     def test_agy_failure_keeps_worktree_and_fails(self):
         self.assertEqual(self.run_it("fail"), 1)
         self.assertEqual(len(self.worktrees()), 1)
@@ -108,7 +127,7 @@ class PromptAndUnitsTest(unittest.TestCase):
     def test_prompt_shape(self):
         p = scheduled_correct.build_prompt("2026-11-15", open_pr=True)
         self.assertTrue(p.startswith("/correct"))
-        for part in ("2026-11-15", "AGENTS.md", "show-me-your-work", "How to change a skill", "Never merge", "gh pr create"):
+        for part in ("2026-11-15", "AGENTS.md", "show-me-your-work", "How to change a skill", "Never merge", "gh pr create", "paused command ends this run"):
             self.assertIn(part, p)
         q = scheduled_correct.build_prompt("2026-11-15", open_pr=False)
         self.assertNotIn("gh pr create", q)
