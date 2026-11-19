@@ -47,6 +47,8 @@ def main(argv: list[str]) -> int:
     n = bump("candidates")
     model = argv[argv.index("--model") + 1]
     emit({"event": "init", "conversation_id": f"c{n}", "init": {"model": model, "cwd": os.getcwd()}})
+    if MODE == "fail":
+        return 1
     if MODE == "crash" and n == 2:
         return 1
     if MODE == "sigterm" and n == 2:
@@ -64,11 +66,15 @@ def main(argv: list[str]) -> int:
     if MODE == "peek":
         emit({"event": "step_update", "step_update": {"step_type": "tool", "state": "DONE",
               "tool_info": {"name": "read_file", "parameters": {"Path": os.environ["FAKE_PEEK"]}}}})
-    Path("app.py").write_text("fixed\n")
-    if MODE == "commit":
+    if MODE not in ("noop", "trail"):
+        Path("app.py").write_text("fixed\n")
+    if MODE in ("commit", "commit-trail"):
         import subprocess
         env = dict(os.environ, GIT_AUTHOR_NAME="a", GIT_AUTHOR_EMAIL="a@a", GIT_COMMITTER_NAME="a", GIT_COMMITTER_EMAIL="a@a")
         subprocess.run(["git", "commit", "-qam", "fix"], check=True, env=env)
+    if MODE in ("trail", "commit-trail"):
+        Path("docs/decisions").mkdir(parents=True, exist_ok=True)
+        Path("docs/decisions/2026-01-01-correct.tsv").write_text("ts\tphase\n")
     emit({"event": "result", "result": {"conversation_id": f"c{n}", "status": "SUCCESS", "response": "done",
           "duration_seconds": 1.5, "usage": {"total_tokens": 100 * n}}})
     return 0

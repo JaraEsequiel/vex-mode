@@ -1,0 +1,7 @@
+{
+  "kind": "waiver",
+  "skill": "correct",
+  "tree_sha256": "ef2c9d45dd83adacaa4371a15c687903ccad953497ef0d9011e72cbd5b9baccd",
+  "date": "2026-11-19",
+  "reason": "Vendored verbatim from pstack. Manual-only (disable-model-invocation): it runs from /correct or the weekly scheduled run, never mid-task, so no /vex-mode case can trigger it. Its first real run is the dry run in docs/decisions/2026-11-19-m3-dry-run.md: it mined 36 commits and 2 PRs, kept only classes seen twice, and fixed one with a test that failed first. A measured eval needs a case with a planted repeated mistake in git history, which does not exist yet."
+}

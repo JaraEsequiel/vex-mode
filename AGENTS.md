@@ -16,6 +16,7 @@ This repo is an Antigravity plugin: Vex's working mode for agents, built on psta
 - `evals/`: `run.py` (the eval harness), `harness/`, and per skill `evals/<skill>/cases/` and `results/`. Never inside `skills/`: a candidate must not see them.
 - `scripts/vendor.py`: copies pstack files verbatim and records provenance.
 - `scripts/build_plugin.py`: exports only the plugin's parts; install with `--install`, never `agy plugin install` on the repo.
+- `scripts/scheduled_correct.py`: the weekly unattended `/correct` run and its systemd timer (`install`, `run`, `uninstall`).
 - `vendor.lock`: provenance for every file under `skills/`, `rules/`, `agents/`.
 - `docs/specs/`, `docs/plans/`, `docs/decisions/`: design, plans, decision log.
 
@@ -74,6 +75,9 @@ If an eval was killed before it restored the user's plugin, the next eval refuse
 | Every eval measures compliance, outcome and cost on three fixed arms | `evals/harness/arms.py` `evals/tests/test_run.py` |
 | An eval never leaves a variant installed | `evals/run.py` `evals/tests/test_run.py` |
 | A run that read (by file or shell) the eval cache, the repo, another project copy, an `evals/` folder or another skill copy is invalid | `evals/harness/isolation.py` `evals/tests/test_run.py` |
+| No AI PR merges itself: `gh pr merge` (any flags), `gh api` merges and main ref updates, a push to `main`/`master` (any refspec form, `--all`, `-c` push overrides) and tracking main pause (headless `agy -p`: blocked). A bare `git push` while on main is not caught | `hooks/irreversible.py` `hooks/tests/test_irreversible.py` |
+| Scheduled runs never overlap, refuse unless the installed plugin has `correct` and the merge guard and no eval holds it, keep any unfinished work, notify on every failure, and never leave an empty worktree. The agent only commits; the script pushes the branch and opens the PR | `scripts/scheduled_correct.py` `scripts/tests/test_scheduled_correct.py` |
+| `agy -p` is written last in skills and rules (it takes the next word as the prompt) | `checks/check_skills.py` `checks/tests/test_check_skills.py` |
 | A PreToolUse hook with no opinion prints nothing (`{}` denies the tool) | `hooks/tests/test_irreversible.py` `docs/decisions/2026-11-18-hook-probe.md` |
 
 When you are corrected for a mistake, add a row here together with its enforcer in the same change. A rule that nothing enforces is a repeat waiting to happen.

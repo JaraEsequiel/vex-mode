@@ -1,0 +1,7 @@
+{
+  "kind": "waiver",
+  "skill": "reflect",
+  "tree_sha256": "c1fa6cca7601fa3321dc4a12297f827d9a7c1f77a92e3b079d83e95adc2bc723",
+  "date": "2026-11-19",
+  "reason": "Vendored from pstack; adapted only for agy paths and to route vex-mode skill edits to a PR (design \u00a79.2, \u00a711). Manual-only (disable-model-invocation) and it stops for the user's approval before any edit, so it cannot run headless under the eval harness. Not exercised yet."
+}

@@ -1,0 +1,239 @@
+{
+  "kind": "eval",
+  "skill": "vex-mode",
+  "tree_sha256": "787f91e1650cad53cf23185b3d2d93323a525b3383bbaa6dfc3a86b8a9a66949",
+  "date": "2026-11-19",
+  "case": "tax-rounding",
+  "run_dir": "/home/vex/.cache/vex-mode/runs/20261119-083039-843849",
+  "arms": {
+    "A": {
+      "model": "gemini-4-neon-medium",
+      "plugin_ref": "61756517aace9a73e844441d798c40e03dcdddd1",
+      "tree_sha256": "751c0e58ac82caead441a8eaf1f4c95e14a1ffce203e61f7e898288a17249a18",
+      "runs": [
+        {
+          "slot": 3,
+          "status": "SUCCESS",
+          "invalid": null,
+          "outcome": 1,
+          "compliance": 1.0,
+          "tokens": 112551,
+          "duration_s": 183.125814079,
+          "reads": 19,
+          "commands": 4,
+          "label": "R6"
+        },
+        {
+          "slot": 4,
+          "status": "SUCCESS",
+          "invalid": null,
+          "outcome": 1,
+          "compliance": 1.0,
+          "tokens": 55654,
+          "duration_s": 243.552472707,
+          "reads": 17,
+          "commands": 6,
+          "label": "R2"
+        },
+        {
+          "slot": 8,
+          "status": "SUCCESS",
+          "invalid": null,
+          "outcome": 1,
+          "compliance": 1.0,
+          "tokens": 119351,
+          "duration_s": 263.578295131,
+          "reads": 18,
+          "commands": 9,
+          "label": "R8"
+        }
+      ]
+    },
+    "B": {
+      "model": "gemini-4-neon-medium",
+      "plugin_ref": "c181f742eec4d4a58372000e1defa005a89fe579",
+      "tree_sha256": "787f91e1650cad53cf23185b3d2d93323a525b3383bbaa6dfc3a86b8a9a66949",
+      "runs": [
+        {
+          "slot": 5,
+          "status": "SUCCESS",
+          "invalid": null,
+          "outcome": 0,
+          "compliance": 1.0,
+          "tokens": 118716,
+          "duration_s": 235.719524792,
+          "reads": 17,
+          "commands": 5,
+          "label": "R5"
+        },
+        {
+          "slot": 9,
+          "status": "SUCCESS",
+          "invalid": null,
+          "outcome": 1,
+          "compliance": 1.0,
+          "tokens": 75471,
+          "duration_s": 231.009483338,
+          "reads": 19,
+          "commands": 8,
+          "label": "R7"
+        },
+        {
+          "slot": 1,
+          "status": "SUCCESS",
+          "invalid": null,
+          "outcome": 0,
+          "compliance": 1.0,
+          "tokens": 72461,
+          "duration_s": 190.216307937,
+          "reads": 19,
+          "commands": 4,
+          "label": "R9"
+        }
+      ]
+    },
+    "C": {
+      "model": "gemini-4-neon-high",
+      "plugin_ref": "61756517aace9a73e844441d798c40e03dcdddd1",
+      "tree_sha256": "751c0e58ac82caead441a8eaf1f4c95e14a1ffce203e61f7e898288a17249a18",
+      "runs": [
+        {
+          "slot": 7,
+          "status": "SUCCESS",
+          "invalid": null,
+          "outcome": 1,
+          "compliance": 1.0,
+          "tokens": 98116,
+          "duration_s": 345.329142038,
+          "reads": 19,
+          "commands": 14,
+          "label": "R4"
+        },
+        {
+          "slot": 2,
+          "status": "SUCCESS",
+          "invalid": null,
+          "outcome": 1,
+          "compliance": 1.0,
+          "tokens": 105533,
+          "duration_s": 310.659310055,
+          "reads": 19,
+          "commands": 6,
+          "label": "R3"
+        },
+        {
+          "slot": 6,
+          "status": "SUCCESS",
+          "invalid": null,
+          "outcome": 0,
+          "compliance": 0.5,
+          "tokens": 41622,
+          "duration_s": 127.37637462,
+          "reads": 17,
+          "commands": 5,
+          "label": "R1"
+        }
+      ]
+    }
+  },
+  "judge": {
+    "model": "claude-opus-5-5-high",
+    "error": null
+  },
+  "metrics": {
+    "A": {
+      "compliance": {
+        "mean": 1.0,
+        "min": 1.0,
+        "max": 1.0,
+        "spread": 0.0
+      },
+      "outcome": {
+        "mean": 1.0,
+        "min": 1.0,
+        "max": 1.0,
+        "spread": 0.0
+      },
+      "tokens": {
+        "mean": 95852.0,
+        "min": 55654.0,
+        "max": 119351.0,
+        "spread": 63697.0
+      },
+      "duration_s": {
+        "mean": 230.08552730566666,
+        "min": 183.125814079,
+        "max": 263.578295131,
+        "spread": 80.452481052
+      }
+    },
+    "B": {
+      "compliance": {
+        "mean": 1.0,
+        "min": 1.0,
+        "max": 1.0,
+        "spread": 0.0
+      },
+      "outcome": {
+        "mean": 0.3333333333333333,
+        "min": 0.0,
+        "max": 1.0,
+        "spread": 1.0
+      },
+      "tokens": {
+        "mean": 88882.66666666667,
+        "min": 72461.0,
+        "max": 118716.0,
+        "spread": 46255.0
+      },
+      "duration_s": {
+        "mean": 218.98177202233333,
+        "min": 190.216307937,
+        "max": 235.719524792,
+        "spread": 45.50321685499998
+      }
+    },
+    "C": {
+      "compliance": {
+        "mean": 0.8333333333333334,
+        "min": 0.5,
+        "max": 1.0,
+        "spread": 0.5
+      },
+      "outcome": {
+        "mean": 0.6666666666666666,
+        "min": 0.0,
+        "max": 1.0,
+        "spread": 1.0
+      },
+      "tokens": {
+        "mean": 81757.0,
+        "min": 41622.0,
+        "max": 105533.0,
+        "spread": 63911.0
+      },
+      "duration_s": {
+        "mean": 261.1216089043333,
+        "min": 127.37637462,
+        "max": 345.329142038,
+        "spread": 217.95276741799998
+      }
+    }
+  },
+  "signals": {
+    "B_vs_A": {
+      "compliance": "noise",
+      "outcome": "noise",
+      "tokens": "noise",
+      "duration_s": "noise"
+    },
+    "C_vs_A": {
+      "compliance": "noise",
+      "outcome": "noise",
+      "tokens": "noise",
+      "duration_s": "noise"
+    }
+  },
+  "verdict": "inconclusive",
+  "synthesis": "B vs A is noise on every measure, but B's outcome fell to 1/3 (A 3/3). Both B failures (R5, R9) are the M2 failure mode: the subagent switched invoices.py to Decimal end to end and broke float callers (TypeError in the hidden check); the judge passed both (compliance 1.0), as in #1178. No run in any arm read correct, reflect or show-me-your-work, and B differs from A in the router by one trigger line, so no mechanism links the change to the failure; the same failure hit arm A in M2 with an older router. Across both evals, gemini-4-neon-medium made this mistake in 3 of 12 /vex-mode runs, spread over three router versions. Three runs per arm cannot detect a regression of this size, so this result neither confirms nor rules one out. C (neon-high) R1 left the float bug in place (10.82). Arm C used fewer tokens than A on average, unlike M2."
+}

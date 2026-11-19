@@ -39,6 +39,7 @@ The remaining triggers live only here:
 - A fork you could settle by running something → prototype it instead of asking.
 - Code → name the data shape first.
 - Bot review comments → judge each on its merits.
+- Long or unattended work → **show-me-your-work**.
 
 ## Principles
 

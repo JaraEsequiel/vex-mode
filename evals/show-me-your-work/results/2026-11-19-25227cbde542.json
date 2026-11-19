@@ -1,0 +1,7 @@
+{
+  "kind": "waiver",
+  "skill": "show-me-your-work",
+  "tree_sha256": "25227cbde54287f0e7fbc80fbec0ca1409d285fe4e8d910089df6bd56b198e55",
+  "date": "2026-11-19",
+  "reason": "Vendored from pstack; adapted only for the agy transcript path, the cross-family reviewer through agy --model \u2026 -p, and two references to skills not vendored. Manual-only except through the router's long-or-unattended trigger, which the tax-rounding case does not reach. The dry run in docs/decisions/2026-11-19-m3-dry-run.md exercised it end to end: trail, audit against the transcript, and a cross-family review on claude-sonnet."
+}

@@ -106,5 +106,17 @@ class ReferenceTest(unittest.TestCase):
         self.assertEqual(len(errors), 2, errors)
 
 
+
+class AgyCommandTest(unittest.TestCase):
+    def test_flag_after_print_is_an_error(self):
+        root = make_repo({"skills/foo/SKILL.md": skill(body="Run `agy -p --model claude-x \"hi\"`.")}, lock())
+        errors = check_skills.run(root)
+        self.assertTrue(any("agy" in e and "-p" in e and "last" in e for e in errors), errors)
+
+    def test_print_flag_last_passes(self):
+        root = make_repo({"skills/foo/SKILL.md": skill(body="Run `agy --model claude-x -p \"hi\"`.")}, lock())
+        self.assertEqual(check_skills.run(root), [])
+
+
 if __name__ == "__main__":
     unittest.main()

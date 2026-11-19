@@ -9,11 +9,12 @@ import shlex
 from vexio import read_payload, safe_main
 
 OPERATORS = {"&&", "||", ";", "|", "&", "(", ")", "$", "$(", "`"}
-GIT_PUSH_FLAGS = {"--force", "--mirror", "--delete", "--force-if-includes", "--prune"}
+GIT_PUSH_FLAGS = {"--force", "--mirror", "--delete", "--force-if-includes", "--prune", "--all"}
 SHELLS = {"bash", "sh", "zsh", "dash"}
 WRAPPERS = {"command", "nohup", "time", "exec", "builtin"}
 # wrapper -> options that take a separate argument
 WRAPPER_ARGS = {"sudo": {"-u", "-g", "-C", "-h", "-p", "-U"}, "env": {"-u", "-C", "-S"}, "xargs": {"-I", "-n", "-P", "-d", "-L", "-s", "-E", "-a"}}
+PROTECTED_BRANCHES = {"main", "master"}
 SQL = re.compile(r"\b(drop\s+(table|database|schema)|truncate\b)", re.IGNORECASE)
 
 
@@ -68,6 +69,51 @@ def _git_push(args: list[str]) -> str | None:
             return f"git push with force refspec {a}"
         if a.startswith(":") and len(a) > 1:
             return f"git push deleting remote ref {a}"
+    refspecs = [a for a in args if not a.startswith("-")][1:]
+    for spec in refspecs:
+        dest = spec.split(":")[-1].removeprefix("refs/").removeprefix("heads/")
+        if dest in PROTECTED_BRANCHES:
+            return f"git push to {dest} (only the user merges)"
+    return None
+
+
+GH_FLAGS_WITH_VALUE = {"-R", "--repo"}
+GH_API_MERGE = re.compile(
+    r"/merges?/?(\?|$)|mergePullRequest|enablePullRequestAutoMerge|git/refs/heads/(main|master)\b")
+
+
+def _positional(args: list[str], with_value: set[str]) -> list[str]:
+    out, skip = [], False
+    for a in args:
+        if skip:
+            skip = False
+        elif a in with_value:
+            skip = True
+        elif not a.startswith("-"):
+            out.append(a)
+    return out
+
+
+def _gh(args: list[str]) -> str | None:
+    if _positional(args, GH_FLAGS_WITH_VALUE)[:2] == ["pr", "merge"]:
+        return "gh pr merge (only the user merges)"
+    if args[:1] == ["api"] and any(GH_API_MERGE.search(a) for a in args[1:]):
+        return "gh api merge or main ref update (only the user merges)"
+    return None
+
+
+def _git(args: list[str]) -> str | None:
+    for i, a in enumerate(args[:-1]):
+        if a == "-c" and re.match(r"(remote\.[^=]*\.push|push\.default)=", args[i + 1]):
+            return f"git -c {args[i + 1]} (changes where a push goes)"
+    if "branch" in args:
+        rest = args[args.index("branch") + 1:]
+        targets = [rest[i + 1] for i, a in enumerate(rest[:-1]) if a == "-u"]
+        targets += [a.split("=", 1)[1] for a in rest if a.startswith("--set-upstream-to=")]
+        if any(t.split("/")[-1] in PROTECTED_BRANCHES for t in targets):
+            return "git branch tracking main (a bare push would go there)"
+    if "push" in args:
+        return _git_push(args[args.index("push") + 1:])
     return None
 
 
@@ -88,8 +134,12 @@ def _segment(tokens: list[str]) -> str | None:
             if re.fullmatch(r"-[a-zA-Z]*c[a-zA-Z]*", a):
                 return classify(args[i + 1])
         return None
-    if cmd == "git" and "push" in args:
-        return _git_push(args[args.index("push") + 1:])
+    if cmd == "git":
+        return _git(args)
+    if cmd == "eval":
+        return classify(" ".join(args))
+    if cmd == "gh":
+        return _gh(args)
     if cmd == "rm":
         return _rm(args)
     if cmd == "terraform" and args[:1] in (["destroy"], ["apply"]):
