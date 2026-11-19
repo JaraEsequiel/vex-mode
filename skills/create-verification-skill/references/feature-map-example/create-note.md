@@ -37,3 +37,7 @@ Preconditions:
 - Titles are trimmed on save. Assert the rendered title, not the draft input value.
 - A save status alone is insufficient proof. Reopen the note from the list.
 - Remove `Release checklist` and `CLI note` during fixture cleanup, but retain their proof artifacts.
+
+## Breaks
+
+- Make `Save note` return without persisting. **Confirm persistence** must fail: the reopened note is missing.

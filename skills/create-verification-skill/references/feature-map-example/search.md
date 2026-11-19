@@ -43,3 +43,7 @@ Preconditions:
 - Archived notes are excluded unless the user enables `Include archived`.
 - The CLI defaults to human-readable output. Use `--format json` for stable assertions.
 - Opening a result changes browser state. Reopen search before proving another query.
+
+## Breaks
+
+- Make search match titles only. **Body match** must fail: `budget` returns no `Quarterly plan`.
