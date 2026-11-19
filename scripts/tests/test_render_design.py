@@ -70,6 +70,23 @@ class RenderTest(unittest.TestCase):
         self.assertIn("<b>Fecha</b> 2026-11-19", page)
         self.assertIn('<h2 id="s13">', page)
 
+    def test_research_and_run_tags_link(self):
+        doc = DOC.replace("Texto con", "Ver `[R-trim]` y `[RUN]`. Texto con").replace(
+            "| `MÍA` | Propuesta mía |", "| `R-trim` | TRIM |\n| `RUN` | Corrida |\n| `MÍA` | Propuesta mía |")
+        page = rd.render(doc, TEMPLATE)
+        self.assertIn('<a class="s r" href="#R-trim">R-trim</a>', page)
+        self.assertIn('<a class="s run" href="#RUN">RUN</a>', page)
+        self.assertIn('<tr id="R-trim">', page)
+        self.assertIn('<tr id="RUN">', page)
+
+    def test_h3_with_three_part_number(self):
+        page = rd.render(DOC.replace("## 13. Fuentes", "### 8.2.1 Calidad\n\n## 13. Fuentes"), TEMPLATE)
+        self.assertIn('<h3 id="s8-2-1">8.2.1 Calidad</h3>', page)
+
+    def test_unknown_heading_does_not_hang(self):
+        page = rd.render(DOC.replace("## 13. Fuentes", "#### Suelto\n\n## 13. Fuentes"), TEMPLATE)
+        self.assertIn("Suelto", page)
+
     def test_committed_html_is_current(self):
         self.assertEqual(rd.main(["--check"]), 0, "run python3 scripts/render_design.py")
 

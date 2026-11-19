@@ -18,11 +18,11 @@ OUT = MD.with_suffix(".html")
 TEMPLATE = Path(__file__).resolve().parent / "design_template.html"
 PSTACK_BLOB = "https://github.com/cursor/plugins/blob/35a9094/"
 
-TAG = re.compile(r"^(P-[\w-]+|T-[\w-]+|I-\d+|A-[\w-]+|AUD|VEX|MÍA)(:[\w,\-–]+)?$")
-CLASSES = {"P": "p", "T": "t", "I": "i", "A": "a", "AUD": "aud", "VEX": "vex", "MÍA": "mia"}
+TAG = re.compile(r"^(P-[\w-]+|T-[\w-]+|I-\d+|A-[\w-]+|R-[\w-]+|RUN|AUD|VEX|MÍA)(:[\w,\-–]+)?$")
+CLASSES = {"P": "p", "T": "t", "I": "i", "A": "a", "R": "r", "RUN": "run", "AUD": "aud", "VEX": "vex", "MÍA": "mia"}
 LIST = re.compile(r"^(\s*)([-*]|\d+\.)\s+(.*)$")
 H2 = re.compile(r"^## (\d+[a-z]?)\.\s+(.*)$")
-H3 = re.compile(r"^### (\d+)\.(\d+)\s+(.*)$")
+H3 = re.compile(r"^### (\d+(?:\.\d+)+)\s+(.*)$")
 
 
 def tag_link(code: str) -> str | None:
@@ -121,7 +121,7 @@ def render_body(lines: list[str]) -> tuple[str, list[tuple[str, str]]]:
             out.append(f'<h2 id="s{section}"><span class="n">{section}</span>{inline(m.group(2))}</h2>')
             i += 1
         elif m := H3.match(line):
-            out.append(f'<h3 id="s{m.group(1)}-{m.group(2)}">{m.group(1)}.{m.group(2)} {inline(m.group(3))}</h3>')
+            out.append(f'<h3 id="s{m.group(1).replace(".", "-")}">{m.group(1)} {inline(m.group(2))}</h3>')
             i += 1
         elif line.startswith("```"):
             lang, i, code = line[3:].strip(), i + 1, []
@@ -145,7 +145,7 @@ def render_body(lines: list[str]) -> tuple[str, list[tuple[str, str]]]:
                 i += 1
             out.append(_list(items))
         else:
-            para = []
+            para, i = [lines[i].strip()], i + 1
             while i < len(lines) and lines[i].strip() and not (
                     lines[i].startswith(("#", "|", "```")) or LIST.match(lines[i]) or lines[i].strip() == "---"):
                 para.append(lines[i].strip())
