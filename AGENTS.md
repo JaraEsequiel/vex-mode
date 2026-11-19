@@ -14,7 +14,7 @@ This repo is an Antigravity plugin: Vex's working mode for agents, built on psta
 - `agents/vex-agent.md`: the subagent definition.
 - `hooks.json` + `hooks/`: mode hooks (activation, irreversible pause, stop gate).
 - `checks/`: deterministic structural checks. `checks/run.py` runs all of them.
-- `evals/`: `run.py` (the eval harness), `harness/`, and per skill `evals/<skill>/cases/` and `results/`. Never inside `skills/`: a candidate must not see them.
+- `evals/`: `run.py` (the eval harness), `harness/` (`judges.py` calls the judge over API), `judge.json` (judge provider, model, effort), and per skill `evals/<skill>/cases/` and `results/`. Never inside `skills/`: a candidate must not see them.
 - `scripts/vendor.py`: copies pstack files verbatim and records provenance.
 - `scripts/build_plugin.py`: exports only the plugin's parts; install with `--install`, never `agy plugin install` on the repo.
 - `scripts/scheduled_correct.py`: the weekly unattended `/correct` run and its systemd timer (`install`, `run`, `uninstall`).
@@ -74,7 +74,8 @@ If an eval was killed before it restored the user's plugin, the next eval refuse
 | No finishing without evidence in vex-mode | `hooks/stop_gate.py` `hooks/tests/test_stop_gate.py` |
 | A PR that changes a skill carries an eval result or waiver for that skill's tree hash | `checks/check_evals.py` `checks/tests/test_check_evals.py` |
 | Nothing a candidate sees contains a banned word | `checks/check_evals.py` `checks/tests/test_check_evals.py` |
-| The judge is from another model family than every candidate | `checks/check_evals.py` `evals/harness/arms.py` |
+| The judge is set once in `evals/judge.json` and is from another model family than every candidate | `checks/check_evals.py` `evals/harness/arms.py` |
+| The judge's API key never reaches the repo, a result or the run dir | `evals/harness/judges.py` `evals/tests/test_run.py` |
 | Every eval measures compliance, outcome and cost on three fixed arms | `evals/harness/arms.py` `evals/tests/test_run.py` |
 | An eval never leaves a variant installed | `evals/run.py` `evals/tests/test_run.py` |
 | A run that read (by file or shell) the eval cache, the repo, another project copy, an `evals/` folder or another skill copy is invalid | `evals/harness/isolation.py` `evals/tests/test_run.py` |

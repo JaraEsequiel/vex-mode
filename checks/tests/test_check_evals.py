@@ -13,7 +13,6 @@ CASE_JSON = {
     "runs": 3,
     "candidate_model": "gemini-4-neon-medium",
     "upgrade_model": "gemini-4-neon-high",
-    "judge_model": "claude-opus-5-5-high",
     "workdir": "ledger-app",
     "timeout_s": 900,
 }
@@ -28,6 +27,7 @@ def case_files(skill="x", case="c1", **over):
         base + "check.py": "import sys\n",
         base + "case.json": json.dumps(cfg),
         base + "project/app.py": "def total(xs):\n    return sum(xs)\n",
+        "evals/judge.json": json.dumps(over.pop("judge", {"provider": "openai", "model": "gpt-6.2-sol", "effort": "medium"})),
     }
     files.update(over.pop("extra", {}))
     for k in over.pop("drop", []):
@@ -111,12 +111,20 @@ class LayoutTest(unittest.TestCase):
         self.assertTrue(self.errors(case_files(case_json={"workdir": "rubric-app"})))
 
     def test_case_json_fields(self):
-        for bad in ({"runs": 0}, {"workdir": "Bad Name"}, {"timeout_s": "x"}, {"judge_model": ""}):
+        for bad in ({"runs": 0}, {"workdir": "Bad Name"}, {"timeout_s": "x"}, {"candidate_model": ""}):
             self.assertTrue(self.errors(case_files(case_json=bad)), bad)
 
     def test_judge_same_family_rejected(self):
-        errors = self.errors(case_files(case_json={"judge_model": "gemini-4-argon-high"}))
+        errors = self.errors(case_files(judge={"provider": "agy", "model": "gemini-4-argon-high", "effort": "high"}))
         self.assertTrue(any("family" in e for e in errors), errors)
+
+    def test_judge_lives_in_judge_json_not_in_the_case(self):
+        errors = self.errors(case_files(case_json={"judge_model": "claude-opus-5-5-high"}))
+        self.assertTrue(any("judge_model" in e and "evals/judge.json" in e for e in errors), errors)
+        files = case_files()
+        files.pop("evals/judge.json")
+        self.assertTrue(any("evals/judge.json" in e for e in self.errors(files)))
+        self.assertTrue(any("provider" in e for e in self.errors(case_files(judge={"provider": "x", "model": "m"}))))
 
     def test_evals_dir_without_skill(self):
         files = case_files(skill="ghost")

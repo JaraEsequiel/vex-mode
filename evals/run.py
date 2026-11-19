@@ -31,12 +31,11 @@ sys.path.insert(0, str(HERE.parent / "checks"))
 import build_plugin  # noqa: E402
 from _util import skill_tree_sha256  # noqa: E402
 from harness import arms as arms_mod  # noqa: E402
-from harness import isolation, judge, stats, transcript  # noqa: E402
+from harness import isolation, judge, judges, stats, transcript  # noqa: E402
 
 METRICS = ("compliance", "outcome", "tokens", "duration_s")
 VERDICTS = ("promote", "reject", "inconclusive")
 DIFF_LIMIT = 20000
-JUDGE_TIMEOUT_S = 1800
 
 
 class EvalError(Exception):
@@ -105,40 +104,20 @@ def _outcome(case_dir: Path, work: Path, record: Path) -> int:
     return 1 if r.returncode == 0 else 0
 
 
-JUDGE_INLINE_MAX = 100_000
-
-
-def _judge(records: dict, materials: dict[int, str], rubric: str, judge_model: str, run_dir: Path,
-           rng: random.Random) -> str | None:
-    """One blinded pass over every valid run; sets each run's label and compliance. Returns the judge error.
+def _judge(records: dict, materials: dict[int, str], rubric: str, judge_cfg: dict, run_dir: Path,
+           rng: random.Random) -> tuple[str | None, dict]:
+    """One blinded pass over every valid run; sets each run's label and compliance. Returns (error, usage).
     A run whose grade is missing, duplicated or has the wrong number of criteria gets compliance None."""
     if not materials:
-        return None
+        return None, {}
     order = list(materials)
     rng.shuffle(order)
     labels = {slot: f"R{i}" for i, slot in enumerate(order, 1)}
     prompt = judge.build_prompt(rubric, [(labels[s], materials[s]) for s in order])
     (run_dir / "judge-prompt.md").write_text(prompt)
-    (run_dir / "schema.json").write_text(json.dumps(judge.SCHEMA))
-    judge_dir = run_dir / "review"
-    judge_dir.mkdir(exist_ok=True)
-    if len(prompt.encode()) > JUDGE_INLINE_MAX:  # one argv string is capped at 128 KiB on Linux
-        (judge_dir / "judge-prompt.md").write_text(prompt)  # agy -p denies reads outside its workspace (cwd)
-        prompt = (f"Read the file {judge_dir / 'judge-prompt.md'} in full and do exactly what it asks. "
-                  "Your answer must follow the JSON schema you were given.")
-    launch_error = None
-    try:
-        out = subprocess.run([*build_plugin.agy_command(), "-p", prompt, "--model", judge_model,
-                              "--output-format", "json", "--json-schema", str(run_dir / "schema.json")],
-                             cwd=judge_dir, capture_output=True, text=True, timeout=JUDGE_TIMEOUT_S)
-        stdout = out.stdout
-    except subprocess.TimeoutExpired:
-        stdout = ""
-    except OSError as e:
-        stdout, launch_error = "", f"could not start the judge: {e}"
-    (run_dir / "judge.json").write_text(stdout)
+    verdict, error, usage = judges.judge(prompt, judge.SCHEMA, judge_cfg, run_dir / "review")
+    (run_dir / "verdict.json").write_text(json.dumps(verdict, indent=2) if verdict else "null")
     (run_dir / "labels.json").write_text(json.dumps({labels[s]: s for s in order}, indent=2))
-    verdict, error = judge.parse_output(stdout) if stdout else (None, launch_error or "judge timed out or printed nothing")
     expected = [labels[s] for s in order]
     n = judge.criteria_count(rubric)
     problems = judge.label_problems(verdict or {"runs": []}, expected, n)
@@ -150,7 +129,24 @@ def _judge(records: dict, materials: dict[int, str], rubric: str, judge_model: s
                 r["compliance"] = None if bad else judge.compliance(verdict, r["label"])
     if error is None:
         error = judge.check_verdict(verdict, expected, n)
-    return error
+    return error, usage
+
+
+def _judge_config(repo: Path) -> dict:
+    """The configured judge, checked before any candidate runs: a missing key fails now, not after the runs."""
+    try:
+        cfg = judges.load_config(repo)
+        key = judges.api_key(cfg["provider"])
+    except judges.JudgeConfigError as e:
+        raise EvalError(str(e))
+    if cfg["provider"] != "agy" and not key:
+        raise EvalError(f"no API key for the {cfg['provider']} judge: set {judges.KEY_ENV[cfg['provider']]} "
+                        f"or put it in ~/.config/vex-mode/secrets.env (chmod 600)")
+    return cfg
+
+
+def _judge_record(cfg: dict, error: str | None, usage: dict) -> dict:
+    return {"provider": cfg["provider"], "model": cfg["model"], "effort": cfg["effort"], "error": error, "usage": usage}
 
 
 def _score(records: dict) -> tuple[dict, dict]:
@@ -196,10 +192,11 @@ def rejudge(path: Path) -> None:
             t = transcript.parse((run_dir / "transcripts" / f"{r['slot']}.ndjson").read_text())
             materials[r["slot"]] = _material(t, diff.read_text())
             r["compliance"] = None
+    judge_cfg = _judge_config(repo)
     with _locked():
-        error = _judge(result["arms"], materials, (case_dir / "rubric.md").read_text(), cfg["judge_model"],
-                       run_dir, random.Random())
-    result["judge"] = {"model": cfg["judge_model"], "error": error}
+        error, usage = _judge(result["arms"], materials, (case_dir / "rubric.md").read_text(), judge_cfg,
+                              run_dir, random.Random())
+    result["judge"] = _judge_record(judge_cfg, error, usage)
     result["metrics"], result["signals"] = _score(result["arms"])
     result["verdict"], result["synthesis"] = None, None
     path.write_text(json.dumps(result, indent=2) + "\n")
@@ -265,7 +262,8 @@ def run_eval(repo: Path, skill: str, case: str, base: str | None = None,
         base = _git(repo, "merge-base", "origin/main", "HEAD", check=False)
         if not base:
             raise EvalError("no merge base with origin/main; pass --base")
-    arm_list = arms_mod.build_arms(cfg, _commit(repo, base), _commit(repo, variant))
+    judge_cfg = _judge_config(repo)
+    arm_list = arms_mod.build_arms(cfg, _commit(repo, base), _commit(repo, variant), judge_cfg["model"])
     prompt = (case_dir / "prompt.md").read_text().strip()
     rubric = (case_dir / "rubric.md").read_text()
 
@@ -331,12 +329,12 @@ def run_eval(repo: Path, skill: str, case: str, base: str | None = None,
                 signal.signal(sig, handler)
             restore()
 
-        judge_error = _judge(records, materials, rubric, cfg["judge_model"], run_dir, rng)
+        judge_error, judge_usage = _judge(records, materials, rubric, judge_cfg, run_dir, rng)
     metrics, signals = _score(records)
     result = {
         "kind": "eval", "skill": skill, "tree_sha256": trees["B"], "date": dt.date.today().isoformat(),
         "case": case, "run_dir": str(run_dir), "arms": records,
-        "judge": {"model": cfg["judge_model"], "error": judge_error},
+        "judge": _judge_record(judge_cfg, judge_error, judge_usage),
         "metrics": metrics, "signals": signals, "verdict": None, "synthesis": None,
     }
     path.parent.mkdir(parents=True, exist_ok=True)

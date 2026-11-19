@@ -15,8 +15,8 @@ class Arm:
     model: str
 
 
-def build_arms(case: dict, base_ref: str, variant_ref: str) -> list[Arm]:
-    candidate, upgrade, judge = case["candidate_model"], case["upgrade_model"], case["judge_model"]
+def build_arms(case: dict, base_ref: str, variant_ref: str, judge: str) -> list[Arm]:
+    candidate, upgrade = case["candidate_model"], case["upgrade_model"]
     taken = {model_family(candidate), model_family(upgrade)}
     if model_family(judge) in taken:
         raise ValueError(f"judge {judge} shares a model family with a candidate ({sorted(taken)})")

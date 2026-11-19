@@ -11,7 +11,6 @@ FIX = HERE / "fixtures"
 CASE = {
     "candidate_model": "gemini-4-neon-medium",
     "upgrade_model": "gemini-4-neon-high",
-    "judge_model": "claude-opus-5-5-high",
 }
 
 
@@ -48,7 +47,7 @@ class TranscriptTest(unittest.TestCase):
 
 class ArmsTest(unittest.TestCase):
     def test_arms_fixed_order_and_levers(self):
-        a, b, c = arms.build_arms(CASE, "base123", "head456")
+        a, b, c = arms.build_arms(CASE, "base123", "head456", "claude-opus-5-5-high")
         self.assertEqual([x.label for x in (a, b, c)], ["A", "B", "C"])
         self.assertEqual((a.model, b.model), (CASE["candidate_model"],) * 2)
         self.assertNotEqual(a.plugin_ref, b.plugin_ref)
@@ -57,9 +56,9 @@ class ArmsTest(unittest.TestCase):
 
     def test_judge_family_must_differ(self):
         with self.assertRaises(ValueError):
-            arms.build_arms(dict(CASE, judge_model="gemini-4-argon-high"), "a", "b")
+            arms.build_arms(CASE, "a", "b", "gemini-4-argon-high")
         with self.assertRaises(ValueError):
-            arms.build_arms(dict(CASE, upgrade_model="claude-opus-5-5-high"), "a", "b")
+            arms.build_arms(dict(CASE, upgrade_model="gpt-6.2-astra"), "a", "b", "gpt-6.2-sol")
 
 
 class IsolationTest(unittest.TestCase):

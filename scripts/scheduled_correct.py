@@ -52,6 +52,7 @@ Description=vex-mode weekly unattended /correct run
 Type=oneshot
 Environment=PATH={path}
 Environment=VEX_AGY={agy}
+EnvironmentFile=-%h/.config/vex-mode/secrets.env
 ExecStart=/usr/bin/python3 {script} run --repo {repo}
 """,
         "vex-correct.timer": """[Unit]

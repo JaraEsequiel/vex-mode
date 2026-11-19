@@ -190,6 +190,7 @@ class PromptAndUnitsTest(unittest.TestCase):
         self.assertIn("ExecStart=/usr/bin/python3 /r/scripts/scheduled_correct.py run --repo /r", service)
         self.assertIn("Environment=PATH=/m/bin:/usr/bin", service)
         self.assertIn("Environment=VEX_AGY=/m/bin/agy", service)
+        self.assertIn("EnvironmentFile=-%h/.config/vex-mode/secrets.env", service)
         self.assertIn("OnCalendar=Sun *-*-* 03:00:00", timer)
         self.assertIn("Persistent=true", timer)
 

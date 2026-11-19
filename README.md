@@ -26,7 +26,11 @@ Cada cambio a una skill se mide antes de entrar. El eval compara tres brazos, ca
 - B: la versión nueva.
 - C: la de `main` con un modelo mejor.
 
-Un juez de otra familia de modelos califica las respuestas sin saber de qué brazo viene cada una.
+Un juez de otra familia de modelos califica las respuestas sin saber de qué brazo viene cada una. El juez se llama directo por API, no por agy:
+
+- **Configuración:** `evals/judge.json` (`provider`: `openai`, `anthropic` o `agy`; `model`; `effort`). Por defecto `openai` / `gpt-6.2-sol` / `medium`. Para una corrida puntual: `VEX_JUDGE_PROVIDER`, `VEX_JUDGE_MODEL`, `VEX_JUDGE_EFFORT`.
+- **API key:** `OPENAI_API_KEY` o `ANTHROPIC_API_KEY` en el entorno o en `~/.config/vex-mode/secrets.env` (`chmod 600`; si otros pueden leerlo, el eval se niega). Nunca va al repo. Si falta, el eval falla antes de lanzar candidatos.
+- **Recalificar sin repetir ejecuciones:** `python3 evals/run.py rejudge <resultado.json>` usa el juez configurado ahora.
 
 ```bash
 python3 evals/run.py vex-mode tax-rounding

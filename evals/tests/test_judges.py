@@ -20,14 +20,14 @@ class FakeAPI:
     """A local HTTP server that records each request and answers from a queue of (status, headers, body)."""
 
     def __init__(self):
-        self.requests, self.replies = [], []
+        self.requests, self.replies, self.handler = [], [], None
         api = self
 
         class Handler(BaseHTTPRequestHandler):
             def do_POST(self):
                 body = json.loads(self.rfile.read(int(self.headers["Content-Length"])))
                 api.requests.append({"path": self.path, "headers": dict(self.headers), "body": body})
-                status, headers, reply = api.replies.pop(0)
+                status, headers, reply = api.handler(api.requests[-1]) if api.handler else api.replies.pop(0)
                 data = reply if isinstance(reply, bytes) else json.dumps(reply).encode()
                 self.send_response(status)
                 for k, v in headers.items():

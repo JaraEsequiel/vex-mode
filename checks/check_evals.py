@@ -52,19 +52,47 @@ def _case_errors(case: Path, rel: str) -> list[str]:
             errors.append(f"{rel}/case.json: runs must be an integer >= 1")
         if not (isinstance(cfg.get("timeout_s"), int) and cfg["timeout_s"] > 0):
             errors.append(f"{rel}/case.json: timeout_s must be a positive integer")
-        for key in ("candidate_model", "upgrade_model", "judge_model"):
+        for key in ("candidate_model", "upgrade_model"):
             if not (isinstance(cfg.get(key), str) and cfg[key]):
                 errors.append(f"{rel}/case.json: {key} is required")
+        if "judge_model" in cfg:
+            errors.append(f"{rel}/case.json: judge_model is gone; the judge is set once in evals/judge.json")
         workdir = cfg.get("workdir")
         if not (isinstance(workdir, str) and SLUG.match(workdir)):
             errors.append(f"{rel}/case.json: workdir must match {SLUG.pattern}")
         elif hits := banned_hits(workdir):
             errors.append(f"{rel}/case.json: workdir has banned words {hits}")
-        models = [cfg.get(k) for k in ("candidate_model", "upgrade_model", "judge_model")]
-        if all(isinstance(m, str) and m for m in models):
-            judge = model_family(models[2])
-            if judge in {model_family(models[0]), model_family(models[1])}:
-                errors.append(f"{rel}/case.json: judge family '{judge}' must differ from every candidate's family")
+        models = [cfg.get(k) for k in ("candidate_model", "upgrade_model")]
+        judge_model = (judge_config(case.parents[3]) or {}).get("model")
+        if judge_model and all(isinstance(m, str) and m for m in models):
+            judge = model_family(judge_model)
+            if judge in {model_family(m) for m in models}:
+                errors.append(f"{rel}/case.json: judge family '{judge}' (evals/judge.json) must differ from every candidate's family")
+    return errors
+
+
+JUDGE_PROVIDERS = ("openai", "anthropic", "agy")
+
+
+def judge_config(root: Path) -> dict | None:
+    try:
+        cfg = json.loads((root / "evals/judge.json").read_text())
+    except (OSError, ValueError):
+        return None
+    return cfg if isinstance(cfg, dict) else None
+
+
+def judge_config_errors(root: Path) -> list[str]:
+    if not any((root / "evals").glob("*/cases/*/case.json")):
+        return []
+    cfg = judge_config(root)
+    if cfg is None:
+        return ["evals/judge.json is required (provider, model, effort) and must be a JSON object"]
+    errors = []
+    if cfg.get("provider") not in JUDGE_PROVIDERS:
+        errors.append(f"evals/judge.json: provider must be one of {', '.join(JUDGE_PROVIDERS)}")
+    if not (isinstance(cfg.get("model"), str) and cfg["model"]):
+        errors.append("evals/judge.json: model is required")
     return errors
 
 
@@ -113,7 +141,7 @@ def _load_results(skill_dir: Path) -> list[tuple[Path, dict | None]]:
 
 
 def layout_errors(root: Path) -> list[str]:
-    errors = []
+    errors = judge_config_errors(root)
     for d in _skill_dirs(root):
         rel = d.relative_to(root).as_posix()
         if not (root / "skills" / d.name).is_dir():
