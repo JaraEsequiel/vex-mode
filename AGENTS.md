@@ -14,6 +14,7 @@ This repo is an Antigravity plugin: Vex's working mode for agents, built on psta
 - `hooks.json` + `hooks/`: mode hooks (activation, irreversible pause, stop gate).
 - `checks/`: deterministic structural checks. `checks/run.py` runs all of them.
 - `scripts/vendor.py`: copies pstack files verbatim and records provenance.
+- `scripts/build_plugin.py`: exports only the plugin's parts; install with `--install`, never `agy plugin install` on the repo.
 - `vendor.lock`: provenance for every file under `skills/`, `rules/`, `agents/`.
 - `docs/specs/`, `docs/plans/`, `docs/decisions/`: design, plans, decision log.
 
@@ -47,6 +48,7 @@ A new file that has no upstream goes under `original` in `vendor.lock`.
 | No dangling skill, playbook or link references | `checks/check_skills.py` |
 | Size budgets (SKILL ≤ 16 KB, rule ≤ 24 KB) | `checks/check_skills.py` |
 | Every rule has an enforcer | `checks/check_rules.py` |
+| The plugin is installed only from a clean build (no repo files in the installed copy) | `scripts/build_plugin.py` `scripts/tests/test_build_plugin.py` |
 | Plugin manifest, skills, agents and rules load in agy | `scripts/validate_plugin.py` `.github/workflows/ci.yml` |
 | Every check and test runs on every push and PR | `.github/workflows/ci.yml` |
 | Full mode activates only via /vex-mode, reading list injected once | `hooks/activate.py` `hooks/tests/test_activate.py` |

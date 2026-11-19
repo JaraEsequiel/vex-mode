@@ -7,9 +7,12 @@ Está construido sobre [pstack](https://github.com/cursor/plugins/tree/main/psta
 ## Instalar
 
 ```bash
-agy plugin install ~/Projects/VexOs/Code/Repos/vex-mode
+cd ~/Projects/VexOs/Code/Repos/vex-mode
+python3 scripts/build_plugin.py --install ~/.cache/vex-mode/build
 agy plugin list
 ```
+
+Se instala desde una copia limpia: `agy plugin install` copia la carpeta entera, y el repo tiene archivos (docs, evals, `.git`) que no deben llegar a tus sesiones.
 
 ## Usar
 
