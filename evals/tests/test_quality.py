@@ -12,8 +12,8 @@ from harness import quality
 
 CASE = HERE.parent / "vex-mode/cases/tax-rounding"
 BEFORE = CASE / "project"
-CHECK = CASE / "check.py"
 FIX = HERE / "fixtures/quality"
+CHECK = FIX / "check_totals.py"  # the tests' own oracle: totals only, so the case's check can get stricter
 GOOD = (FIX / "good_invoices.py").read_text()
 
 
