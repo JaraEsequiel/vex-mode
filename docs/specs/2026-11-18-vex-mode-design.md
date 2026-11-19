@@ -90,6 +90,7 @@ vex-mode/
 ├── evals/<skill>/            § 8.2  casos y resultados de evals (fuera de skills/)
 ├── evals/run.py              § 8.2  arnés que ejecuta candidatos y juez con agy -p
 ├── scripts/build_plugin.py   § 8.2  exporta solo las partes del plugin para instalar
+├── scripts/scheduled_correct.py § 9 ejecución semanal de `correct` (timer de systemd)
 ├── vendor.lock               § 6.6  procedencia de lo copiado de pstack
 ├── LICENSES/pstack-MIT.txt   § 6.6
 ├── docs/
@@ -252,12 +253,21 @@ El mecanismo exacto del hook `Stop` (qué cuenta como evidencia) se prototipa an
 
 1. **`correct`:** mina commits, reverts y reviews, y agrupa los errores en clases (una clase cuenta cuando ocurrió 2 veces). Cada clase se arregla en el nivel más alto que funcione: arquitectura, después tipos y lint, después test, y docs al final. Cada check nuevo tiene que demostrar que falla con un error real del pasado `[P-correct:15-26]`.
 2. **`reflect`:** al terminar una tarea larga, convierte lo aprendido en una edición concreta de una skill existente. Un hallazgo solo se guarda si seguirá siendo cierto en 6 meses `[P-reflect:13]`.
-3. **`show-me-your-work`:** guarda las decisiones en `decisions.tsv` `[P-smyw:46]`. En este repo se guarda en `docs/decisions/`, porque el repo vive de su propio historial `[MÍA]`.
+   - Lee el transcript completo de la conversación, que agy guarda en `<directorio de artefactos>/.system_generated/logs/transcript.jsonl` y nombra en el prompt del agente. Como el archivo es completo, lo que una compactación resumió sigue ahí `[P-reflect:11]` `[A-transcript]` `[I-875]`.
+   - **Destino de la edición:** si la skill es de vex-mode, la edita en un worktree del repo y abre un PR que mergeas tú, siguiendo "How to change a skill" del `AGENTS.md`. Si es de otro plugin, sigue a pstack: edita una copia en `.agents/skills/<skill>/` o `~/.gemini/config/skills/<skill>/` y nunca abre PRs `[P-reflect:17]` `[A-skills]` `[VEX]`.
+3. **`show-me-your-work`:** guarda las decisiones en `decisions.tsv` `[P-smyw:46]`. Por defecto no se commitea; se commitea cuando un revisor necesita el rastro para confiar en el resultado `[P-smyw:48]`. En este repo, un rastro commiteado va en `docs/decisions/<fecha>-<tema>.tsv`, porque el repo vive de su propio historial `[MÍA]`.
+   - La auditoría del final lee el transcript de agy de esa conversación `[P-smyw:57]` `[A-transcript]`.
+   - La revisión cruzada del rastro usa `agy -p --model <modelo de otra familia>`, igual que el juez de los evals `[P-smyw:67]` `[I-1159]` `[A-cli]`.
 4. **Cómo entra un cambio:** como PR desde un worktree, con la plantilla de `worker.md`. Solo entra si pasa CI (§8.4) y, cuando toca una skill, el eval (§8.2) `[P-worker]` `[VEX]`.
 5. **Disparo programado, y el merge lo haces tú** `[VEX]`.
    - Una ejecución periódica corre `correct` sobre el historial reciente y deja PRs.
    - **Ningún PR de la IA se mergea solo.** Es el primer peldaño de la escalera de confianza de poteto: el automerge se gana después, con evidencia acumulada `[T-maily]` `[T-talk]`.
-   - Mecanismo propuesto: un timer de systemd de usuario que ejecuta `agy -p` en local, porque GitHub Actions no tiene tu sesión de agy. La frecuencia la decide el implementador; propongo semanal `[MÍA]`.
+   - **Mecanismo:** un timer de systemd de usuario, semanal (domingo 03:00, `Persistent=true`), que ejecuta `scripts/scheduled_correct.py` en local, porque GitHub Actions no tiene tu sesión de agy `[VEX]` `[MÍA]`.
+   - El script crea un worktree desde `origin/main` en una rama `correct/<fecha>` y ejecuta `agy -p "/correct …"` sobre los commits y PRs de los últimos 7 días.
+   - Si `correct` cambia una skill, un hook o una regla, la misma ejecución corre el eval (§8.2) y deja el resultado en el PR, así el CI del PR pasa sin que intervengas `[VEX]`.
+   - El rastro de decisiones de la ejecución se commitea en el PR (`show-me-your-work`), porque nadie la vio correr `[P-smyw:48]`.
+   - **Qué hace cumplir "no se mergea solo":** el hook de pausa trata `gh pr merge` y cualquier push a `main` como irreversibles. En `agy -p` un `force_ask` no se ejecuta, porque no hay humano que confirme `[A-hooks]` (`docs/decisions/2026-11-18-hook-probe.md`).
+   - **Costo conocido:** el eval reemplaza el plugin instalado mientras corre (unos 70 minutos). Si el timer se pone al día al iniciar sesión, una sesión tuya de agy en ese rato ve la variante; el arnés restaura tu plugin al terminar.
 6. **Nunca sobreajustar** a una sola conversación: hacen falta varias repeticiones para convertir algo en regla `[P-automate:87]`.
 
 ## 10. `agent-ready`: el generador para otros repos
@@ -280,7 +290,7 @@ Cada hito termina en un estado verificable antes de empezar el siguiente `[P-mod
   - Router `vex-mode` con 2 playbooks (bug-fix y feature) y `worker.md` + `vex-agent`.
   - Hooks del modo, con la marca de activación.
 - **M2 — Evals:** `eval.md` y `principle-explain-the-number` copiados de pstack, el arnés `evals/run.py`, `scripts/build_plugin.py`, el primer caso real y la política de hash en CI (§8.2).
-- **M3 — Auto-mejora:** `correct`, `reflect`, `show-me-your-work` y el disparo programado (§9).
+- **M3 — Auto-mejora:** `correct`, `reflect` y `show-me-your-work` copiados de pstack y adaptados, el disparador de `show-me-your-work` en el router, el guardián de merge en el hook de pausa, `scripts/scheduled_correct.py` con su timer, y la evidencia de evals del propio PR (§9).
 - **M4 — Otros repos:** `create-verification-skill` y `agent-ready` (§10).
 
 ## 11. Desviaciones de pstack (documentadas a propósito)
@@ -293,6 +303,8 @@ Cada hito termina en un estado verificable antes de empezar el siguiente `[P-mod
 | Cuando el cambio evaluado toca el propio playbook de evals, el plugin del brazo B nombra "eval" | Es la skill bajo prueba: el candidato carga lo que se evalúa. Los casos, las rúbricas y el juez siguen ocultos | `[P-eval:7]` `[VEX]` |
 | Las fases B y C de `arena` las ejecuta un arnés determinista con `agy -p`, no subagentes | En agy el modelo de cada candidato se fija por flag, y el aislamiento exige instalar cada variante | `[P-eval:20-21]` `[I-877]` `[A-cli]` `[MÍA]` |
 | Auto-mejora programada | pstack la dispara a mano | `[P-correct]` `[VEX]` |
+| `reflect` abre un PR cuando la skill es de vex-mode (pstack prohíbe PRs y edita una copia local) | Un cambio a vex-mode entra como PR con su eval (§9.4); una copia local nunca llegaría al repo | `[P-reflect:17]` `[VEX]` |
+| La ejecución programada corre el eval de lo que cambia | Sin resultado, el CI de su PR falla (§8.2); al estar desatendida, el tiempo no molesta | `[VEX]` |
 | Evals guardados y exigidos en CI | pstack no publica evidencia | `[AUD]` `[VEX]` |
 | Sin la regla de citar principios en cada respuesta | Se cumple solo en apariencia | `[I-726]` |
 | Solo Antigravity | Los adaptadores de pstack degradaron la calidad | `[AUD]` `[VEX]` |
@@ -337,6 +349,10 @@ Cada hito termina en un estado verificable antes de empezar el siguiente `[P-mod
 | `A-hooks` | agy 1.5.11: `hooks.json`, eventos y ubicaciones (global, plugin, `<workspace>/.agents/hooks.json`) |
 | `A-validate` | `agy plugin validate --help` |
 | `A-cli` | agy 1.5.11, probado el 2026-11-18: `agy models` (familias Gemini, Claude y GPT-OSS); `agy -p --output-format stream-json` registra cada herramienta con sus parámetros y el uso de tokens; `--json-schema`; `--settings` rechaza `plugins`; una skill en `.agents/skills/` del workspace reemplaza a la del plugin global; `agy plugin install` copia la carpeta entera |
+| `I-875` | https://github.com/cursor/plugins/issues/875 (abierto): `reflect` descarta como aislados errores repetidos que la compactación resumió; en agy no aplica porque el transcript es completo |
+| `I-876` | https://github.com/cursor/plugins/issues/876 (abierto): mostrar de nuevo las filas `open` del rastro; propuesta sin implementar en pstack, no adoptada en M3 |
+| `I-1159` | https://github.com/cursor/plugins/issues/1159 (abierto): el revisor cruzado de `show-me-your-work` no tiene rol en la configuración de modelos |
+| `A-transcript` | agy 1.5.12, probado el 2026-11-19: cada conversación guarda un transcript legible en `~/.gemini/antigravity-cli/brain/<id>/.system_generated/logs/transcript.jsonl`, y el prompt del agente nombra esa ruta |
 | `T-robson` | Barnaby Robson, "On pstack" (2026-10-05): https://barnabyrobson.org/on-pstack/ |
 | `AUD` | La auditoría de esta sesión: 3 auditores (diseño, evidencia, Claude Code) y 2 refutadores |
 | `VEX` | Decisiones tuyas en esta conversación |
