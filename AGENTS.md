@@ -74,6 +74,7 @@ If an eval was killed before it restored the user's plugin, the next eval refuse
 | Every eval measures compliance, outcome and cost on three fixed arms | `evals/harness/arms.py` `evals/tests/test_run.py` |
 | An eval never leaves a variant installed | `evals/run.py` `evals/tests/test_run.py` |
 | A run that read (by file or shell) the eval cache, the repo, another project copy, an `evals/` folder or another skill copy is invalid | `evals/harness/isolation.py` `evals/tests/test_run.py` |
+| No AI PR merges itself: `gh pr merge`, `gh api …/merge` and a push to `main`/`master` pause (headless `agy -p`: blocked) | `hooks/irreversible.py` `hooks/tests/test_irreversible.py` |
 | A PreToolUse hook with no opinion prints nothing (`{}` denies the tool) | `hooks/tests/test_irreversible.py` `docs/decisions/2026-11-18-hook-probe.md` |
 
 When you are corrected for a mistake, add a row here together with its enforcer in the same change. A rule that nothing enforces is a repeat waiting to happen.

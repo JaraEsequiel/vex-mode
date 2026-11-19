@@ -14,6 +14,7 @@ SHELLS = {"bash", "sh", "zsh", "dash"}
 WRAPPERS = {"command", "nohup", "time", "exec", "builtin"}
 # wrapper -> options that take a separate argument
 WRAPPER_ARGS = {"sudo": {"-u", "-g", "-C", "-h", "-p", "-U"}, "env": {"-u", "-C", "-S"}, "xargs": {"-I", "-n", "-P", "-d", "-L", "-s", "-E", "-a"}}
+PROTECTED_BRANCHES = {"main", "master"}
 SQL = re.compile(r"\b(drop\s+(table|database|schema)|truncate\b)", re.IGNORECASE)
 
 
@@ -68,6 +69,19 @@ def _git_push(args: list[str]) -> str | None:
             return f"git push with force refspec {a}"
         if a.startswith(":") and len(a) > 1:
             return f"git push deleting remote ref {a}"
+    refspecs = [a for a in args if not a.startswith("-")][1:]
+    for spec in refspecs:
+        dest = spec.split(":")[-1].removeprefix("refs/heads/")
+        if dest in PROTECTED_BRANCHES:
+            return f"git push to {dest} (only the user merges)"
+    return None
+
+
+def _gh(args: list[str]) -> str | None:
+    if args[:2] == ["pr", "merge"]:
+        return "gh pr merge (only the user merges)"
+    if args[:1] == ["api"] and any(re.search(r"/merge$", a) for a in args[1:]):
+        return "gh api merge (only the user merges)"
     return None
 
 
@@ -90,6 +104,8 @@ def _segment(tokens: list[str]) -> str | None:
         return None
     if cmd == "git" and "push" in args:
         return _git_push(args[args.index("push") + 1:])
+    if cmd == "gh":
+        return _gh(args)
     if cmd == "rm":
         return _rm(args)
     if cmd == "terraform" and args[:1] in (["destroy"], ["apply"]):
