@@ -1,0 +1,246 @@
+{
+  "kind": "eval",
+  "skill": "vex-mode",
+  "tree_sha256": "cc500b7097a8b65c7c9c9840f4cd1bf568e85949ce32d24a160b38befe7fdfa2",
+  "date": "2026-11-19",
+  "case": "tax-rounding",
+  "run_dir": "/home/vex/.cache/vex-mode/runs/20261119-145054-789891",
+  "arms": {
+    "A": {
+      "model": "gemini-4-neon-medium",
+      "plugin_ref": "208ac47d7f2b80deb42c75bb4824201918492cb4",
+      "tree_sha256": "e2e983302b172af5bc79cbb01053c8b2decb3529dc14ca8e810636cd7fae5406",
+      "runs": [
+        {
+          "slot": 5,
+          "status": "SUCCESS",
+          "invalid": null,
+          "outcome": 1,
+          "compliance": 1.0,
+          "tokens": 72991,
+          "duration_s": 254.405635048,
+          "reads": 19,
+          "commands": 5,
+          "label": "R7"
+        },
+        {
+          "slot": 9,
+          "status": "SUCCESS",
+          "invalid": null,
+          "outcome": 1,
+          "compliance": 1.0,
+          "tokens": 88807,
+          "duration_s": 196.437951777,
+          "reads": 21,
+          "commands": 8,
+          "label": "R1"
+        },
+        {
+          "slot": 7,
+          "status": "SUCCESS",
+          "invalid": null,
+          "outcome": 0,
+          "compliance": 1.0,
+          "tokens": 61969,
+          "duration_s": 206.302189957,
+          "reads": 19,
+          "commands": 7,
+          "label": "R6"
+        }
+      ]
+    },
+    "B": {
+      "model": "gemini-4-neon-medium",
+      "plugin_ref": "7304bb9421a526f0c33889099f62e5d838b94956",
+      "tree_sha256": "cc500b7097a8b65c7c9c9840f4cd1bf568e85949ce32d24a160b38befe7fdfa2",
+      "runs": [
+        {
+          "slot": 1,
+          "status": "SUCCESS",
+          "invalid": null,
+          "outcome": 0,
+          "compliance": 1.0,
+          "tokens": 72746,
+          "duration_s": 208.220196915,
+          "reads": 21,
+          "commands": 7,
+          "label": "R9"
+        },
+        {
+          "slot": 3,
+          "status": "SUCCESS",
+          "invalid": null,
+          "outcome": 0,
+          "compliance": 1.0,
+          "tokens": 79973,
+          "duration_s": 224.53119849,
+          "reads": 23,
+          "commands": 9,
+          "label": "R5"
+        },
+        {
+          "slot": 6,
+          "status": "SUCCESS",
+          "invalid": null,
+          "outcome": 0,
+          "compliance": 1.0,
+          "tokens": 61880,
+          "duration_s": 203.874661958,
+          "reads": 20,
+          "commands": 9,
+          "label": "R4"
+        }
+      ]
+    },
+    "C": {
+      "model": "gemini-4-neon-high",
+      "plugin_ref": "208ac47d7f2b80deb42c75bb4824201918492cb4",
+      "tree_sha256": "e2e983302b172af5bc79cbb01053c8b2decb3529dc14ca8e810636cd7fae5406",
+      "runs": [
+        {
+          "slot": 4,
+          "status": "SUCCESS",
+          "invalid": null,
+          "outcome": 1,
+          "compliance": 1.0,
+          "tokens": 97705,
+          "duration_s": 501.894247782,
+          "reads": 19,
+          "commands": 16,
+          "label": "R8"
+        },
+        {
+          "slot": 2,
+          "status": "SUCCESS",
+          "invalid": null,
+          "outcome": 0,
+          "compliance": 0.5,
+          "tokens": 45643,
+          "duration_s": 102.908108621,
+          "reads": 17,
+          "commands": 3,
+          "label": "R2"
+        },
+        {
+          "slot": 8,
+          "status": "SUCCESS",
+          "invalid": null,
+          "outcome": 1,
+          "compliance": 1.0,
+          "tokens": 70602,
+          "duration_s": 444.655569353,
+          "reads": 19,
+          "commands": 6,
+          "label": "R3"
+        }
+      ]
+    }
+  },
+  "judge": {
+    "provider": "openai",
+    "model": "gpt-6.2-sol",
+    "effort": "medium",
+    "error": null,
+    "usage": {
+      "input": 27957,
+      "output": 1976,
+      "reasoning": 0
+    }
+  },
+  "metrics": {
+    "A": {
+      "compliance": {
+        "mean": 1.0,
+        "min": 1.0,
+        "max": 1.0,
+        "spread": 0.0
+      },
+      "outcome": {
+        "mean": 0.6666666666666666,
+        "min": 0.0,
+        "max": 1.0,
+        "spread": 1.0
+      },
+      "tokens": {
+        "mean": 74589.0,
+        "min": 61969.0,
+        "max": 88807.0,
+        "spread": 26838.0
+      },
+      "duration_s": {
+        "mean": 219.04859226066665,
+        "min": 196.437951777,
+        "max": 254.405635048,
+        "spread": 57.967683271
+      }
+    },
+    "B": {
+      "compliance": {
+        "mean": 1.0,
+        "min": 1.0,
+        "max": 1.0,
+        "spread": 0.0
+      },
+      "outcome": {
+        "mean": 0.0,
+        "min": 0.0,
+        "max": 0.0,
+        "spread": 0.0
+      },
+      "tokens": {
+        "mean": 71533.0,
+        "min": 61880.0,
+        "max": 79973.0,
+        "spread": 18093.0
+      },
+      "duration_s": {
+        "mean": 212.20868578766667,
+        "min": 203.874661958,
+        "max": 224.53119849,
+        "spread": 20.65653653200002
+      }
+    },
+    "C": {
+      "compliance": {
+        "mean": 0.8333333333333334,
+        "min": 0.5,
+        "max": 1.0,
+        "spread": 0.5
+      },
+      "outcome": {
+        "mean": 0.6666666666666666,
+        "min": 0.0,
+        "max": 1.0,
+        "spread": 1.0
+      },
+      "tokens": {
+        "mean": 71316.66666666667,
+        "min": 45643.0,
+        "max": 97705.0,
+        "spread": 52062.0
+      },
+      "duration_s": {
+        "mean": 349.8193085853333,
+        "min": 102.908108621,
+        "max": 501.894247782,
+        "spread": 398.986139161
+      }
+    }
+  },
+  "signals": {
+    "B_vs_A": {
+      "compliance": "noise",
+      "outcome": "noise",
+      "tokens": "noise",
+      "duration_s": "noise"
+    },
+    "C_vs_A": {
+      "compliance": "noise",
+      "outcome": "noise",
+      "tokens": "noise",
+      "duration_s": "noise"
+    }
+  },
+  "verdict": "inconclusive",
+  "synthesis": "Batch A (tdd, why, architect, unslop, technical-writing). B outcome 0/3 vs A 2/3, noise by stats. All three B failures switched invoices.py to Decimal end to end and broke float callers; the judge passed them (1.0). The follow-up B1 eval (same batch without architect references) also failed 2/3 the same way, so architect is not the cause. Across both evals, every run whose own test called invoice_total with a float passed, and none of the failures did: the failure is the agent changing the function's contract, a class seen in 8 runs over 4 evals. Followed by a bug-fix playbook line that asks to keep the public contract."
+}

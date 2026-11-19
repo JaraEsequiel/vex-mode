@@ -1,0 +1,7 @@
+{
+  "kind": "waiver",
+  "skill": "unslop",
+  "tree_sha256": "63cb1124e120d70f0ceb549a0aa3e645605635de87eb72cccdce313bed1a10aa",
+  "date": "2026-11-19",
+  "reason": "Vendored verbatim from pstack@e58dd04. The router's prose trigger applies it to every reply; its effect is on prose, which no outcome check measures. The tax-rounding eval of the same PR runs with it in the router."
+}

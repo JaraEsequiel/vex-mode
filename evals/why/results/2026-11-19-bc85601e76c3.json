@@ -1,0 +1,7 @@
+{
+  "kind": "waiver",
+  "skill": "why",
+  "tree_sha256": "bc85601e76c3b29b6417f9b93af1b7158758b9fc972b717f6b7332b26fd5b6ba",
+  "date": "2026-11-19",
+  "reason": "Vendored verbatim from pstack@e58dd04 (9 lines). Reached through bug-fix step 2 (regression history), which the tax-rounding eval of the same PR exercises; the case's repo has one commit, so the history it reads is thin. No case calls /why on its own."
+}

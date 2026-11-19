@@ -14,12 +14,12 @@
 
 **Steps:**
 
-1. **Frame.** State what variant is under test and what behavior counts as success. Write the rubric (3-6 concrete criteria) for the judge only. Hold it back from candidates. Pair the rubric with the case's outcome check and report cost; change one lever per comparison.
+1. **Frame.** State what variant is under test and what behavior counts as success. Write the rubric (3-6 concrete criteria) for the judge only. Hold it back from candidates. Pair the rubric with the case's outcome check, the code-quality measure (`"quality": true` in the case's `case.json`; it scores only runs that pass the check) and cost; change one lever per comparison.
 2. **Set up sanitized environments.** Per-candidate working dir with the variant in place. Plant any context an organic task would have: a project skeleton, the skills the candidate would naturally read.
 3. **Author one organic prompt.** What a user would type. No leakage of what's being measured.
 4. **Run the candidates** with `python3 evals/run.py <skill> <case>` from the vex-mode source repo. It builds the three arms, installs each arm's plugin build, runs one `agy -p` per candidate in its own sanitized dir, and restores the installed plugin. Same prompt to each.
 5. **The same command runs one blinded judge** set in `evals/judge.json` (provider, model, effort; called over API), of a different model family than every candidate. Judge sees outputs by sanitized label and the rubric, never a model name.
 6. **Verify the chain from transcripts, not self-report.** Read each candidate's `stream-json` transcript in the run directory the harness prints. Look at which files each candidate actually opened. Grade chain-following from the files it really read plus the shape of the code, never from the candidate's own claims.
-7. **Read every candidate output yourself** end to end. Compare to the judge's verdict. Disagreement means a model is biased or the rubric is ambiguous. Synthesize. Record the decision with `python3 evals/run.py verdict <result> <promote|reject|inconclusive> "<synthesis>"`, per the **principle-explain-the-number** skill.
+7. **Read every candidate output yourself** end to end. Compare to the judge's verdict. Disagreement means a model is biased or the rubric is ambiguous. Synthesize. Record the decision with `python3 evals/run.py verdict <result> <promote|reject|inconclusive> "<synthesis>"`, per the **principle-explain-the-number** skill. Never promote when the outcome or a blocking quality measure got worse; CI rejects it.
 
 **Reply:** variant under test, rubric, per-candidate notes, judge's verdict, your synthesis, and a recommendation for whether to promote the variant.

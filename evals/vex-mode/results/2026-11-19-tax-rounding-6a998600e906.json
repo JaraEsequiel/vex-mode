@@ -1,0 +1,246 @@
+{
+  "kind": "eval",
+  "skill": "vex-mode",
+  "tree_sha256": "6a998600e90698c3781d49880cced6569978f72a4606b76cec121c570463522d",
+  "date": "2026-11-19",
+  "case": "tax-rounding",
+  "run_dir": "/home/vex/.cache/vex-mode/runs/20261119-171919-648186",
+  "arms": {
+    "A": {
+      "model": "gemini-4-neon-medium",
+      "plugin_ref": "208ac47d7f2b80deb42c75bb4824201918492cb4",
+      "tree_sha256": "e2e983302b172af5bc79cbb01053c8b2decb3529dc14ca8e810636cd7fae5406",
+      "runs": [
+        {
+          "slot": 8,
+          "status": "SUCCESS",
+          "invalid": null,
+          "outcome": 0,
+          "compliance": 1.0,
+          "tokens": 67256,
+          "duration_s": 194.897500321,
+          "reads": 17,
+          "commands": 6,
+          "label": "R9"
+        },
+        {
+          "slot": 3,
+          "status": "SUCCESS",
+          "invalid": null,
+          "outcome": 1,
+          "compliance": 1.0,
+          "tokens": 59020,
+          "duration_s": 192.106205644,
+          "reads": 17,
+          "commands": 5,
+          "label": "R5"
+        },
+        {
+          "slot": 1,
+          "status": "SUCCESS",
+          "invalid": null,
+          "outcome": 1,
+          "compliance": 1.0,
+          "tokens": 80914,
+          "duration_s": 275.48676902,
+          "reads": 19,
+          "commands": 7,
+          "label": "R3"
+        }
+      ]
+    },
+    "B": {
+      "model": "gemini-4-neon-medium",
+      "plugin_ref": "e1ef3a9f88ce7e63424c395248ad2f73e2f82ce7",
+      "tree_sha256": "6a998600e90698c3781d49880cced6569978f72a4606b76cec121c570463522d",
+      "runs": [
+        {
+          "slot": 7,
+          "status": "SUCCESS",
+          "invalid": null,
+          "outcome": 1,
+          "compliance": 1.0,
+          "tokens": 99064,
+          "duration_s": 283.745789514,
+          "reads": 20,
+          "commands": 12,
+          "label": "R6"
+        },
+        {
+          "slot": 4,
+          "status": "SUCCESS",
+          "invalid": null,
+          "outcome": 1,
+          "compliance": 1.0,
+          "tokens": 65167,
+          "duration_s": 234.877927804,
+          "reads": 22,
+          "commands": 9,
+          "label": "R2"
+        },
+        {
+          "slot": 5,
+          "status": "SUCCESS",
+          "invalid": null,
+          "outcome": 1,
+          "compliance": 1.0,
+          "tokens": 82750,
+          "duration_s": 216.008257849,
+          "reads": 23,
+          "commands": 5,
+          "label": "R1"
+        }
+      ]
+    },
+    "C": {
+      "model": "gemini-4-neon-high",
+      "plugin_ref": "208ac47d7f2b80deb42c75bb4824201918492cb4",
+      "tree_sha256": "e2e983302b172af5bc79cbb01053c8b2decb3529dc14ca8e810636cd7fae5406",
+      "runs": [
+        {
+          "slot": 6,
+          "status": "SUCCESS",
+          "invalid": null,
+          "outcome": 0,
+          "compliance": 0.5,
+          "tokens": 47601,
+          "duration_s": 92.22659188,
+          "reads": 17,
+          "commands": 3,
+          "label": "R4"
+        },
+        {
+          "slot": 9,
+          "status": "SUCCESS",
+          "invalid": null,
+          "outcome": 1,
+          "compliance": 1.0,
+          "tokens": 80957,
+          "duration_s": 297.081772026,
+          "reads": 19,
+          "commands": 7,
+          "label": "R7"
+        },
+        {
+          "slot": 2,
+          "status": "SUCCESS",
+          "invalid": null,
+          "outcome": 1,
+          "compliance": 1.0,
+          "tokens": 161709,
+          "duration_s": 462.729947032,
+          "reads": 25,
+          "commands": 21,
+          "label": "R8"
+        }
+      ]
+    }
+  },
+  "judge": {
+    "provider": "openai",
+    "model": "gpt-6.2-sol",
+    "effort": "medium",
+    "error": null,
+    "usage": {
+      "input": 29232,
+      "output": 1970,
+      "reasoning": 39
+    }
+  },
+  "metrics": {
+    "A": {
+      "compliance": {
+        "mean": 1.0,
+        "min": 1.0,
+        "max": 1.0,
+        "spread": 0.0
+      },
+      "outcome": {
+        "mean": 0.6666666666666666,
+        "min": 0.0,
+        "max": 1.0,
+        "spread": 1.0
+      },
+      "tokens": {
+        "mean": 69063.33333333333,
+        "min": 59020.0,
+        "max": 80914.0,
+        "spread": 21894.0
+      },
+      "duration_s": {
+        "mean": 220.83015832833334,
+        "min": 192.106205644,
+        "max": 275.48676902,
+        "spread": 83.380563376
+      }
+    },
+    "B": {
+      "compliance": {
+        "mean": 1.0,
+        "min": 1.0,
+        "max": 1.0,
+        "spread": 0.0
+      },
+      "outcome": {
+        "mean": 1.0,
+        "min": 1.0,
+        "max": 1.0,
+        "spread": 0.0
+      },
+      "tokens": {
+        "mean": 82327.0,
+        "min": 65167.0,
+        "max": 99064.0,
+        "spread": 33897.0
+      },
+      "duration_s": {
+        "mean": 244.8773250556667,
+        "min": 216.008257849,
+        "max": 283.745789514,
+        "spread": 67.73753166500003
+      }
+    },
+    "C": {
+      "compliance": {
+        "mean": 0.8333333333333334,
+        "min": 0.5,
+        "max": 1.0,
+        "spread": 0.5
+      },
+      "outcome": {
+        "mean": 0.6666666666666666,
+        "min": 0.0,
+        "max": 1.0,
+        "spread": 1.0
+      },
+      "tokens": {
+        "mean": 96755.66666666667,
+        "min": 47601.0,
+        "max": 161709.0,
+        "spread": 114108.0
+      },
+      "duration_s": {
+        "mean": 284.01277031266665,
+        "min": 92.22659188,
+        "max": 462.729947032,
+        "spread": 370.503355152
+      }
+    }
+  },
+  "signals": {
+    "B_vs_A": {
+      "compliance": "noise",
+      "outcome": "noise",
+      "tokens": "noise",
+      "duration_s": "noise"
+    },
+    "C_vs_A": {
+      "compliance": "noise",
+      "outcome": "noise",
+      "tokens": "noise",
+      "duration_s": "noise"
+    }
+  },
+  "verdict": "promote",
+  "synthesis": "Batch A (tdd, why, architect, unslop, technical-writing) plus a bug-fix line that keeps the public contract. B outcome 3/3 vs A 2/3 (noise by stats, not worse); compliance 1.0 on both. Every B run's own regression test called invoice_total with floats, as existing callers do, and kept the float interface via Decimal(str(x)); the one A failure is the known Decimal contract break, with no float call in its test. Across the three batch A evals the predictor holds 18/18: a run passes exactly when its test exercises the callers' types. Cost: B uses 19% more tokens than A. The judge's first call timed out at 600 s and was rejudged."
+}

@@ -31,6 +31,19 @@ class CheckVendorTest(unittest.TestCase):
         errors = check_vendor.run(root)
         self.assertTrue(any("sha256" in e for e in errors), errors)
 
+    def test_removed_ref_to_a_vendored_skill_is_error(self):
+        other = "skills/unslop/SKILL.md"
+        item = dict(entry(SKILL), adapted=True, removed_refs=["unslop", "arena"])
+        root = make_repo({SKILL: "x", other: "u"}, lock(files=[item, dict(entry(other), adapted=True)]))
+        errors = check_vendor.run(root)
+        self.assertTrue(any("unslop" in e and "restore" in e for e in errors), errors)
+        self.assertFalse(any("arena" in e for e in errors), errors)
+
+    def test_local_additions_must_be_strings(self):
+        bad = dict(entry(SKILL), adapted=True, local_additions="one line")
+        errors = check_vendor.run(make_repo({SKILL: "x"}, lock(files=[bad])))
+        self.assertTrue(any("local_additions" in e for e in errors), errors)
+
     def test_upstream_commit_must_be_a_sha(self):
         good = dict(entry(SKILL), adapted=True, upstream_commit="a" * 40)
         self.assertEqual(check_vendor.run(make_repo({SKILL: "x"}, lock(files=[good]))), [])

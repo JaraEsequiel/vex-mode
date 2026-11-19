@@ -56,7 +56,7 @@ def report(repo: Path, upstream: Path) -> list[dict]:
         src = upstream / item["upstream_path"]
         frm = item.get("upstream_commit") or default
         e = {"path": item["path"], "upstream_path": item["upstream_path"], "adapted": bool(item.get("adapted")),
-             "from_commit": frm, "diff": ""}
+             "from_commit": frm, "diff": "", "local_additions": item.get("local_additions", [])}
         if not src.is_file():
             e["status"] = "deleted"
         elif hashlib.sha256(src.read_bytes()).hexdigest() == item["upstream_sha256"]:
@@ -81,7 +81,10 @@ def render(entries: list[dict], head: str) -> str:
             lines += ["The file was deleted upstream. Decide whether to keep our copy as `original` or drop it.", ""]
         elif e["adapted"]:
             lines += ["Do not re-copy it: re-apply this upstream change onto our adaptation where it applies, "
-                      f"then `python3 scripts/upstream_drift.py --fetch --accept {e['path']}`.", "",
+                      f"then `python3 scripts/upstream_drift.py --fetch --accept {e['path']}`.", ""]
+            if e.get("local_additions"):
+                lines += ["Keep our local additions to this file:", *[f"- {a}" for a in e["local_additions"]], ""]
+            lines += [
                       "```diff", e["diff"].rstrip(), "```", ""]
         else:
             lines += [f"Re-copy it: `python3 scripts/vendor.py <upstream> {e['upstream_path']} {e['path']}` "

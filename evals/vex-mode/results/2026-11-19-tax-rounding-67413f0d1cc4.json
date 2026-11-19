@@ -1,0 +1,573 @@
+{
+  "kind": "eval",
+  "skill": "vex-mode",
+  "tree_sha256": "67413f0d1cc4576fa0ebfab2ab114c5d4707166c0720d20943982d145d57abba",
+  "date": "2026-11-19",
+  "case": "tax-rounding",
+  "run_dir": "/home/vex/.cache/vex-mode/runs/20261119-182057-379714",
+  "arms": {
+    "A": {
+      "model": "gemini-4-neon-medium",
+      "plugin_ref": "c2edbccfe8398790a1c73f13528bb12fc8176b3a",
+      "tree_sha256": "e2e983302b172af5bc79cbb01053c8b2decb3529dc14ca8e810636cd7fae5406",
+      "runs": [
+        {
+          "slot": 7,
+          "status": "SUCCESS",
+          "invalid": null,
+          "outcome": 0,
+          "compliance": 1.0,
+          "tokens": 47709,
+          "duration_s": 193.335658171,
+          "reads": 19,
+          "commands": 4,
+          "label": "R9"
+        },
+        {
+          "slot": 8,
+          "status": "SUCCESS",
+          "invalid": null,
+          "outcome": 1,
+          "compliance": 1.0,
+          "tokens": 67027,
+          "duration_s": 181.124852132,
+          "reads": 17,
+          "commands": 5,
+          "label": "R7",
+          "quality": {
+            "prod_lines": 17,
+            "test_lines": 72,
+            "removable_lines": 2,
+            "complexity_delta": 3.3005630797457695,
+            "verbosity": 0.0,
+            "comments_added": 3,
+            "docstrings_added": 1,
+            "security_findings": 0,
+            "judge_reuse": 1.0,
+            "judge_simplicity": 0.0,
+            "judge_contract": 0.0
+          },
+          "quality_errors": {}
+        },
+        {
+          "slot": 9,
+          "status": "SUCCESS",
+          "invalid": null,
+          "outcome": 1,
+          "compliance": 1.0,
+          "tokens": 74317,
+          "duration_s": 234.773028268,
+          "reads": 17,
+          "commands": 5,
+          "label": "R6",
+          "quality": {
+            "prod_lines": 20,
+            "test_lines": 55,
+            "removable_lines": 2,
+            "complexity_delta": 4.485281374238571,
+            "verbosity": 0.0,
+            "comments_added": 3,
+            "docstrings_added": 1,
+            "security_findings": 0,
+            "judge_reuse": 1.0,
+            "judge_simplicity": 0.0,
+            "judge_contract": 0.0
+          },
+          "quality_errors": {}
+        }
+      ]
+    },
+    "B": {
+      "model": "gemini-4-neon-medium",
+      "plugin_ref": "3accacfd2ea1106cd9f28ade4038cd8cac43aaed",
+      "tree_sha256": "67413f0d1cc4576fa0ebfab2ab114c5d4707166c0720d20943982d145d57abba",
+      "runs": [
+        {
+          "slot": 3,
+          "status": "SUCCESS",
+          "invalid": null,
+          "outcome": 1,
+          "compliance": 1.0,
+          "tokens": 64093,
+          "duration_s": 203.613653827,
+          "reads": 24,
+          "commands": 4,
+          "label": "R8",
+          "quality": {
+            "prod_lines": 14,
+            "test_lines": 41,
+            "removable_lines": 0,
+            "complexity_delta": 4.485281374238571,
+            "verbosity": 0.0,
+            "comments_added": 3,
+            "docstrings_added": 1,
+            "security_findings": 0,
+            "judge_reuse": 1.0,
+            "judge_simplicity": 1.0,
+            "judge_contract": 0.0
+          },
+          "quality_errors": {}
+        },
+        {
+          "slot": 5,
+          "status": "SUCCESS",
+          "invalid": null,
+          "outcome": 1,
+          "compliance": 1.0,
+          "tokens": 85497,
+          "duration_s": 255.716575979,
+          "reads": 22,
+          "commands": 9,
+          "label": "R1",
+          "quality": {
+            "prod_lines": 16,
+            "test_lines": 45,
+            "removable_lines": 0,
+            "complexity_delta": 5.461676705456991,
+            "verbosity": 0.0,
+            "comments_added": 0,
+            "docstrings_added": 1,
+            "security_findings": 0,
+            "judge_reuse": 1.0,
+            "judge_simplicity": 1.0,
+            "judge_contract": 0.0
+          },
+          "quality_errors": {}
+        },
+        {
+          "slot": 6,
+          "status": "SUCCESS",
+          "invalid": null,
+          "outcome": 1,
+          "compliance": 1.0,
+          "tokens": 94779,
+          "duration_s": 267.936530057,
+          "reads": 20,
+          "commands": 12,
+          "label": "R5",
+          "quality": {
+            "prod_lines": 10,
+            "test_lines": 37,
+            "removable_lines": 0,
+            "complexity_delta": 3.3005630797457695,
+            "verbosity": 0.0,
+            "comments_added": 0,
+            "docstrings_added": 1,
+            "security_findings": 0,
+            "judge_reuse": 1.0,
+            "judge_simplicity": 1.0,
+            "judge_contract": 0.0
+          },
+          "quality_errors": {}
+        }
+      ]
+    },
+    "C": {
+      "model": "gemini-4-neon-high",
+      "plugin_ref": "c2edbccfe8398790a1c73f13528bb12fc8176b3a",
+      "tree_sha256": "e2e983302b172af5bc79cbb01053c8b2decb3529dc14ca8e810636cd7fae5406",
+      "runs": [
+        {
+          "slot": 4,
+          "status": "SUCCESS",
+          "invalid": null,
+          "outcome": 1,
+          "compliance": 1.0,
+          "tokens": 89221,
+          "duration_s": 290.281763461,
+          "reads": 19,
+          "commands": 8,
+          "label": "R2",
+          "quality": {
+            "prod_lines": 17,
+            "test_lines": 88,
+            "removable_lines": 2,
+            "complexity_delta": 3.3005630797457695,
+            "verbosity": 0.0,
+            "comments_added": 6,
+            "docstrings_added": 1,
+            "security_findings": 0,
+            "judge_reuse": 1.0,
+            "judge_simplicity": 0.0,
+            "judge_contract": 0.0
+          },
+          "quality_errors": {}
+        },
+        {
+          "slot": 1,
+          "status": "SUCCESS",
+          "invalid": null,
+          "outcome": 1,
+          "compliance": 1.0,
+          "tokens": 92353,
+          "duration_s": 308.508459469,
+          "reads": 19,
+          "commands": 8,
+          "label": "R3",
+          "quality": {
+            "prod_lines": 13,
+            "test_lines": 86,
+            "removable_lines": 2,
+            "complexity_delta": 0.4721359549995796,
+            "verbosity": 0.0,
+            "comments_added": 4,
+            "docstrings_added": 1,
+            "security_findings": 0,
+            "judge_reuse": 1.0,
+            "judge_simplicity": 0.0,
+            "judge_contract": 0.0
+          },
+          "quality_errors": {}
+        },
+        {
+          "slot": 2,
+          "status": "SUCCESS",
+          "invalid": null,
+          "outcome": 0,
+          "compliance": 0.5,
+          "tokens": 46209,
+          "duration_s": 85.961204503,
+          "reads": 17,
+          "commands": 4,
+          "label": "R4"
+        }
+      ]
+    }
+  },
+  "judge": {
+    "provider": "openai",
+    "model": "gpt-6.2-sol",
+    "effort": "medium",
+    "error": null,
+    "usage": {
+      "input": 27506,
+      "output": 2027,
+      "reasoning": 26
+    }
+  },
+  "quality": {
+    "enabled": true,
+    "errors": [],
+    "judge_usage": {
+      "input": 64098,
+      "output": 4554,
+      "reasoning": 897
+    }
+  },
+  "metrics": {
+    "A": {
+      "compliance": {
+        "mean": 1.0,
+        "min": 1.0,
+        "max": 1.0,
+        "spread": 0.0
+      },
+      "outcome": {
+        "mean": 0.6666666666666666,
+        "min": 0.0,
+        "max": 1.0,
+        "spread": 1.0
+      },
+      "tokens": {
+        "mean": 63017.666666666664,
+        "min": 47709.0,
+        "max": 74317.0,
+        "spread": 26608.0
+      },
+      "duration_s": {
+        "mean": 203.07784619033336,
+        "min": 181.124852132,
+        "max": 234.773028268,
+        "spread": 53.64817613599999
+      },
+      "prod_lines": {
+        "mean": 18.5,
+        "min": 17.0,
+        "max": 20.0,
+        "spread": 3.0
+      },
+      "removable_lines": {
+        "mean": 2.0,
+        "min": 2.0,
+        "max": 2.0,
+        "spread": 0.0
+      },
+      "complexity_delta": {
+        "mean": 3.8929222269921704,
+        "min": 3.3005630797457695,
+        "max": 4.485281374238571,
+        "spread": 1.1847182944928019
+      },
+      "verbosity": {
+        "mean": 0.0,
+        "min": 0.0,
+        "max": 0.0,
+        "spread": 0.0
+      },
+      "comments_added": {
+        "mean": 3.0,
+        "min": 3.0,
+        "max": 3.0,
+        "spread": 0.0
+      },
+      "security_findings": {
+        "mean": 0.0,
+        "min": 0.0,
+        "max": 0.0,
+        "spread": 0.0
+      },
+      "judge_reuse": {
+        "mean": 1.0,
+        "min": 1.0,
+        "max": 1.0,
+        "spread": 0.0
+      },
+      "judge_simplicity": {
+        "mean": 0.0,
+        "min": 0.0,
+        "max": 0.0,
+        "spread": 0.0
+      },
+      "judge_contract": {
+        "mean": 0.0,
+        "min": 0.0,
+        "max": 0.0,
+        "spread": 0.0
+      },
+      "test_lines": {
+        "mean": 63.5,
+        "min": 55.0,
+        "max": 72.0,
+        "spread": 17.0
+      },
+      "docstrings_added": {
+        "mean": 1.0,
+        "min": 1.0,
+        "max": 1.0,
+        "spread": 0.0
+      }
+    },
+    "B": {
+      "compliance": {
+        "mean": 1.0,
+        "min": 1.0,
+        "max": 1.0,
+        "spread": 0.0
+      },
+      "outcome": {
+        "mean": 1.0,
+        "min": 1.0,
+        "max": 1.0,
+        "spread": 0.0
+      },
+      "tokens": {
+        "mean": 81456.33333333333,
+        "min": 64093.0,
+        "max": 94779.0,
+        "spread": 30686.0
+      },
+      "duration_s": {
+        "mean": 242.42225328766668,
+        "min": 203.613653827,
+        "max": 267.936530057,
+        "spread": 64.32287623000002
+      },
+      "prod_lines": {
+        "mean": 13.333333333333334,
+        "min": 10.0,
+        "max": 16.0,
+        "spread": 6.0
+      },
+      "removable_lines": {
+        "mean": 0.0,
+        "min": 0.0,
+        "max": 0.0,
+        "spread": 0.0
+      },
+      "complexity_delta": {
+        "mean": 4.415840386480444,
+        "min": 3.3005630797457695,
+        "max": 5.461676705456991,
+        "spread": 2.161113625711222
+      },
+      "verbosity": {
+        "mean": 0.0,
+        "min": 0.0,
+        "max": 0.0,
+        "spread": 0.0
+      },
+      "comments_added": {
+        "mean": 1.0,
+        "min": 0.0,
+        "max": 3.0,
+        "spread": 3.0
+      },
+      "security_findings": {
+        "mean": 0.0,
+        "min": 0.0,
+        "max": 0.0,
+        "spread": 0.0
+      },
+      "judge_reuse": {
+        "mean": 1.0,
+        "min": 1.0,
+        "max": 1.0,
+        "spread": 0.0
+      },
+      "judge_simplicity": {
+        "mean": 1.0,
+        "min": 1.0,
+        "max": 1.0,
+        "spread": 0.0
+      },
+      "judge_contract": {
+        "mean": 0.0,
+        "min": 0.0,
+        "max": 0.0,
+        "spread": 0.0
+      },
+      "test_lines": {
+        "mean": 41.0,
+        "min": 37.0,
+        "max": 45.0,
+        "spread": 8.0
+      },
+      "docstrings_added": {
+        "mean": 1.0,
+        "min": 1.0,
+        "max": 1.0,
+        "spread": 0.0
+      }
+    },
+    "C": {
+      "compliance": {
+        "mean": 0.8333333333333334,
+        "min": 0.5,
+        "max": 1.0,
+        "spread": 0.5
+      },
+      "outcome": {
+        "mean": 0.6666666666666666,
+        "min": 0.0,
+        "max": 1.0,
+        "spread": 1.0
+      },
+      "tokens": {
+        "mean": 75927.66666666667,
+        "min": 46209.0,
+        "max": 92353.0,
+        "spread": 46144.0
+      },
+      "duration_s": {
+        "mean": 228.250475811,
+        "min": 85.961204503,
+        "max": 308.508459469,
+        "spread": 222.547254966
+      },
+      "prod_lines": {
+        "mean": 15.0,
+        "min": 13.0,
+        "max": 17.0,
+        "spread": 4.0
+      },
+      "removable_lines": {
+        "mean": 2.0,
+        "min": 2.0,
+        "max": 2.0,
+        "spread": 0.0
+      },
+      "complexity_delta": {
+        "mean": 1.8863495173726745,
+        "min": 0.4721359549995796,
+        "max": 3.3005630797457695,
+        "spread": 2.82842712474619
+      },
+      "verbosity": {
+        "mean": 0.0,
+        "min": 0.0,
+        "max": 0.0,
+        "spread": 0.0
+      },
+      "comments_added": {
+        "mean": 5.0,
+        "min": 4.0,
+        "max": 6.0,
+        "spread": 2.0
+      },
+      "security_findings": {
+        "mean": 0.0,
+        "min": 0.0,
+        "max": 0.0,
+        "spread": 0.0
+      },
+      "judge_reuse": {
+        "mean": 1.0,
+        "min": 1.0,
+        "max": 1.0,
+        "spread": 0.0
+      },
+      "judge_simplicity": {
+        "mean": 0.0,
+        "min": 0.0,
+        "max": 0.0,
+        "spread": 0.0
+      },
+      "judge_contract": {
+        "mean": 0.0,
+        "min": 0.0,
+        "max": 0.0,
+        "spread": 0.0
+      },
+      "test_lines": {
+        "mean": 87.0,
+        "min": 86.0,
+        "max": 88.0,
+        "spread": 2.0
+      },
+      "docstrings_added": {
+        "mean": 1.0,
+        "min": 1.0,
+        "max": 1.0,
+        "spread": 0.0
+      }
+    }
+  },
+  "signals": {
+    "B_vs_A": {
+      "compliance": "noise",
+      "outcome": "noise",
+      "tokens": "noise",
+      "duration_s": "noise",
+      "prod_lines": "noise",
+      "removable_lines": "better",
+      "complexity_delta": "noise",
+      "verbosity": "noise",
+      "comments_added": "noise",
+      "security_findings": "noise",
+      "judge_reuse": "noise",
+      "judge_simplicity": "better",
+      "judge_contract": "noise",
+      "test_lines": "better",
+      "docstrings_added": "noise"
+    },
+    "C_vs_A": {
+      "compliance": "noise",
+      "outcome": "noise",
+      "tokens": "noise",
+      "duration_s": "noise",
+      "prod_lines": "noise",
+      "removable_lines": "noise",
+      "complexity_delta": "noise",
+      "verbosity": "noise",
+      "comments_added": "noise",
+      "security_findings": "noise",
+      "judge_reuse": "noise",
+      "judge_simplicity": "noise",
+      "judge_contract": "noise",
+      "test_lines": "worse",
+      "docstrings_added": "noise"
+    }
+  },
+  "verdict": "promote",
+  "synthesis": "Contract line moved to bug-fix step 3 (architect sketch included, 'request' wording) and the eval playbook names the quality measure. B outcome 3/3 vs A 2/3 (noise, not worse); every B run's own test called invoice_total with floats; the A failure is the known Decimal contract break. Quality, among passing runs: B better on removable_lines (0 vs 2), judge_simplicity and test_lines; every other measure noise; no blocking measure worse. judge_contract is 0 in all arms: even passing patches convert only the price to Decimal (a float quantity like 1.5 now raises TypeError) and change line_total/read_lines return types, which the hidden check does not exercise. The contract line does not fully keep the contract; the case's check should cover float quantities and return types."
+}

@@ -78,6 +78,17 @@ class DriftTest(unittest.TestCase):
         self.assertIn("re-apply", b)
         self.assertNotIn("vendor.py", b)
 
+    def test_adapted_change_lists_our_local_additions(self):
+        lock = json.loads((self.repo / "vendor.lock").read_text())
+        for e in lock["files"]:
+            if e["path"] == "skills/b/SKILL.md":
+                e["local_additions"] = ["Keep the public contract (docs/decisions/x.md)"]
+        (self.repo / "vendor.lock").write_text(json.dumps(lock))
+        text = ud.render(ud.report(self.repo, self.up), self.v2)
+        b = text.split("skills/b/SKILL.md", 1)[1].split("###", 1)[0]
+        self.assertIn("Keep the public contract", b)
+        self.assertIn("keep", b.lower())
+
     def test_unadapted_change_says_revendor(self):
         text = ud.render(ud.report(self.repo, self.up), self.v2)
         a = text.split("skills/a/SKILL.md", 1)[1].split("###", 1)[0]

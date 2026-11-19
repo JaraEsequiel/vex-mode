@@ -5,6 +5,17 @@
   },
   "files": [
     {
+      "path": "skills/architect/SKILL.md",
+      "upstream_path": "pstack/skills/architect/SKILL.md",
+      "upstream_sha256": "aea83d7aa109eb73402182701b14c289844663ad9c8f959fedbef2df66787ce0",
+      "pending_refs": [],
+      "upstream_commit": "e58dd043600587dbaf58ba315e7f2b38373eeb43",
+      "adapted": true,
+      "removed_refs": [
+        "arena"
+      ]
+    },
+    {
       "path": "skills/correct/SKILL.md",
       "upstream_path": "pstack/skills/correct/SKILL.md",
       "upstream_sha256": "e347045d00c967a0b831ef883cc6ac79d21329aa10b5968637df95de7febf0ba",
@@ -140,7 +151,6 @@
       "pending_refs": [],
       "adapted": true,
       "removed_refs": [
-        "unslop",
         "poteto-mode"
       ],
       "upstream_commit": "35a90942a7f02e1ebbc2443643179815f2147954"
@@ -160,12 +170,32 @@
       "upstream_commit": "35a90942a7f02e1ebbc2443643179815f2147954"
     },
     {
+      "path": "skills/tdd/SKILL.md",
+      "upstream_path": "pstack/skills/tdd/SKILL.md",
+      "upstream_sha256": "eeb868e2dfebee528d730a67d7b17498fac4bb85dec2e38bc5c5176aca4d5d2f",
+      "pending_refs": [],
+      "upstream_commit": "e58dd043600587dbaf58ba315e7f2b38373eeb43"
+    },
+    {
+      "path": "skills/technical-writing/SKILL.md",
+      "upstream_path": "pstack/skills/technical-writing/SKILL.md",
+      "upstream_sha256": "0a620885599cdde5a0a31fa39878144c10f61c894b56bf4a9ff779496e718b14",
+      "pending_refs": [],
+      "upstream_commit": "e58dd043600587dbaf58ba315e7f2b38373eeb43"
+    },
+    {
+      "path": "skills/unslop/SKILL.md",
+      "upstream_path": "pstack/skills/unslop/SKILL.md",
+      "upstream_sha256": "2b823fd069e031c1420180be8e0d4f5e2fd25bf2c428049e5c835c59a489b5e0",
+      "pending_refs": [],
+      "upstream_commit": "e58dd043600587dbaf58ba315e7f2b38373eeb43"
+    },
+    {
       "path": "skills/vex-mode/SKILL.md",
       "upstream_path": "pstack/skills/poteto-mode/SKILL.md",
       "upstream_sha256": "9c09f6ab6661975a5be108f925afe203e10966ee426e3d786f4d338c5b05bd9f",
       "pending_refs": [],
       "removed_refs": [
-        "architect",
         "arena",
         "benchmark-checklist",
         "figure-it-out",
@@ -203,9 +233,7 @@
         "principle-redesign-from-first-principles",
         "principle-test-behavior-not-implementation",
         "principle-type-system-discipline",
-        "swarm",
-        "technical-writing",
-        "unslop"
+        "swarm"
       ],
       "adapted": true,
       "upstream_commit": "e58dd043600587dbaf58ba315e7f2b38373eeb43"
@@ -216,13 +244,13 @@
       "upstream_sha256": "eef68686ea0128d36979c39ce88f5cd5c248eb4e58f1ca3229692b9902961170",
       "pending_refs": [],
       "removed_refs": [
-        "why",
-        "tdd",
-        "architect",
         "interrogate"
       ],
       "adapted": true,
-      "upstream_commit": "35a90942a7f02e1ebbc2443643179815f2147954"
+      "upstream_commit": "35a90942a7f02e1ebbc2443643179815f2147954",
+      "local_additions": [
+        "Step 3: \"Keep the public contract, an `architect` sketch included: the regression test calls the code the way its existing callers do, with the same argument types, and the fix changes an interface only when the request asks for it.\" Evidence: docs/decisions/2026-11-19-skills-batch-a.md"
+      ]
     },
     {
       "path": "skills/vex-mode/playbooks/eval.md",
@@ -233,7 +261,11 @@
         "arena"
       ],
       "adapted": true,
-      "upstream_commit": "35a90942a7f02e1ebbc2443643179815f2147954"
+      "upstream_commit": "35a90942a7f02e1ebbc2443643179815f2147954",
+      "local_additions": [
+        "Step 1: the code-quality measure (case.json \"quality\": true, design \u00a78.2.1).",
+        "Step 7: never promote when the outcome or a blocking quality measure got worse (CI rule, M5)."
+      ]
     },
     {
       "path": "skills/vex-mode/playbooks/feature.md",
@@ -241,7 +273,6 @@
       "upstream_sha256": "beb7b527049eab12052deac8a32e6ee7f6cf26e7ebffb3c3f5d6cead1ec7df7e",
       "pending_refs": [],
       "removed_refs": [
-        "architect",
         "arena",
         "interrogate"
       ],
@@ -265,6 +296,13 @@
       "upstream_sha256": "d051060527ab1649fb1e69d1e7d416950264f9955c3de3635c0d63569f1b90d8",
       "pending_refs": [],
       "upstream_commit": "35a90942a7f02e1ebbc2443643179815f2147954"
+    },
+    {
+      "path": "skills/why/SKILL.md",
+      "upstream_path": "pstack/skills/why/SKILL.md",
+      "upstream_sha256": "6b65b3180f1f1bd3b696d7933daf900747410c82931d220a3f57a98addb1c0fd",
+      "pending_refs": [],
+      "upstream_commit": "e58dd043600587dbaf58ba315e7f2b38373eeb43"
     }
   ],
   "original": [
