@@ -213,6 +213,28 @@ class JudgesTest(unittest.TestCase):
         os.environ.pop("ANTHROPIC_API_KEY")
         self.assertIsNone(judges.api_key("anthropic"))
 
+    def test_base_url_from_the_secrets_file(self):
+        secrets = self.tmp / "secrets.env"
+        secrets.write_text(f"VEX_OPENAI_BASE_URL='{self.api.url}'\nVEX_ANTHROPIC_BASE_URL={self.api.url}\n")
+        secrets.chmod(0o600)
+        os.environ["VEX_SECRETS"] = str(secrets)
+        os.environ.pop("VEX_OPENAI_BASE_URL")
+        self.api.replies.append((200, {}, openai_reply(json.dumps(VERDICT))))
+        verdict, error, _ = self.call()
+        self.assertIsNone(error)
+        self.assertEqual(self.api.requests[0]["path"], "/v1/responses")
+
+    def test_base_url_env_wins_over_the_file_and_default_applies(self):
+        secrets = self.tmp / "secrets.env"
+        secrets.write_text("VEX_OPENAI_BASE_URL=http://file.invalid/v1\n")
+        secrets.chmod(0o600)
+        os.environ["VEX_SECRETS"] = str(secrets)
+        self.assertEqual(judges.base_url("openai"), self.api.url)
+        os.environ.pop("VEX_OPENAI_BASE_URL")
+        self.assertEqual(judges.base_url("openai"), "http://file.invalid/v1")
+        os.environ.pop("VEX_ANTHROPIC_BASE_URL")
+        self.assertEqual(judges.base_url("anthropic"), "https://api.anthropic.com/v1")
+
     def test_agy_provider_uses_existing_path(self):
         fake = self.tmp / "agy.py"
         fake.write_text("import json,sys\nprint(json.dumps({'status':'SUCCESS','structured_output':%r}))\n" % VERDICT)

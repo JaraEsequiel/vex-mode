@@ -1,8 +1,10 @@
 """The eval judge, called directly over a provider's API (design §8.2). One request per eval.
 
 Config: evals/judge.json {provider, model, effort}; env VEX_JUDGE_PROVIDER / VEX_JUDGE_MODEL /
-VEX_JUDGE_EFFORT override it. Keys: OPENAI_API_KEY / ANTHROPIC_API_KEY, else ~/.config/vex-mode/secrets.env
-(VEX_SECRETS), which must not be readable by group or others. A key is never returned in an error.
+VEX_JUDGE_EFFORT override it. Keys: OPENAI_API_KEY / ANTHROPIC_API_KEY; API roots (an OpenAI-compatible
+server): VEX_OPENAI_BASE_URL / VEX_ANTHROPIC_BASE_URL. Each comes from the environment, else from
+~/.config/vex-mode/secrets.env (VEX_SECRETS), which must not be readable by group or others. A key is never
+returned in an error.
 """
 import copy
 import http.client
@@ -45,12 +47,8 @@ def _secrets_file() -> Path:
     return Path(os.environ.get("VEX_SECRETS", Path.home() / ".config/vex-mode/secrets.env"))
 
 
-def api_key(provider: str) -> str | None:
-    name = KEY_ENV.get(provider)
-    if name is None:
-        return None
-    if os.environ.get(name):
-        return os.environ[name]
+def _from_secrets(name: str) -> str | None:
+    """A value from the secrets file, which must not be readable by group or others."""
     path = _secrets_file()
     if not path.is_file():
         return None
@@ -61,6 +59,23 @@ def api_key(provider: str) -> str | None:
         if sep and k.strip() == name:
             return v.strip().strip("'\"")
     return None
+
+
+def api_key(provider: str) -> str | None:
+    name = KEY_ENV.get(provider)
+    if name is None:
+        return None
+    return os.environ.get(name) or _from_secrets(name)
+
+
+BASE_URL_ENV = {"openai": "VEX_OPENAI_BASE_URL", "anthropic": "VEX_ANTHROPIC_BASE_URL"}
+BASE_URL_DEFAULT = {"openai": "https://api.openai.com/v1", "anthropic": "https://api.anthropic.com/v1"}
+
+
+def base_url(provider: str) -> str:
+    """The provider's API root: the environment, else the secrets file, else the provider's own."""
+    name = BASE_URL_ENV[provider]
+    return (os.environ.get(name) or _from_secrets(name) or BASE_URL_DEFAULT[provider]).rstrip("/")
 
 
 def strict_schema(schema: dict) -> dict:
@@ -170,7 +185,7 @@ def _verdict(text: str, schema: dict) -> tuple[dict | None, str | None]:
 
 
 def _openai(prompt: str, schema: dict, cfg: dict, key: str) -> tuple[dict | None, str | None, dict]:
-    base = os.environ.get("VEX_OPENAI_BASE_URL", "https://api.openai.com/v1")
+    base = base_url("openai")
     body = {"model": cfg["model"], "input": [{"role": "user", "content": prompt}],
             "reasoning": {"effort": cfg["effort"]}, "max_output_tokens": MAX_OUTPUT_TOKENS,
             "text": {"format": {"type": "json_schema", "name": "verdict", "schema": strict_schema(schema),
@@ -193,7 +208,7 @@ def _openai(prompt: str, schema: dict, cfg: dict, key: str) -> tuple[dict | None
 
 
 def _anthropic(prompt: str, schema: dict, cfg: dict, key: str) -> tuple[dict | None, str | None, dict]:
-    base = os.environ.get("VEX_ANTHROPIC_BASE_URL", "https://api.anthropic.com/v1")
+    base = base_url("anthropic")
     body = {"model": cfg["model"], "max_tokens": MAX_OUTPUT_TOKENS,
             "messages": [{"role": "user", "content": prompt}],
             "output_config": {"effort": cfg["effort"], "format": {"type": "json_schema", "schema": strict_schema(schema)}}}

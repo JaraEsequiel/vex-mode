@@ -175,6 +175,8 @@ def _judge_config(repo: Path) -> dict:
     try:
         cfg = judges.load_config(repo)
         key = judges.api_key(cfg["provider"])
+        if cfg["provider"] != "agy":
+            judges.base_url(cfg["provider"])  # a secrets file it cannot read fails now, not after the runs
     except judges.JudgeConfigError as e:
         raise EvalError(str(e))
     if cfg["provider"] != "agy" and not key:

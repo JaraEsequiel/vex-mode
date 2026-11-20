@@ -191,6 +191,17 @@ class RunTest(unittest.TestCase):
                            "VEX_OPENAI_BASE_URL": api.url, "OPENAI_API_KEY": "sk-secret-123"})
         return api
 
+    def test_an_unreadable_base_url_fails_before_any_run(self):
+        self.openai_judge()
+        os.environ.pop("VEX_OPENAI_BASE_URL")
+        secrets = Path(os.environ["VEX_SECRETS"])
+        secrets.write_text("VEX_OPENAI_BASE_URL=http://file.invalid/v1\n")
+        secrets.chmod(0o644)
+        self.addCleanup(secrets.unlink)
+        with self.assertRaisesRegex(run.EvalError, "chmod 600"):
+            self.run_eval()
+        self.assertFalse((self.home / "calls.log").exists(), "a candidate ran before the judge config was checked")
+
     def test_result_records_judge_provider_and_usage(self):
         self.openai_judge()
         result = json.loads(self.run_eval().read_text())
