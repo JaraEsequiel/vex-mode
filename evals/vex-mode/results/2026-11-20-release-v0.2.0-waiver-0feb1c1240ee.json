@@ -1,0 +1,7 @@
+{
+  "kind": "waiver",
+  "skill": "vex-mode",
+  "tree_sha256": "0feb1c1240eef11ea9b87088cb7ba8b4e5a9a45d9e65438a3ad9561a7c0f4c33",
+  "date": "2026-11-20",
+  "reason": "Release bump only: plugin.json version 0.1.0 -> 0.2.0 (and the regenerated Claude Code manifest). No skill, hook, rule or agent text changed, so no eval can measure it. The content it ships is covered by the results for c0d39af911ce and earlier (#26-#37)."
+}
