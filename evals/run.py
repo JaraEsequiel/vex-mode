@@ -282,19 +282,30 @@ def rejudge(path: Path) -> None:
     case_dir = repo / "evals" / result["skill"] / "cases" / result["case"]
     cfg = json.loads((case_dir / "case.json").read_text())
     run_dir = Path(result["run_dir"])
+    claude = result.get("harness") == "claude-code"
+    parse = transcript.parse_claude if claude else transcript.parse
     materials = {}
-    for rec in result["arms"].values():
+    for label, rec in result["arms"].items():
         for r in rec["runs"]:
             r.pop("label", None)
-            if r["invalid"]:
-                continue
-            diff = run_dir / "diffs" / f"{r['slot']}.diff"
-            if not diff.is_file():
-                raise EvalError(f"{diff} is missing; rerun the eval")
-            parse = transcript.parse_claude if result.get("harness") == "claude-code" else transcript.parse
             t = parse((run_dir / "transcripts" / f"{r['slot']}.ndjson").read_text())
+            # Isolation is checked again, so a false positive fixed since the eval no longer voids a run.
+            # Without the run's working directory relative paths cannot be resolved: keep the stored reason.
+            if t.cwd:
+                r["invalid"] = _invalid(t, _plugin_root(claude, run_dir, label, bool(rec.get("plugin_ref"))),
+                                        repo, Path(t.cwd))
+            if r["invalid"]:
+                r["outcome"], r["compliance"] = 0, 0.0
+                continue
+            diff, check = run_dir / "diffs" / f"{r['slot']}.diff", run_dir / "checks" / f"{r['slot']}.txt"
+            for f in (diff, check):
+                if not f.is_file():
+                    raise EvalError(f"{f} is missing; rerun the eval")
+            r["outcome"] = 1 if check.read_text().startswith("exit 0\n") else 0
             materials[r["slot"]] = _material(t, diff.read_text())
             r["compliance"] = None
+    if empty := [label for label, rec in result["arms"].items() if not any(r["invalid"] is None for r in rec["runs"])]:
+        raise EvalError(f"arm {empty[0]} has no valid run, so nothing can be compared; result left as it was")
     judge_cfg = _judge_config(repo)
     families = {model_family(rec["model"]) for rec in result["arms"].values()}
     if model_family(judge_cfg["model"]) in families:
@@ -311,6 +322,20 @@ def rejudge(path: Path) -> None:
     result["verdict"], result["synthesis"] = None, None
     path.write_text(json.dumps(result, indent=2) + "\n")
     print(f"result: {path}")
+
+
+def _plugin_root(claude: bool, run_dir: Path, label: str, has_plugin: bool) -> Path:
+    """Where an arm's own plugin files live during its runs; reads there are allowed."""
+    if not has_plugin:
+        return run_dir / "no-plugin" if claude else _plugin_home() / "vex-mode"
+    # The Claude Code build sits outside the eval cache (a forbidden root) so an arm may read its own plugin files.
+    return _cache() / "vex-cc" / run_dir.name / label if claude else _plugin_home() / "vex-mode"
+
+
+def _invalid(t: transcript.Transcript, plugin_root: Path, repo: Path, workdir: Path | None) -> str | None:
+    bad = isolation.violations(t, plugin_root=plugin_root, forbidden=[_cache() / "vex-mode", repo, judges._secrets_file()],
+                               workdir=workdir, work_root=_cache() / "vex-work", home=Path.home())
+    return "; ".join(bad) or (None if t.status == "SUCCESS" else f"status {t.status}")
 
 
 def _marker() -> Path:
@@ -434,7 +459,7 @@ def run_eval(repo: Path, skill: str, case: str, base: str | None = None,
         saved = {sig: signal.signal(sig, _raise_interrupt) for sig in (signal.SIGTERM, signal.SIGHUP)}
         try:
             for arm in arm_list:
-                plugin_root = (cc_trees.get(arm.label) if claude else installed) or run_dir / "no-plugin"
+                plugin_root = _plugin_root(claude, run_dir, arm.label, bool(arm.plugin_ref))
                 if not claude:
                     build_plugin.install(builds[arm.label])
                     if skill_tree_sha256(installed / "skills" / skill) != trees[arm.label]:
@@ -454,9 +479,7 @@ def run_eval(repo: Path, skill: str, case: str, base: str | None = None,
                         if QUOTA.search(t.error):
                             raise EvalError(f"arm {arm.label}: the candidate model's quota ran out ({t.error[:200]}); "
                                             f"stopped, no result written; run dir: {run_dir}")
-                        bad = isolation.violations(t, plugin_root=plugin_root, forbidden=[_cache() / "vex-mode", repo, judges._secrets_file()],
-                                                   workdir=work, work_root=work_root, home=Path.home())
-                        invalid = "; ".join(bad) or (None if t.status == "SUCCESS" else f"status {t.status}")
+                        invalid = _invalid(t, plugin_root, repo, work)
                         diff = _diff(work)
                         (run_dir / "diffs" / f"{slot}.diff").write_text(diff)
                         outcome = _outcome(case_dir, work, run_dir / "checks" / f"{slot}.txt")

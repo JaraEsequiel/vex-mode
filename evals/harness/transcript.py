@@ -20,6 +20,7 @@ class Transcript:
     response: str = ""
     cost_usd: float = 0.0
     error: str = ""
+    cwd: str | None = None  # the run's working directory, from the init event
     gate_reply: str = ""  # Claude Code: the reply the Stop hook interrupted to ask for evidence
 
 
@@ -34,6 +35,7 @@ def parse(text: str) -> Transcript:
         if kind == "init":
             t.model = event["init"].get("model")
             t.conversation_id = event.get("conversation_id")
+            t.cwd = event["init"].get("cwd")
         elif kind == "step_update":
             step = event["step_update"]
             t.step_tokens += int((step.get("usage") or {}).get("total_tokens") or 0)
@@ -101,6 +103,7 @@ def parse_claude(text: str) -> Transcript:
         if kind == "system" and event.get("subtype") == "init":
             t.model = event.get("model")
             t.conversation_id = event.get("session_id")
+            t.cwd = event.get("cwd")
         elif kind == "assistant" and isinstance(content, list):
             if message.get("id") not in counted and isinstance(message.get("usage"), dict):
                 counted.add(message.get("id"))
