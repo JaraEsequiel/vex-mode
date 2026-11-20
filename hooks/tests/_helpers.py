@@ -39,5 +39,8 @@ def cc_bash(cmd, session=SESSION):
     return {"session_id": session, "hook_event_name": "PreToolUse", "tool_name": "Bash", "tool_input": {"command": cmd}, "cwd": "/tmp"}
 
 
-def cc_stop(session=SESSION, prompt_id="p1", active=False):
-    return {"session_id": session, "hook_event_name": "Stop", "prompt_id": prompt_id, "stop_hook_active": active, "cwd": "/tmp"}
+def cc_stop(session=SESSION, prompt_id="p1", active=False, transcript=None):
+    payload = {"session_id": session, "hook_event_name": "Stop", "prompt_id": prompt_id, "stop_hook_active": active, "cwd": "/tmp"}
+    if transcript is not None:
+        payload["transcript_path"] = transcript
+    return payload

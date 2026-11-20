@@ -80,6 +80,7 @@ If an eval was killed before it restored the user's plugin, the next eval refuse
 | Any other `/<skill>` of the plugin gets that skill's text and folder injected (in `agy -p` a plugin slash command does not expand) | `hooks/activate.py` `hooks/tests/test_activate.py` |
 | Pause before irreversible actions (force_ask, never allow) | `hooks/irreversible.py` `hooks/tests/test_irreversible.py` |
 | No finishing without evidence in vex-mode | `hooks/stop_gate.py` `hooks/tests/test_stop_gate.py` |
+| In Claude Code the Stop gate skips the ask when the turn's last main-agent tool call ran a command (read from `transcript_path`, keyed by `promptId`); a turn without tools or an unreadable transcript is asked | `hooks/stop_gate.py` `hooks/tests/test_claude_code.py` |
 | A PR that changes a skill carries an eval result or waiver for that skill's tree hash | `checks/check_evals.py` `checks/tests/test_check_evals.py` |
 | Nothing a candidate sees contains a banned word | `checks/check_evals.py` `checks/tests/test_check_evals.py` |
 | The judge is set once in `evals/judge.json` and is from another model family than every candidate | `checks/check_evals.py` `evals/harness/arms.py` |
