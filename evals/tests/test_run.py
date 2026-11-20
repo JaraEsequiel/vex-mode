@@ -523,6 +523,22 @@ class ClaudeCodeRunTest(RunTest):
         result = json.loads(self.run_eval().read_text())
         self.assertIn("UNFINISHED", result["arms"]["A"]["runs"][0]["invalid"])
 
+    def test_flag_runs_an_agy_case_with_its_claude_code_models(self):
+        both = {**CASE, "claude_code": {"candidate_model": "claude-sonnet-5-5", "upgrade_model": "claude-opus-5-5"}}
+        write(self.repo, {"evals/x/cases/c1/case.json": json.dumps(both)})
+        git(self.repo, "commit", "-qam", "both harnesses")
+        path = run.run_eval(self.repo, "x", "c1", base="main", variant="HEAD", harness="claude-code")
+        result = json.loads(path.read_text())
+        self.assertEqual(result["harness"], "claude-code")
+        self.assertEqual(result["arms"]["C"]["model"], "claude-opus-5-5")
+        self.assertIn("-c1-claude-code-", path.name)
+
+    def test_flag_without_claude_code_models_fails(self):
+        write(self.repo, {"evals/x/cases/c1/case.json": json.dumps(CASE)})
+        git(self.repo, "commit", "-qam", "agy only")
+        with self.assertRaisesRegex(run.EvalError, "no Claude Code models"):
+            run.run_eval(self.repo, "x", "c1", base="main", variant="HEAD", harness="claude-code")
+
     def test_pending_agy_restore_does_not_block(self):
         run._marker().parent.mkdir(parents=True, exist_ok=True)
         run._marker().write_text("-")
