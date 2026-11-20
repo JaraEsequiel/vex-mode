@@ -1,3 +1,4 @@
+import json
 import sys
 import unittest
 from pathlib import Path
@@ -39,6 +40,36 @@ class TranscriptTest(unittest.TestCase):
     def test_unfinished_run_keeps_step_tokens(self):
         t = transcript.parse((FIX / "run_unfinished.ndjson").read_text())
         self.assertGreater(t.step_tokens, 0)
+
+    def test_parse_claude_code_stream(self):
+        t = transcript.parse_claude((FIX / "claude_run_ok.ndjson").read_text())
+        self.assertEqual(t.conversation_id, "s1")
+        self.assertEqual(t.model, "claude-sonnet-5-5")
+        self.assertEqual(t.status, "SUCCESS")
+        self.assertEqual(t.response, "Fixed the total.")
+        self.assertEqual(t.duration_s, 12.5)
+        self.assertEqual(t.total_tokens, 1000)  # modelUsage covers subagents too
+        self.assertEqual(t.cost_usd, 0.42)
+        # Subagent calls (parent_tool_use_id set) count: their reads can break isolation too.
+        self.assertEqual(t.reads, ["/plug/skills/x/SKILL.md", "/w"])
+        self.assertEqual(t.commands, ["python3 -m pytest -q"])
+        self.assertEqual(t.steps[0], "Read: /plug/skills/x/SKILL.md")
+        self.assertEqual(t.steps[2], "Bash: python3 -m pytest -q (error) [subagent]")
+        self.assertTrue(t.steps[1].startswith("Agent: "))
+        self.assertIn("Grep", t.steps[4])
+
+    def test_parse_claude_code_error_and_unfinished(self):
+        err = transcript.parse_claude(json.dumps({"type": "result", "subtype": "error_max_turns", "is_error": True,
+                                                  "usage": {"input_tokens": 1, "output_tokens": 2}}))
+        self.assertEqual(err.status, "ERROR_MAX_TURNS")
+        self.assertEqual(err.total_tokens, 3)
+        cut = transcript.parse_claude((FIX / "claude_run_ok.ndjson").read_text().rsplit("\n", 2)[0])
+        self.assertEqual(cut.status, "UNFINISHED")
+        self.assertEqual(cut.reads, ["/plug/skills/x/SKILL.md", "/w"])
+
+    def test_claude_unfinished_run_keeps_message_tokens(self):
+        msg = {"type": "assistant", "message": {"id": "m1", "usage": {"input_tokens": 3, "output_tokens": 4}, "content": []}}
+        self.assertEqual(transcript.parse_claude(json.dumps(msg) + "\n" + json.dumps(msg)).step_tokens, 7)
 
     def test_garbage_lines_are_skipped(self):
         t = transcript.parse("not json\n\n")
