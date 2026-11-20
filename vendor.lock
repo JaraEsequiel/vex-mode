@@ -261,7 +261,6 @@
         "playbooks/pause-safely.md",
         "playbooks/perf-issue.md",
         "playbooks/prototype.md",
-        "playbooks/refactoring.md",
         "playbooks/runtime-forensics.md",
         "playbooks/session-pickup.md",
         "playbooks/shipping.md",
@@ -273,13 +272,9 @@
         "principle-build-the-lever",
         "principle-exhaust-the-design-space",
         "principle-experience-first",
-        "principle-foundational-thinking",
         "principle-guard-the-context-window",
         "principle-make-operations-idempotent",
-        "principle-migrate-callers-then-delete-legacy-apis",
-        "principle-minimize-reader-load",
         "principle-outcome-oriented-execution",
-        "principle-redesign-from-first-principles",
         "principle-test-behavior-not-implementation",
         "principle-type-system-discipline",
         "swarm"
@@ -344,7 +339,11 @@
       "upstream_path": "pstack/skills/poteto-mode/playbooks/refactoring.md",
       "upstream_sha256": "f11ff3c3ff0ea09d3ce2db0a3c11be3a3c11c279c04b83324723d0e0f984755b",
       "pending_refs": [],
-      "upstream_commit": "0b46ec399d55f2829e88822998f53b84944837d3"
+      "upstream_commit": "0b46ec399d55f2829e88822998f53b84944837d3",
+      "adapted": true,
+      "removed_refs": [
+        "figure-it-out"
+      ]
     },
     {
       "path": "skills/vex-mode/worker.md",
