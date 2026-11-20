@@ -279,11 +279,11 @@ flowchart LR
 
 | Medida | Cómo | Criterio | Fuente | Mejor | ¿Bloquea? |
 |---|---|---|---|---|---|
-| `prod_lines` | Líneas agregadas más borradas fuera de los tests | menor código | `[R-trim]` (len(P)) | menos | sí |
+| `prod_lines` | Líneas agregadas fuera de los tests (las borradas no cuentan, ver abajo) | menor código | `[R-trim]` (len(P)) `[MÍA]` | menos | sí |
 | `test_lines` | Lo mismo en tests (`test_*.py`, `*_test.py`, `tests/`) | — | `[RUN]` | — | no, informativa |
 
 Un script que el candidato deja suelto (`repro.py`, `debug_*.py`) cuenta como producción y, como el check no lo usa, como removible. TRIM encontró que los scripts de reproducción sueltos son el 49,6 % de las líneas removibles `[R-trim]`. Reproducir el error no exige dejar el archivo en el proyecto `[MÍA]`.
-| `removable_lines` | Líneas de producción que se pueden revertir sin que falle el `check.py` oculto (ver abajo) | menor código, slop | `[R-trim]` | menos | sí |
+| `removable_lines` | Líneas de producción agregadas que se pueden quitar sin que falle el `check.py` oculto (ver abajo) | menor código, slop | `[R-trim]` | menos | sí |
 | `complexity_delta` | Σ CC(f)·√SLOC(f) sobre las funciones de los archivos tocados, después menos antes | sobreingeniería, simplicidad | `[R-slopcode]` (masa) | menos | sí |
 | `verbosity` | (Líneas agregadas que marca una regla ∪ líneas clonadas) ÷ líneas agregadas de producción | AI slop | `[R-slopcode]` | menos | sí |
 | `comments_added` | Comentarios `#` en líneas agregadas (`tokenize`) | sin comentarios | `[VEX]` | 0 | sí |
@@ -296,6 +296,8 @@ Un script que el candidato deja suelto (`repro.py`, `debug_*.py`) cuenta como pr
   - Acá el oráculo es el `check.py` oculto, que corre en milisegundos. Se hace una pasada por bloque de `difflib` y otra por línea (TRIM-NG, O(n) corridas del check), siempre de atrás hacia adelante. Una unidad se revierte solo si el check sigue pasando.
   - Cubre solo producción: el check nunca ejercita los tests del candidato, que siempre saldrían "removibles".
   - Límite: la medida no puede ser mejor que el check. Si el check es débil, cuenta como removible código que sí sirve.
+  - Solo cuentan las líneas agregadas, acá y en `prod_lines` `[MÍA]`. TRIM mide len = agregadas más borradas, pero en un caso de limpieza borrar la API vieja es la tarea: en `points-cleanup` las líneas borradas eran dos tercios de `prod_lines` en cada ejecución que pasó, y volver a poner el código borrado contaba como "removible" (de 6 a 14 líneas por ejecución, contra 1 a 4 sin eso). Restaurar código no es quitarlo, así que nunca se prueba revertir un borrado puro. Si borrar algo rompe la tarea, ya lo dice el check.
+  - Un bloque reemplazado se revierte entero o no se revierte: código muerto pegado a un cambio necesario cae en el mismo bloque de `difflib` y no cuenta como removible.
 - **Complejidad:**
   - CC se calcula con `ast`, con las reglas de radon `[R-slopcode]`, y se pondera por √SLOC, igual que la masa de SlopCodeBench.
   - La erosión del paper solo suma funciones con CC > 10, así que en un parche chico da 0 siempre `[RUN]`. Por eso se usa la variación de la masa. La erosión completa queda para el caso de varias etapas.

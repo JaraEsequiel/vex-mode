@@ -102,6 +102,7 @@ If an eval was killed before it restored the user's plugin, the next eval refuse
 | A pass/fail outcome is compared with a one-sided Fisher exact test, every other measure (compliance, tokens, time, quality) with a one-sided exact Mann-Whitney test (α 0.05); each keeps its p | `evals/harness/stats.py` `evals/run.py` `evals/tests/test_harness.py` `evals/tests/test_run.py` |
 | Quality is measured only on runs that pass; promote is refused when outcome or a blocking quality measure is worse or errored | `evals/run.py` `checks/check_evals.py` `evals/tests/test_run.py` `checks/tests/test_check_evals.py` |
 | Every blocking deterministic quality measure scores a planted worse patch worse than the good fix | `evals/harness/quality.py` `evals/tests/test_quality.py` |
+| Deleted code costs nothing: `prod_lines` and `removable_lines` count added lines only, and restoring a deletion is never "removable" | `evals/harness/quality.py` `evals/tests/test_quality.py` |
 | A PreToolUse hook with no opinion prints nothing (`{}` denies the tool) | `hooks/tests/test_irreversible.py` `docs/decisions/2026-11-18-hook-probe.md` |
 
 When you are corrected for a mistake, add a row here together with its enforcer in the same change. A rule that nothing enforces is a repeat waiting to happen.

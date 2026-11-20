@@ -84,11 +84,11 @@ def measure_dirs(before: Path, after: Path, check: Path | None, timeout_s: int =
 
     added_prod = 0
     for rel, (a, b, ops) in files.items():
-        count = sum((i2 - i1) + (j2 - j1) for tag, i1, i2, j1, j2 in ops if tag != "equal")
-        values["test_lines" if is_test(rel) else "prod_lines"] += count
+        added = _added(ops)
+        # Added lines only: deleting code is often the task (a legacy API), and the check already says if it broke.
+        values["test_lines" if is_test(rel) else "prod_lines"] += len(added)
         if not rel.endswith(".py"):
             continue
-        added = _added(ops)
         prod = not is_test(rel)
         try:
             values["comments_added"] += len(_comments("".join(b)) & added)
@@ -255,7 +255,8 @@ def _run_check(check: Path, root: Path, timeout_s: int) -> bool:
 
 def _removable(after: Path, files: dict, check: Path, timeout_s: int) -> int:
     """TRIM-NG (arXiv 2607.18161) with the hidden check as oracle: revert whole change blocks, then single lines of
-    pure insertions and deletions, last to first; keep a revert only if the check still passes. Blank-only units and
+    pure insertions, last to first; keep a revert only if the check still passes, and count the added lines it took
+    out. Restoring deleted code is not removing code, so pure deletions are never tried. Blank-only units and
     replaced lines stay atomic, so the count is never inflated by whitespace or by half-reverted edits."""
     if not _run_check(check, after, timeout_s):
         raise ValueError("check fails on the patch itself")
@@ -290,15 +291,14 @@ def _removable(after: Path, files: dict, check: Path, timeout_s: int) -> int:
         for rel, (a, b, ops) in files.items():
             for k in reversed(range(len(ops))):
                 tag, i1, i2, j1, j2 = ops[k]
-                if tag != "equal" and any(line.strip() for line in a[i1:i2] + b[j1:j2]):
-                    removed += attempt(rel, "blocks", k, (i2 - i1) + (j2 - j1))
+                if tag in ("insert", "replace") and any(line.strip() for line in b[j1:j2]):
+                    removed += attempt(rel, "blocks", k, j2 - j1)
         for rel, (a, b, ops) in files.items():
             for k in reversed(range(len(ops))):
                 tag, i1, i2, j1, j2 = ops[k]
-                if k in state[rel]["blocks"] or tag not in ("insert", "delete"):
+                if k in state[rel]["blocks"] or tag != "insert":
                     continue
-                side, lines, lo, hi = ("b", b, j1, j2) if tag == "insert" else ("a", a, i1, i2)
-                for n in reversed(range(lo, hi)):
-                    if lines[n].strip():
-                        removed += attempt(rel, "lines", (side, n), 1)
+                for n in reversed(range(j1, j2)):
+                    if b[n].strip():
+                        removed += attempt(rel, "lines", ("b", n), 1)
         return removed

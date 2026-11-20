@@ -517,12 +517,12 @@ flowchart LR
 </li></ul>
 <table>
   <tr><th>Medida</th><th>Cómo</th><th>Criterio</th><th>Fuente</th><th>Mejor</th><th>¿Bloquea?</th></tr>
-  <tr><td><code>prod_lines</code></td><td>Líneas agregadas más borradas fuera de los tests</td><td>menor código</td><td><a class="s r" href="#R-trim">R-trim</a> (len(P))</td><td>menos</td><td>sí</td></tr>
+  <tr><td><code>prod_lines</code></td><td>Líneas agregadas fuera de los tests (las borradas no cuentan, ver abajo)</td><td>menor código</td><td><a class="s r" href="#R-trim">R-trim</a> (len(P)) <a class="s mia" href="#MIA">MÍA</a></td><td>menos</td><td>sí</td></tr>
   <tr><td><code>test_lines</code></td><td>Lo mismo en tests (<code>test_*.py</code>, <code>*_test.py</code>, <code>tests/</code>)</td><td>—</td><td><a class="s run" href="#RUN">RUN</a></td><td>—</td><td>no, informativa</td></tr>
 </table>
 <p>Un script que el candidato deja suelto (<code>repro.py</code>, <code>debug_*.py</code>) cuenta como producción y, como el check no lo usa, como removible. TRIM encontró que los scripts de reproducción sueltos son el 49,6 % de las líneas removibles <a class="s r" href="#R-trim">R-trim</a>. Reproducir el error no exige dejar el archivo en el proyecto <a class="s mia" href="#MIA">MÍA</a>.</p>
 <table>
-  <tr><th><code>removable_lines</code></th><th>Líneas de producción que se pueden revertir sin que falle el <code>check.py</code> oculto (ver abajo)</th><th>menor código, slop</th><th><a class="s r" href="#R-trim">R-trim</a></th><th>menos</th><th>sí</th></tr>
+  <tr><th><code>removable_lines</code></th><th>Líneas de producción agregadas que se pueden quitar sin que falle el <code>check.py</code> oculto (ver abajo)</th><th>menor código, slop</th><th><a class="s r" href="#R-trim">R-trim</a></th><th>menos</th><th>sí</th></tr>
   <tr><td><code>verbosity</code></td><td>(Líneas agregadas que marca una regla ∪ líneas clonadas) ÷ líneas agregadas de producción</td><td>AI slop</td><td><a class="s r" href="#R-slopcode">R-slopcode</a></td><td>menos</td><td>sí</td></tr>
   <tr><td><code>comments_added</code></td><td>Comentarios <code>#</code> en líneas agregadas (<code>tokenize</code>)</td><td>sin comentarios</td><td><a class="s vex" href="#VEX">VEX</a></td><td>0</td><td>sí</td></tr>
   <tr><td><code>docstrings_added</code></td><td>Docstrings nuevos</td><td>—</td><td><a class="s mia" href="#MIA">MÍA</a></td><td>—</td><td>no, informativa</td></tr>
@@ -539,6 +539,10 @@ flowchart LR
 <li>Cubre solo producción: el check nunca ejercita los tests del candidato, que siempre saldrían "removibles".
 </li>
 <li>Límite: la medida no puede ser mejor que el check. Si el check es débil, cuenta como removible código que sí sirve.
+</li>
+<li>Solo cuentan las líneas agregadas, acá y en <code>prod_lines</code> <a class="s mia" href="#MIA">MÍA</a>. TRIM mide len = agregadas más borradas, pero en un caso de limpieza borrar la API vieja es la tarea: en <code>points-cleanup</code> las líneas borradas eran dos tercios de <code>prod_lines</code> en cada ejecución que pasó, y volver a poner el código borrado contaba como "removible" (de 6 a 14 líneas por ejecución, contra 1 a 4 sin eso). Restaurar código no es quitarlo, así que nunca se prueba revertir un borrado puro. Si borrar algo rompe la tarea, ya lo dice el check.
+</li>
+<li>Un bloque reemplazado se revierte entero o no se revierte: código muerto pegado a un cambio necesario cae en el mismo bloque de <code>difflib</code> y no cuenta como removible.
 </li></ul>
 </li>
 <li><b>Complejidad:</b>

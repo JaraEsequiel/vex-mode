@@ -415,9 +415,9 @@ class RunTest(unittest.TestCase):
         self.assertEqual(result["quality"]["errors"], [])
         for r in self.passing(result):
             self.assertEqual(set(r["quality"]), set(QUALITY_ALL))
-            self.assertEqual(r["quality"]["prod_lines"], 2)
+            self.assertEqual(r["quality"]["prod_lines"], 1)
             self.assertEqual(r["quality"]["judge_reuse"], 1.0)
-        self.assertEqual(result["metrics"]["A"]["prod_lines"]["mean"], 2.0)
+        self.assertEqual(result["metrics"]["A"]["prod_lines"]["mean"], 1.0)
         self.assertEqual(result["signals"]["B_vs_A"]["prod_lines"], "noise")
         self.assertEqual(run.main(["verdict", str(self.repo / "evals/x/results" / next(
             p.name for p in (self.repo / "evals/x/results").iterdir())), "promote", "same quality"]), 0)
