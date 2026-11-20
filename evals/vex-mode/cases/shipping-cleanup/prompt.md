@@ -1,0 +1,1 @@
+/vex-mode Shipping prices are computed two different ways in rates.py, plus a small helper that wraps one of them, and every pricing fix has to be made twice. Clean it up so there is one way to price a parcel. Checkout, labels and quotes must keep printing exactly what they print today.
