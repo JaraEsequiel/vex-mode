@@ -15,23 +15,9 @@ Bundled skills live at `../<name>/SKILL.md` from this file, so put this file's a
 Before anything else in a `/vex-mode` run, read these files in full, by their absolute path under this plugin:
 
 - `skills/vex-mode/worker.md`
-- `skills/vex-mode/playbooks/bug-fix.md`
-- `skills/vex-mode/playbooks/feature.md`
-- `skills/vex-mode/playbooks/refactoring.md`
 - `skills/vex-mode/playbooks/opening-a-pr.md`
-- `skills/principle-laziness-protocol/SKILL.md`
-- `skills/principle-foundational-thinking/SKILL.md`
-- `skills/principle-redesign-from-first-principles/SKILL.md`
-- `skills/principle-subtract-before-you-add/SKILL.md`
-- `skills/principle-minimize-reader-load/SKILL.md`
-- `skills/principle-model-the-domain/SKILL.md`
-- `skills/principle-migrate-callers-then-delete-legacy-apis/SKILL.md`
-- `skills/principle-separate-before-serializing-shared-state/SKILL.md`
-- `skills/principle-prove-it-works/SKILL.md`
-- `skills/principle-fix-root-causes/SKILL.md`
-- `skills/principle-sequence-verifiable-units/SKILL.md`
-- `skills/principle-never-block-on-the-human/SKILL.md`
-- `skills/principle-encode-lessons-in-structure/SKILL.md`
+
+Then read the playbook that matches the task (see Playbooks) and every file its **Read first** line names.
 
 ## Non-negotiables
 
@@ -108,4 +94,4 @@ Write short declarative sentences with no long dash and no colon as a connector.
 
 Match the task to a playbook and open its steps at `playbooks/<title>.md`, with the title in kebab case. Copy its steps into the todolist tool first.
 
-Bug fix, Feature, Refactoring, Opening a PR, Eval.
+Bug fix, Feature, Opening a PR, Eval.

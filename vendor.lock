@@ -261,6 +261,7 @@
         "playbooks/pause-safely.md",
         "playbooks/perf-issue.md",
         "playbooks/prototype.md",
+        "playbooks/refactoring.md",
         "playbooks/runtime-forensics.md",
         "playbooks/session-pickup.md",
         "playbooks/shipping.md",
@@ -280,7 +281,10 @@
         "swarm"
       ],
       "adapted": true,
-      "upstream_commit": "e58dd043600587dbaf58ba315e7f2b38373eeb43"
+      "upstream_commit": "e58dd043600587dbaf58ba315e7f2b38373eeb43",
+      "local_additions": [
+        "\"## Read first\": worker.md and opening-a-pr.md, then the matching playbook and its Read first line. Evidence: design \u00a76.3 (reading list per playbook) and the points-cleanup eval of this change."
+      ]
     },
     {
       "path": "skills/vex-mode/playbooks/bug-fix.md",
@@ -293,7 +297,8 @@
       "adapted": true,
       "upstream_commit": "35a90942a7f02e1ebbc2443643179815f2147954",
       "local_additions": [
-        "Step 3: \"Keep the public contract, an `architect` sketch included: the regression test calls the code the way its existing callers do, with the same argument and return types, and the fix changes an interface only when the request asks for it.\" Evidence: docs/decisions/2026-11-19-skills-batch-a.md"
+        "Step 3: \"Keep the public contract, an `architect` sketch included: the regression test calls the code the way its existing callers do, with the same argument and return types, and the fix changes an interface only when the request asks for it.\" Evidence: docs/decisions/2026-11-19-skills-batch-a.md",
+        "\"**Read first:**\" line naming the principles to read. Evidence: design \u00a76.3 (reading list per playbook) and the points-cleanup eval of this change."
       ]
     },
     {
@@ -308,7 +313,8 @@
       "upstream_commit": "35a90942a7f02e1ebbc2443643179815f2147954",
       "local_additions": [
         "Step 1: the code-quality measure (case.json \"quality\": true, design \u00a78.2.1).",
-        "Step 7: never promote when the outcome or a blocking quality measure got worse (CI rule, M5)."
+        "Step 7: never promote when the outcome or a blocking quality measure got worse (CI rule, M5).",
+        "\"**Read first:**\" line naming the principles to read. Evidence: design \u00a76.3 (reading list per playbook) and the points-cleanup eval of this change."
       ]
     },
     {
@@ -321,7 +327,10 @@
         "interrogate"
       ],
       "adapted": true,
-      "upstream_commit": "35a90942a7f02e1ebbc2443643179815f2147954"
+      "upstream_commit": "35a90942a7f02e1ebbc2443643179815f2147954",
+      "local_additions": [
+        "\"**Read first:**\" line naming the principles to read. Evidence: design \u00a76.3 (reading list per playbook) and the points-cleanup eval of this change."
+      ]
     },
     {
       "path": "skills/vex-mode/playbooks/opening-a-pr.md",
@@ -335,17 +344,6 @@
       "upstream_commit": "35a90942a7f02e1ebbc2443643179815f2147954",
       "local_additions": [
         "Comment on the tracked issue or ticket with the PR link, root cause, and what changed when the task references one (user correction on issue #25)."
-      ]
-    },
-    {
-      "path": "skills/vex-mode/playbooks/refactoring.md",
-      "upstream_path": "pstack/skills/poteto-mode/playbooks/refactoring.md",
-      "upstream_sha256": "f11ff3c3ff0ea09d3ce2db0a3c11be3a3c11c279c04b83324723d0e0f984755b",
-      "pending_refs": [],
-      "upstream_commit": "0b46ec399d55f2829e88822998f53b84944837d3",
-      "adapted": true,
-      "removed_refs": [
-        "figure-it-out"
       ]
     },
     {
