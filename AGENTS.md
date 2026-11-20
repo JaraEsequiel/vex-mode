@@ -12,6 +12,7 @@ This repo is an Antigravity plugin: Vex's working mode for agents, built on psta
 - `skills/principle-*/`: one principle per skill.
 - `skills/agent-ready/`: prepares another repo for agents; `templates/` holds the files it copies there (the Stop hook is tested in `scripts/tests/test_check_on_stop.py`).
 - `agents/vex-agent.md`: the subagent definition.
+- `adapters/claude-code.md`: maps the agy names in the skills to Claude Code (copied from pstack's `docs/harness/claude-code.md` and adapted). Evidence for its Claude Code facts: `docs/decisions/2026-11-19-claude-code-probes.md`.
 - `hooks.json` + `hooks/`: mode hooks (activation, irreversible pause, stop gate).
 - `checks/`: deterministic structural checks. `checks/run.py` runs all of them.
 - `evals/`: `run.py` (the eval harness), `harness/` (`judges.py` calls the judge over API; `quality.py` and `quality_judge.py` measure code quality on passing runs, design §8.2.1), `judge.json` (judge provider, model, effort), and per skill `evals/<skill>/cases/` and `results/`. Never inside `skills/`: a candidate must not see them.
@@ -20,7 +21,7 @@ This repo is an Antigravity plugin: Vex's working mode for agents, built on psta
 - `scripts/build_plugin.py`: exports only the plugin's parts; install with `--install`, never `agy plugin install` on the repo.
 - `scripts/scheduled_correct.py`: the weekly unattended `/correct` run and its systemd timer (`install`, `run`, `uninstall`).
 - `scripts/render_design.py`: renders `docs/specs/*-design.html` from the design's Markdown (template: `scripts/design_template.html`). Edit the `.md`, then run it.
-- `vendor.lock`: provenance for every file under `skills/`, `rules/`, `agents/`.
+- `vendor.lock`: provenance for every file under `skills/`, `rules/`, `agents/`, `adapters/`.
 - `docs/specs/`, `docs/plans/`, `docs/decisions/`: design, plans, decision log.
 
 ## How to verify a change
