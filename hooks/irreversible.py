@@ -1,4 +1,4 @@
-"""PreToolUse (run_command): force a human confirmation before irreversible commands.
+"""PreToolUse (agy run_command, Claude Code Bash): force a human confirmation before irreversible commands.
 
 Returns None (print nothing) when it has no opinion: agy treats `{}` as deny.
 """
@@ -6,7 +6,7 @@ import os
 import re
 import shlex
 
-from vexio import read_payload, safe_main
+from vexio import is_claude_code, read_payload, safe_main
 
 OPERATORS = {"&&", "||", ";", "|", "&", "(", ")", "$", "$(", "`"}
 GIT_PUSH_FLAGS = {"--force", "--mirror", "--delete", "--force-if-includes", "--prune", "--all"}
@@ -164,14 +164,25 @@ def classify(command: str) -> str | None:
 
 
 def handle(payload: dict) -> dict | None:
-    call = payload.get("toolCall") or {}
-    args = call.get("args") or {}
-    command = args.get("CommandLine") if isinstance(args, dict) else None
+    if is_claude_code(payload):
+        args = payload.get("tool_input") if payload.get("tool_name") == "Bash" else None
+        command = args.get("command") if isinstance(args, dict) else None
+    else:
+        call = payload.get("toolCall") or {}
+        args = call.get("args") or {}
+        command = args.get("CommandLine") if isinstance(args, dict) else None
     if not isinstance(command, str):
         return None
     reason = classify(command)
     if reason is None:
         return None
+    if is_claude_code(payload):
+        # In `claude -p`, "ask" denies the call and the agent reads the reason (probe, finding 4).
+        return {"hookSpecificOutput": {
+            "hookEventName": "PreToolUse",
+            "permissionDecision": "ask",
+            "permissionDecisionReason": f"vex-mode: irreversible action ({reason}). Always pause: confirm before it runs.",
+        }}
     return {
         "decision": "force_ask",
         "reason": f"vex-mode: irreversible action ({reason}). Always pause: confirm before it runs.",

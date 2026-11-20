@@ -36,3 +36,24 @@ class EvaluateTest(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class ClaudeTest(unittest.TestCase):
+    def fake(self, code):
+        import os, tempfile
+        script = Path(tempfile.mkdtemp(prefix="fakeclaude-")) / "claude"
+        script.write_text(f"#!/bin/sh\necho \"$@\" >> \"$(dirname \"$0\")/calls\"\nexit {code}\n")
+        script.chmod(0o755)
+        os.environ["VEX_CLAUDE"] = str(script)
+        self.addCleanup(os.environ.pop, "VEX_CLAUDE")
+        return script.parent / "calls"
+
+    def test_validates_marketplace_and_tree_strictly(self):
+        calls = self.fake(0)
+        self.assertEqual(validate_plugin.claude_problems(Path("/r")), [])
+        lines = calls.read_text().splitlines()
+        self.assertEqual(lines, ["plugin validate --strict /r", "plugin validate --strict /r/harness/claude-code"])
+
+    def test_failure_is_a_problem(self):
+        self.fake(1)
+        self.assertEqual(len(validate_plugin.claude_problems(Path("/r"))), 2)

@@ -1,0 +1,16 @@
+{
+  "name": "vex",
+  "owner": {
+    "name": "Vex"
+  },
+  "metadata": {
+    "description": "Vex's agent working mode for Claude Code."
+  },
+  "plugins": [
+    {
+      "name": "vex-mode",
+      "source": "./harness/claude-code",
+      "description": "Vex's agent working mode: rigorous playbooks, verified work, rules enforced by structure. Built on pstack."
+    }
+  ]
+}

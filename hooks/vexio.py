@@ -1,4 +1,7 @@
-"""stdin/stdout plumbing shared by the vex-mode hooks (agy hook contract: JSON in, JSON out)."""
+"""stdin/stdout plumbing shared by the vex-mode hooks: JSON in, JSON out, for agy and Claude Code.
+
+Each hook tells the two apart by the payload: Claude Code sends `hook_event_name` and `session_id`,
+agy sends `hookEventName` and `conversationId` (docs/decisions/2026-11-19-claude-code-probes.md)."""
 import json
 import os
 import re
@@ -20,12 +23,22 @@ def emit(obj: dict | None) -> None:
         sys.stdout.write(json.dumps(obj))
 
 
+def is_claude_code(payload: dict) -> bool:
+    return "hook_event_name" in payload and "session_id" in payload
+
+
+def session_of(payload: dict) -> str | None:
+    """The conversation id of either harness, if it is safe to use as a file name."""
+    return safe_id(payload.get("session_id") if is_claude_code(payload) else payload.get("conversationId"))
+
+
 def plugin_root() -> Path:
-    return Path(os.environ.get("PLUGIN_ROOT") or Path(__file__).resolve().parents[1])
+    root = os.environ.get("PLUGIN_ROOT") or os.environ.get("CLAUDE_PLUGIN_ROOT")
+    return Path(root or Path(__file__).resolve().parents[1])
 
 
 def state_dir() -> Path:
-    data = os.environ.get("PLUGIN_DATA")
+    data = os.environ.get("PLUGIN_DATA") or os.environ.get("CLAUDE_PLUGIN_DATA")
     return Path(data) / "state" if data else plugin_root() / ".state"
 
 

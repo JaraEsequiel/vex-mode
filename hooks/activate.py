@@ -1,4 +1,4 @@
-"""PreInvocation: `/vex-mode` activates the full mode for this conversation and injects the reading list once.
+"""PreInvocation (agy) or UserPromptSubmit (Claude Code): `/vex-mode` activates the full mode for this conversation and injects the reading list once.
 Any other `/<skill>` of this plugin gets that skill's text and folder injected once per user message: in
 `agy -p` a plugin skill's slash command does not expand, and the model may read another skill instead
 (docs/decisions/2026-11-19-m4-eval.md).
@@ -7,9 +7,12 @@ import hashlib
 import re
 from pathlib import Path
 
-from vexio import plugin_root, read_payload, safe_id, safe_main, state_dir
+from vexio import is_claude_code, plugin_root, read_payload, safe_id, safe_main, session_of, state_dir
 
 COMMAND = re.compile(r"^/vex-mode(\s|$)")
+# Claude Code namespaces plugin skills (`/vex-mode:vex-mode`) and expands their text itself, also in -p.
+CC_COMMAND = re.compile(r"^/(vex-mode:)?vex-mode(\s|$)")
+ADAPTER = "adapters/claude-code.md"
 PATH = re.compile(r"^- `([^`]+)`\s*$")
 SKILL_COMMAND = re.compile(r"^/([a-z0-9][a-z0-9-]*)(\s|$)")
 
@@ -44,7 +47,30 @@ def skill_injection(conv: str, prompt: str, root: Path, state: Path) -> dict:
     return {"injectSteps": [{"systemMessage": {"systemMessage": text}}]}
 
 
-def handle(payload: dict, root: Path, state: Path) -> dict:
+def claude_code(payload: dict, root: Path, state: Path) -> dict | None:
+    conv = session_of(payload)
+    if conv is None or payload.get("hook_event_name") != "UserPromptSubmit":
+        return None
+    active = state / "active" / conv
+    injected = state / "injected" / conv
+    if CC_COMMAND.match(payload.get("prompt") or ""):
+        active.parent.mkdir(parents=True, exist_ok=True)
+        active.touch()
+    if not active.exists() or injected.exists():
+        return None
+    injected.parent.mkdir(parents=True, exist_ok=True)
+    injected.touch()
+    files = "\n".join(f"- {p}" for p in [root / ADAPTER, root / "skills/vex-mode/SKILL.md", *reading_list(root)])
+    text = (
+        "vex-mode is active for this session. Before anything else, read these files in full, "
+        "then follow skills/vex-mode/SKILL.md, mapping its agy names with the first file:\n" + files
+    )
+    return {"hookSpecificOutput": {"hookEventName": "UserPromptSubmit", "additionalContext": text}}
+
+
+def handle(payload: dict, root: Path, state: Path) -> dict | None:
+    if is_claude_code(payload):
+        return claude_code(payload, root, state)
     conv = safe_id(payload.get("conversationId"))
     if conv is None:
         return {}
