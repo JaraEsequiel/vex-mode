@@ -1,0 +1,7 @@
+{
+  "kind": "waiver",
+  "skill": "agent-ready",
+  "tree_sha256": "e38054a1f30500afce2be7f41a9bbc6e1958d8098b563eac9307757e54b91a8f",
+  "date": "2026-11-19",
+  "reason": "Adds a Claude Code registration of the same Stop hook template. The agy path is unchanged: the template's agy branch and all 17 earlier tests are untouched, and step 3/7 keep the agy lines verbatim. The Claude Code path is pinned by 4 new tests that run the hook through the template's settings command, and by a claude -p smoke (docs/decisions/2026-11-19-claude-code-probes.md). The agent-ready eval runs on agy, whose Gemini quota is exhausted until about 2026-11-25; rerun it then if the step 3 text change needs measuring."
+}

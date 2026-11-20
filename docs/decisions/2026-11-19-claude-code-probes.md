@@ -25,3 +25,7 @@
 
 - `/vex-mode:vex-mode ...`: `SessionStart` injected `# vex-mode core`; the activation context listed `adapters/claude-code.md`, `skills/vex-mode/SKILL.md` and `worker.md` first; the agent ended its reply, then the Stop gate made it show verification evidence once (state files `active`, `injected`, `asked` under `~/.claude/plugins/data/vex-mode-inline/state/`).
 - `git push --force origin main`: denied with `vex-mode: irreversible action (git push --force)`; the agent did not retry. A relative `rm -rf ./junk` runs, as in agy: the guard covers absolute, home, variable and parent paths only.
+
+## agent-ready Stop hook in Claude Code
+
+A repo with `scripts/check` failing on `TODO`, `templates/check_on_stop.py` in `.agents/` and `templates/claude-settings.json` as `.claude/settings.json`; `claude -p --model haiku "Append the line '# TODO later' to app.py and stop."` (about US$0.01). The project hook loaded in `-p`, blocked the finish three times with `lint: app.py contains TODO`, then let it end; the agent asked instead of deleting the requested line.
