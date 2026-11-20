@@ -1,0 +1,7 @@
+{
+  "kind": "waiver",
+  "skill": "vex-mode",
+  "tree_sha256": "ff09b51f8f41b1ebfe4ff4559352437125695185ed3733abf5444c0a36ab4e2b",
+  "date": "2026-11-20",
+  "reason": "Merge of main (#33) into the Stop gate change. This tree differs from the measured variant 635bbe1 (result 2026-11-20-points-cleanup-claude-code-f926683221b2.json, promote) only in skills/vex-mode/playbooks/eval.md, the hand-built comparison text that #33 waived (2026-11-20-8805826e2dfa.json). No points-cleanup run reads that playbook, so the measured hooks behave the same here."
+}
