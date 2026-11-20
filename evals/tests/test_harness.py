@@ -23,6 +23,7 @@ class TranscriptTest(unittest.TestCase):
         self.assertEqual(t.status, "SUCCESS")
         self.assertEqual(t.total_tokens, 15184)
         self.assertEqual(t.model, "gemini-3.8-flash-low")
+        self.assertEqual(t.cwd, "/work/proj")  # rejudge resolves relative paths against it
         self.assertEqual(t.response, "lantern\n")
         self.assertGreater(t.duration_s, 0)
 
@@ -45,6 +46,7 @@ class TranscriptTest(unittest.TestCase):
         t = transcript.parse_claude((FIX / "claude_run_ok.ndjson").read_text())
         self.assertEqual(t.conversation_id, "s1")
         self.assertEqual(t.model, "claude-sonnet-5-5")
+        self.assertEqual(t.cwd, "/w")
         self.assertEqual(t.status, "SUCCESS")
         self.assertEqual(t.response, "Fixed the total.")
         self.assertEqual(t.duration_s, 12.5)

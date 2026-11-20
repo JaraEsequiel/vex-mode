@@ -343,7 +343,7 @@ Un script que el candidato deja suelto (`repro.py`, `debug_*.py`) cuenta como pr
 - **Qué casos la usan:**
   - `case.json` la activa con `"quality": true`. `tax-rounding` la activa.
   - `habit-tracker` todavía no, porque su salida son sobre todo plantillas copiadas y ahí "menos código" no mide nada `[MÍA]`.
-- **`rejudge`** recalcula también la calidad (medidas y juez) sin correr de nuevo.
+- **`rejudge`** recalcula también la calidad (medidas y juez) sin correr de nuevo. También vuelve a comprobar el aislamiento de cada ejecución con las reglas actuales, así que un falso positivo corregido después del eval ya no anula la ejecución; el resultado (pasa o no pasa) sale del check guardado. Si la transcripción no trae el directorio de trabajo, mantiene el motivo guardado `[MÍA]`.
 - **Costo:** el check corre unas O(líneas del parche) veces por ejecución, y el juez hace 9 llamadas más por eval.
 - **Evaluar la evaluación** `[VEX]`:
   - **En M5, parches plantados:** cada medida que bloquea tiene un test con el arreglo correcto de `tax-rounding` y una versión empeorada a propósito: con comentarios, con código muerto, con `shell=True`, duplicada o con una abstracción de más. La versión empeorada tiene que puntuar peor (es la idea de exigir una rotura deliberada por medida `[I-1271]`). El juez se prueba con respuestas falsas, sin llamar a la API.

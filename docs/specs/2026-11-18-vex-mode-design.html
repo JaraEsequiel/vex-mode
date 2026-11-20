@@ -646,7 +646,7 @@ flowchart LR
 <li><code>habit-tracker</code> todavía no, porque su salida son sobre todo plantillas copiadas y ahí "menos código" no mide nada <a class="s mia" href="#MIA">MÍA</a>.
 </li></ul>
 </li>
-<li><b><code>rejudge</code></b> recalcula también la calidad (medidas y juez) sin correr de nuevo.
+<li><b><code>rejudge</code></b> recalcula también la calidad (medidas y juez) sin correr de nuevo. También vuelve a comprobar el aislamiento de cada ejecución con las reglas actuales, así que un falso positivo corregido después del eval ya no anula la ejecución; el resultado (pasa o no pasa) sale del check guardado. Si la transcripción no trae el directorio de trabajo, mantiene el motivo guardado <a class="s mia" href="#MIA">MÍA</a>.
 </li>
 <li><b>Costo:</b> el check corre unas O(líneas del parche) veces por ejecución, y el juez hace 9 llamadas más por eval.
 </li>

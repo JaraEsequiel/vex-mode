@@ -1,6 +1,6 @@
 import json
-import re
 import os
+import re
 import subprocess
 import shutil
 import sys
@@ -279,6 +279,43 @@ class RunTest(unittest.TestCase):
         self.assertIn("R6", after["judge"]["error"])
         self.assertEqual(after["arms"]["A"]["tree_sha256"], before["arms"]["A"]["tree_sha256"])
         self.assertEqual([r["outcome"] for r in after["arms"]["B"]["runs"]], [r["outcome"] for r in before["arms"]["B"]["runs"]])
+
+    def test_rejudge_recomputes_isolation(self):
+        # 2026-11-20 backlog: a run invalidated by a false positive that was fixed later stayed invalid on
+        # rejudge, and its outcome stayed 0 although its check had passed.
+        path = self.run_eval()
+        result = json.loads(path.read_text())
+        stale, peeked = result["arms"]["B"]["runs"][0], result["arms"]["A"]["runs"][0]
+        stale.update(invalid="command reaches another project copy: ls -la ..", outcome=0, compliance=0.0)
+        path.write_text(json.dumps(result))
+        log = Path(result["run_dir"]) / "transcripts" / f"{peeked['slot']}.ndjson"
+        rubric = self.repo / "evals/x/cases/c1/rubric.md"
+        log.write_text(log.read_text() + json.dumps({"event": "step_update", "step_update": {
+            "step_type": "tool", "state": "DONE",
+            "tool_info": {"name": "read_file", "parameters": {"Path": str(rubric)}}}}) + "\n")
+        self.assertEqual(run.main(["rejudge", str(path)]), 0)
+        after = json.loads(path.read_text())
+        stale, peeked = after["arms"]["B"]["runs"][0], after["arms"]["A"]["runs"][0]
+        self.assertIsNone(stale["invalid"])
+        self.assertEqual(stale["outcome"], 1)
+        self.assertIsNotNone(stale["compliance"])
+        self.assertIn("forbidden path", peeked["invalid"])
+        self.assertEqual((peeked["outcome"], peeked["compliance"]), (0, 0.0))
+        self.assertNotIn(f"{rubric}", (Path(after["run_dir"]) / "judge-prompt.md").read_text())
+
+    def test_rejudge_keeps_a_stored_reason_it_cannot_recheck(self):
+        # Without the run's working directory, relative paths cannot be resolved; keep what the eval found.
+        path = self.run_eval()
+        result = json.loads(path.read_text())
+        r = result["arms"]["B"]["runs"][0]
+        r.update(invalid="command reaches another project copy: ls -la ..", outcome=0, compliance=0.0)
+        path.write_text(json.dumps(result))
+        log = Path(result["run_dir"]) / "transcripts" / f"{r['slot']}.ndjson"
+        log.write_text(re.sub(r', "cwd": "[^"]*"', "", log.read_text()))
+        self.assertEqual(run.main(["rejudge", str(path)]), 0)
+        r = json.loads(path.read_text())["arms"]["B"]["runs"][0]
+        self.assertEqual((r["invalid"], r["outcome"], r["compliance"]),
+                         ("command reaches another project copy: ls -la ..", 0, 0.0))
 
     def test_judge_too_few_criteria_sets_error(self):
         (self.repo / "evals/x/cases/c1/rubric.md").write_text("1. Fixes it.\n2. Shows proof.\n")
