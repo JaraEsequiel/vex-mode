@@ -149,6 +149,27 @@ class PointsCleanupCheckTest(unittest.TestCase):
         self.assertNotEqual(code, 0, out)
         self.assertIn("tests were dropped", out)
 
+    def test_a_local_variable_named_earned_passes(self):
+        # 2026-11-20 points-cleanup slot 6: `earned = ...` inside the function is not the wrapper.
+        rates = KEEP_POINTS_FOR.replace("    points = int(total_eur)", "    earned = int(total_eur)") \
+            .replace("        points += BONUS\n    return points", "        earned += BONUS\n    return earned")
+        self.assertIn("return earned", rates)
+        code, out = self.check(self.keep_points_for(rates))
+        self.assertEqual(code, 0, out)
+
+    def test_a_shim_in_the_tests_fails(self):
+        # 2026-11-20 points-cleanup calibration: production kept order_points, the tests kept a local points_for.
+        work = self.keep_order_points("round(total_eur * 100)")
+        (work / "test_points.py").write_text(
+            "import unittest\n\nfrom points import Order, order_points\n\n\n"
+            "def points_for(total_eur, tier):\n    return order_points(Order(round(total_eur * 100), tier))\n\n\n"
+            "class T(unittest.TestCase):\n"
+            + "".join(f"    def test_{i}(self):\n        self.assertEqual(points_for({e}, 'basic'), {p})\n"
+                      for i, (e, p) in enumerate([(42.5, 42), (100, 100), (100.01, 150), (0.99, 0)])))
+        code, out = self.check(work)
+        self.assertNotEqual(code, 0, out)
+        self.assertIn("tests keep", out)
+
     def test_behavior_change_fails(self):
         code, out = self.check(self.keep_points_for(KEEP_POINTS_FOR.replace("BONUS = 50", "BONUS = 60")))
         self.assertNotEqual(code, 0, out)

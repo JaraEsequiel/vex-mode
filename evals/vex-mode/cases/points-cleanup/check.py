@@ -146,23 +146,32 @@ if not ran or int(ran.group(1)) < MIN_TESTS:
 elif tests.returncode != 0:
     failed.append(f"python3 -m unittest fails: {tests.stderr.strip()[-300:]!r}")
 
-sources = {p: p.read_text() for p in work.rglob("*.py") if not p.name.startswith("test") and "__pycache__" not in p.parts}
-defined = set()
-for path, text in sources.items():
+def top_level(text, name):
+    """Names a module defines at its top level (functions, classes, assignments): local variables do not count."""
     try:
         tree = ast.parse(text)
     except SyntaxError as e:
-        failed.append(f"{path.name} does not parse: {e}")
-        continue
-    for node in ast.walk(tree):
-        if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)):
-            defined.add(node.name)
+        failed.append(f"{name} does not parse: {e}")
+        return set()
+    names = set()
+    for node in tree.body:
+        if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef, ast.ClassDef)):
+            names.add(node.name)
         elif isinstance(node, ast.Assign):
-            defined.update(t.id for t in node.targets if isinstance(t, ast.Name))
-if "earned" in defined:
+            names.update(t.id for t in node.targets if isinstance(t, ast.Name))
+    return names
+
+
+files = [p for p in work.rglob("*.py") if "__pycache__" not in p.parts]
+sources = {p: p.read_text() for p in files if not p.name.startswith("test")}
+defined = set().union(*(top_level(text, p.name) for p, text in sources.items()))
+in_tests = set().union(*(top_level(p.read_text(), p.name) for p in files if p.name.startswith("test")))
+if "earned" in defined | in_tests:
     failed.append("the earned wrapper is still there")
 if {"points_for", "order_points"} <= defined:
     failed.append("both points_for and order_points are still defined (two ways to compute points, or a shim)")
+for name in sorted({"points_for", "order_points", "earned"} & in_tests - defined):
+    failed.append(f"the tests keep a local {name} shim for a deleted function")
 rule = sum(text.count("TIER_RATE[") for text in sources.values())
 if rule > 1:
     failed.append(f"the tier-rate rule appears {rule} times")
