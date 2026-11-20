@@ -53,13 +53,18 @@ Un juez de otra familia de modelos califica las respuestas sin saber de qué bra
 - **Recalificar sin repetir ejecuciones:** `python3 evals/run.py rejudge <resultado.json>` usa el juez configurado ahora.
 
 ```bash
-python3 evals/run.py vex-mode tax-rounding
+python3 evals/run.py vex-mode points-cleanup --harness claude-code --runs 10 --jobs 4
 python3 evals/run.py verdict <resultado.json> promote "<síntesis>"
+python3 evals/run.py calibrate vex-mode points-cleanup --runs 10   # plugin contra sin plugin
 ```
 
 - Los casos están en `evals/<skill>/cases/` y los resultados en `evals/<skill>/results/`.
 - Los transcripts completos quedan solo en local, en `~/.cache/vex-mode/runs/`.
-- Mientras corre un eval, el plugin instalado cambia en cada brazo. Al terminar se restaura el original, aunque el eval falle. No uses agy durante el eval. Si el proceso muere sin restaurar, el siguiente eval no arranca hasta que ejecutes `python3 evals/run.py restore`.
+- Un caso corre en agy salvo que `--harness claude-code` o su `case.json` digan lo contrario.
+- **En Claude Code** no se instala nada: cada brazo carga su propio build con `--plugin-dir`, y `--setting-sources project` deja afuera tus plugins, skills, `CLAUDE.md` y servidores MCP. Los candidatos corren de a `--jobs` a la vez (4 por defecto), cada uno en su propia copia del proyecto.
+- **En agy** el plugin instalado cambia en cada brazo y corre un candidato a la vez. Al terminar se restaura el original, aunque el eval falle. No uses agy durante el eval. Si el proceso muere sin restaurar, el siguiente eval no arranca hasta que ejecutes `python3 evals/run.py restore`.
+- Una ejecución que lee fuera de su carpeta privada (el repo, el cache de evals, otra copia del proyecto o de una skill) queda inválida y no cuenta.
+- `calibrate` compara el plugin de `main` contra ninguno, con el mismo modelo, para saber si un caso mide el plugin. Nunca cuenta como evidencia de una skill.
 
 ## Auto-mejora programada
 

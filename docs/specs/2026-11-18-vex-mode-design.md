@@ -125,7 +125,7 @@ vex-mode/
 - Elige un playbook y copia sus pasos a la lista de tareas `[P-mode:108]`.
 - Si una duda se resuelve ejecutando algo, se prototipa en lugar de preguntar `[P-mode]` (non-negotiables).
 - **Lista de lecturas explícita por playbook.** Cada playbook nombra los archivos exactos que hay que leer. Es lo que demostró subir las lecturas: con una lista incondicional al inicio de cada playbook, 68 de 72 ejecuciones leyeron un principio, frente a 0 de 72 sin ella `[I-726]`. Nombrar la lectura en el kickoff hizo que 65 de 93 delegados leyeran el adaptador `[I-864]`. Leer no prueba calidad: nadie calificó las respuestas `[I-726]`.
-- **Playbooks iniciales:** M1 empieza con 2, bug-fix y feature `[VEX]`. Los siguientes candidatos son investigation, refactoring y opening-a-pr. Se añaden solo cuando su patrón se repita 2 veces `[MÍA]`, con el criterio de *"a class counts once it has happened twice"* `[P-correct:15]`.
+- **Playbooks iniciales:** M1 empieza con 2, bug-fix y feature `[VEX]`. Los siguientes candidatos son investigation, refactoring y opening-a-pr. Se añaden solo cuando su patrón se repita 2 veces `[MÍA]`, con el criterio de *"a class counts once it has happened twice"* `[P-correct:15]`. Hoy hay cuatro: bug-fix, feature, opening-a-pr y eval. El router lee primero `worker.md` y `opening-a-pr.md`; cada playbook nombra en su línea **Read first** los principios que usa. Refactoring entró y se sacó en #35: no mejoró ni shipping-cleanup ni points-cleanup. Las limpiezas siguen la sección "Changing code" del núcleo (#36: points-cleanup 10/10 contra 6/10, Fisher p 0.043). Un playbook de limpiezas se agrega solo si un caso muestra una pérdida sin él.
 - **Sin skills de planificación por defecto.** *"the best spec is code"* `[P-readme:270]`.
 
 ### 6.4 Subagentes: `worker.md` y `vex-agent`
@@ -184,7 +184,7 @@ Controlan **cómo trabaja el agente**, sea cual sea el proyecto `[VEX]` `[A-hook
 |---|---|---|---|
 | `PreInvocation` | Con `/vex-mode`: marca la sesión e inyecta una vez la lista de lecturas (con `worker.md`). Con cualquier otro `/<skill>` del plugin: inyecta su texto y su carpeta, una vez por mensaje | Con `/<skill>` del plugin `[VEX]` | `[P-mode:20]` + el fallo documentado en `[I-726]` + `[A-probe-slash]` |
 | `PreToolUse` | **Pausa y pide confirmación** ante lo irreversible (force-push a ramas compartidas, deploy, borrado de datos). No bloquea sin salida | **Siempre** | `[P-mode:78]` ("Always pause", no "prohibir") `[MÍA]` |
-| `Stop` | No deja cerrar una tarea sin evidencia de verificación | Solo con la marca de `/vex-mode` `[VEX]` | `[P-prove:9]` |
+| `Stop` | No deja cerrar una tarea sin evidencia de verificación. En Claude Code no pregunta si la última herramienta del turno fue `Bash` (#34: la pregunta fija costaba ~80k tokens por ejecución repitiendo checks ya mostrados; `docs/decisions/2026-11-20-stop-gate-write-last.md` mide que ningún turno terminó en una escritura sin check) | Solo con la marca de `/vex-mode` `[VEX]` | `[P-prove:9]` |
 
 El mecanismo del hook `Stop` se prototipó antes de fijarlo, como indica `[P-mode]`: lo que se puede decidir ejecutando algo, se prototipa. El resultado está en `docs/decisions/2026-11-18-hook-probe.md`. En agy, `{}` en `PreToolUse` deniega y `force_ask` en `agy -p` no ejecuta el comando y termina el turno `[A-hooks]`.
 

@@ -24,7 +24,7 @@ vex-mode se instala distinto en cada plataforma. En agy lo construyes desde una 
    python3 scripts/build_plugin.py --ref main --install ~/.cache/vex-mode/build
    ```
 
-   Sin `--ref`, el script copia tu árbol de trabajo tal como está, con cambios sin commitear incluidos. Usa `--ref main` para instalar la versión estable.
+   Sin `--ref`, el script copia tu árbol de trabajo tal como está, con cambios sin commitear incluidos. Usa `--ref main` para instalar lo último que se mergeó, o un tag de versión como `--ref v0.2.0` para fijar una versión (los tags están en `git tag`).
 
 3. Comprueba que el plugin quedó instalado.
 
@@ -116,7 +116,7 @@ Claude Code no tiene reglas de plugin, así que el núcleo llega por un hook.
 | `hooks/session_start.py` | Al iniciar, reanudar, limpiar o compactar la sesión. Carga `rules/AGENTS.md` como contexto. |
 | `hooks/irreversible.py` | Antes de cada `Bash`. Pide confirmación, nunca aprueba por su cuenta. |
 | `hooks/activate.py` | Antes de cada mensaje, para detectar `/vex-mode:vex-mode`. |
-| `hooks/stop_gate.py` | Cuando el agente quiere terminar en una conversación con modo completo. Bloquea una vez por mensaje. |
+| `hooks/stop_gate.py` | Cuando el agente quiere terminar en una conversación con modo completo. Bloquea una vez por mensaje, salvo que la última herramienta del turno haya sido un comando. |
 
 Las skills usan nombres de agy. El agente los traduce con `adapters/claude-code.md`, que el hook de inicio le indica leer. Un paso que solo existe en agy aparece en la respuesta como `Skipped in Claude Code: <paso>. <razón>.` y el agente sigue con el siguiente.
 
@@ -132,4 +132,4 @@ Haz esta prueba en una sesión nueva, en un repo de práctica.
 
 Si el comando corre sin pausa, el hook no cargó. Revisa que `python3` esté en el `PATH` y que abriste una sesión nueva después de instalar.
 
-Para probar el modo completo, escribe `/vex-mode di qué archivos leíste primero` en agy o `/vex-mode:vex-mode di qué archivos leíste primero` en Claude Code. El agente debe nombrar `worker.md`, los playbooks y las skills de principios.
+Para probar el modo completo, escribe `/vex-mode di qué archivos leíste primero` en agy o `/vex-mode:vex-mode di qué archivos leíste primero` en Claude Code. El agente debe nombrar `worker.md` y `opening-a-pr.md`. Los demás playbooks y las skills de principios los lee cuando la tarea los necesita.
