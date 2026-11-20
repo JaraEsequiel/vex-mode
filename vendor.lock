@@ -5,6 +5,13 @@
   },
   "files": [
     {
+      "path": "adapters/claude-code.md",
+      "upstream_path": "pstack/docs/harness/claude-code.md",
+      "upstream_sha256": "289a9127a3597d7b3fbbe10c40aea4aea3f15cd5361a75be43806a07b96f634f",
+      "pending_refs": [],
+      "upstream_commit": "0b46ec399d55f2829e88822998f53b84944837d3"
+    },
+    {
       "path": "skills/architect/SKILL.md",
       "upstream_path": "pstack/skills/architect/SKILL.md",
       "upstream_sha256": "aea83d7aa109eb73402182701b14c289844663ad9c8f959fedbef2df66787ce0",
