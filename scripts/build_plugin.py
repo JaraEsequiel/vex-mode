@@ -94,6 +94,7 @@ TERMS = [
     (".agents/hooks.json", re.compile(r"\.agents/hooks\.json|\.agents/`")),
     ("`evals/run.py`", re.compile(r"`agy -p`")),
     ("agy hook template", re.compile(r"\bagy (Stop )?hook")),
+    ("`Claude Code:` line", re.compile(r"^\s*- (agy|Claude Code):|agy or Claude Code")),
 ]
 # A line naming agy that no term covers means the adapter is missing a row.
 AGY = re.compile(r"\bagy\b|Antigravity|\.gemini|\.agents/")
@@ -204,6 +205,20 @@ def write_claude(src: Path, tree: Path) -> Path:
         dest.write_bytes(data)
         dest.chmod(0o755 if executable else 0o644)
     return tree
+
+
+def build_claude(repo_root: Path, out: Path, ref: str) -> Path:
+    """The Claude Code tree of a commit, for an eval arm (`claude -p --plugin-dir <out>`)."""
+    archive = subprocess.run(["git", "-C", str(repo_root), "archive", "--format=tar", ref],
+                             check=True, capture_output=True).stdout
+    with tempfile.TemporaryDirectory(prefix="vex-cc-src-") as tmp:
+        with tarfile.open(fileobj=io.BytesIO(archive)) as tar:
+            tar.extractall(tmp, filter="data")
+        return write_claude(Path(tmp), out)
+
+
+def claude_command() -> list[str]:
+    return shlex.split(os.environ.get("VEX_CLAUDE", "claude"))
 
 
 def agy_command() -> list[str]:

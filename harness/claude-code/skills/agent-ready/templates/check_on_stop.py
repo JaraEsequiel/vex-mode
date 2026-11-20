@@ -1,9 +1,12 @@
-"""agy Stop hook: when the agent is about to finish with changes that are not pushed (uncommitted, or
+"""Stop hook for agy and Claude Code: when the agent is about to finish with changes that are not pushed (uncommitted, or
 commits no remote has), run the repo's check and, if it fails, send the error back so the agent fixes
 it first.
 
-Lives in <repo>/.agents/ and runs with that folder as cwd:
+Lives in <repo>/.agents/. agy runs it from that folder (`.agents/hooks.json`):
     python3 check_on_stop.py ../scripts/check
+Claude Code runs it from `.claude/settings.json`, with any cwd:
+    python3 "$CLAUDE_PROJECT_DIR/.agents/check_on_stop.py" ../scripts/check
+Relative check paths resolve from this file's folder, so both work.
 
 Prints nothing to let the agent stop: a normal finish with nothing unpushed, a passing check, a
 cancel or error, odd input, or after 3 tries for the same user message. It never raises: a broken
@@ -59,14 +62,18 @@ def _run_check(check: list[str], root: Path) -> tuple[int, str]:
 
 
 def decide(payload: dict, check: list[str], root: Path) -> dict | None:
-    conversation = payload.get("conversationId")
+    # Claude Code sends session_id and prompt_id, and runs Stop only on a normal finish; agy sends
+    # conversationId, lastUserInput and a terminationReason.
+    claude_code = "hook_event_name" in payload and "session_id" in payload
+    conversation = payload.get("session_id" if claude_code else "conversationId")
     if not isinstance(conversation, str) or not conversation:
         return None
-    if payload.get("terminationReason") != "NO_TOOL_CALL":
+    if not claude_code and payload.get("terminationReason") != "NO_TOOL_CALL":
         return None
     if not _has_unpushed_changes(root):
         return None
-    prompt = payload.get("lastUserInput") if isinstance(payload.get("lastUserInput"), str) else ""
+    key = payload.get("prompt_id" if claude_code else "lastUserInput")
+    prompt = key if isinstance(key, str) else ""
     counter = _counter(root, conversation, prompt)
     try:
         used = int(counter.read_text())
@@ -80,7 +87,7 @@ def decide(payload: dict, check: list[str], root: Path) -> dict | None:
     counter.parent.mkdir(parents=True, exist_ok=True)
     counter.write_text(str(used + 1))
     tail = "\n".join(output.strip().splitlines()[-TAIL_LINES:])[-TAIL_CHARS:]
-    return {"decision": "continue", "reason": f"{' '.join(check)} failed (exit {code}); fix it before finishing:\n{tail}"}
+    return {"decision": "block" if claude_code else "continue", "reason": f"{' '.join(check)} failed (exit {code}); fix it before finishing:\n{tail}"}
 
 
 def main(argv: list[str]) -> None:

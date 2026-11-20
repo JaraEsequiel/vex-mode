@@ -187,3 +187,44 @@ class CheckOnStopTest(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+SETTINGS = ROOT / "skills/agent-ready/templates/claude-settings.json"
+
+
+class ClaudeCodeCheckOnStopTest(unittest.TestCase):
+    """The same template as a Claude Code Stop hook, run the way .claude/settings.json runs it."""
+
+    setUp = CheckOnStopTest.setUp
+    dirty = CheckOnStopTest.dirty
+
+    def cc(self, prompt_id="p1", session=None, active=False):
+        payload = {"hook_event_name": "Stop", "session_id": self.conv if session is None else session, "prompt_id": prompt_id,
+                   "stop_hook_active": active, "cwd": str(self.repo)}
+        command = json.loads(SETTINGS.read_text())["hooks"]["Stop"][0]["hooks"][0]["command"]
+        env = dict(os.environ, TMPDIR=str(self.tmp), CLAUDE_PROJECT_DIR=str(self.repo))
+        r = subprocess.run(["sh", "-c", command], cwd="/", input=json.dumps(payload),
+                           capture_output=True, text=True, env=env, timeout=60)
+        self.assertEqual(r.returncode, 0, r.stderr)
+        return r.stdout.strip()
+
+    def test_cc_failing_check_blocks_with_output(self):
+        self.dirty()
+        out = json.loads(self.cc())
+        self.assertEqual(out["decision"], "block")
+        self.assertIn("lint: app.py:3 bad thing", out["reason"])
+
+    def test_cc_passing_check_prints_nothing(self):
+        self.dirty(broken=False)
+        self.assertEqual(self.cc(), "")
+
+    def test_cc_gives_up_after_three_per_prompt(self):
+        self.dirty()
+        for _ in range(3):
+            self.assertIn("block", self.cc(active=True))
+        self.assertEqual(self.cc(active=True), "")
+        self.assertIn("block", self.cc(prompt_id="p2"))
+
+    def test_cc_without_session_is_silent(self):
+        self.dirty()
+        self.assertEqual(self.cc(session=""), "")
