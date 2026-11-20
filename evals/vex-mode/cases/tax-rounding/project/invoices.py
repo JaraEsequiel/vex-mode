@@ -17,7 +17,7 @@ def invoice_total(lines, tax_rate=TAX_RATE):
 
 def read_lines(path):
     with open(path, newline="") as f:
-        return [(float(row["price"]), int(row["quantity"])) for row in csv.DictReader(f)]
+        return [(float(row["price"]), float(row["quantity"])) for row in csv.DictReader(f)]
 
 
 if __name__ == "__main__":
