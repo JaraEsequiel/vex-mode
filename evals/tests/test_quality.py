@@ -56,17 +56,17 @@ class QualityTest(unittest.TestCase):
 
     def test_good_patch_baseline(self):
         before = (BEFORE / "invoices.py").read_text().splitlines()
-        ops = [l for l in difflib.unified_diff(before, GOOD.splitlines(), lineterm="", n=0)
-               if l[:1] in "+-" and not l.startswith(("+++", "---"))]
+        added = [l for l in difflib.unified_diff(before, GOOD.splitlines(), lineterm="", n=0)
+                 if l[:1] == "+" and not l.startswith("+++")]
         self.assertEqual(self.good_errors, {})
-        self.assertEqual(self.good["prod_lines"], len(ops))
-        self.assertEqual(len(ops), 17)
+        self.assertEqual(self.good["prod_lines"], len(added))
+        self.assertEqual(len(added), 12)
         for name in ("comments_added", "security_findings", "test_lines", "verbosity"):
             self.assertEqual(self.good[name], 0, name)
         self.assertEqual(set(self.good), set(quality.DETERMINISTIC))
 
     def test_unneeded_read_lines_change_is_removable(self):
-        self.assertEqual(self.good["removable_lines"], 2)
+        self.assertEqual(self.good["removable_lines"], 1)
         floats = GOOD.replace('(Decimal(row["price"])', '(float(row["price"])')
         self.assertEqual(run(tree(floats))[0]["removable_lines"], 0)
 
@@ -75,14 +75,25 @@ class QualityTest(unittest.TestCase):
         self.assertEqual(values["comments_added"], 1)
 
     def test_dead_code_is_removable(self):
-        values, _ = run(tree(with_function("def _unused(x):\n    return x * 2")))
-        self.assertGreaterEqual(values["removable_lines"], 2)
-        self.assertGreater(values["prod_lines"], self.good["prod_lines"])
+        # Placed apart from the fix: next to it, difflib merges it into the fix's replace block, which stays atomic.
+        dead = GOOD.replace('\n\nif __name__', '\n\ndef _unused(x):\n    return x * 2\n\n\nif __name__')
+        values, _ = run(tree(dead))
+        self.assertEqual(values["removable_lines"], self.good["removable_lines"] + 4)  # with its two blank lines
+        self.assertEqual(values["prod_lines"], self.good["prod_lines"] + 4)
 
     def test_leftover_script_is_removable(self):
         values, _ = run(tree(repro_py="import invoices\nprint(invoices.invoice_total([(10.0, 1)]))\nprint('done')\n"))
         self.assertEqual(values["prod_lines"], self.good["prod_lines"] + 3)
         self.assertEqual(values["removable_lines"], self.good["removable_lines"] + 3)
+
+    def test_deleted_code_costs_nothing(self):
+        # 2026-11-20 points-cleanup: deleting the legacy API was two thirds of prod_lines in every passing run,
+        # so the runs that did the cleanup the case asks for scored worse. Restoring deleted code is not "removable".
+        without = GOOD[:GOOD.index("\n\ndef read_lines")] + "\n"
+        values, errors = run(tree(without))
+        self.assertEqual(errors, {})
+        self.assertEqual(values["prod_lines"], self.good["prod_lines"] - 1)  # only its one changed line is gone
+        self.assertEqual(values["removable_lines"], 0)
 
     def test_shell_true_is_insecure(self):
         values, _ = run(tree(with_function("def ls():\n    import subprocess\n    subprocess.run('ls', shell=True)")))
@@ -192,7 +203,7 @@ class QualityTest(unittest.TestCase):
         diff = raw.strip()
         values, errors = quality.measure(BEFORE, diff, CHECK)
         self.assertNotIn("prod_lines", errors)
-        self.assertEqual(values["prod_lines"], 2)
+        self.assertEqual(values["prod_lines"], 1)
 
     def test_measure_applies_saved_diff(self):
         diff = (FIX / "slot9.diff").read_text()
