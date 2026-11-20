@@ -232,6 +232,19 @@ class StatsTest(unittest.TestCase):
         self.assertEqual(stats.signal(a, stats.summarize([0.0, 0.0, 0.0])), "worse")
         self.assertEqual(stats.signal(a, stats.summarize([0.0, 1.0, 1.0])), "noise")
 
+    def test_fisher_one_sided_p(self):
+        self.assertAlmostEqual(stats.fisher_p([0, 0, 0], [1, 1, 1]), 0.05)
+        self.assertAlmostEqual(stats.fisher_p([1, 0, 0], [1, 1, 1]), 0.2)
+        self.assertEqual(stats.fisher_p([1, 1], [1, 1]), 1.0)
+
+    def test_outcome_signal_tests_pass_fail_counts(self):
+        # 2026-11-20 points-cleanup: 10/10 against 4/10 is a real gap the spread rule called noise.
+        plugin, bare = [1] * 10, [1] * 4 + [0] * 6
+        self.assertEqual(stats.outcome_signal(bare, plugin), ("better", 0.005))
+        self.assertEqual(stats.outcome_signal(plugin, bare), ("worse", 0.005))
+        self.assertEqual(stats.outcome_signal([1, 0, 0], [1, 1, 1]), ("noise", 0.2))
+        self.assertEqual(stats.outcome_signal([1, 1, 1], [1, 1, 1]), ("noise", 1.0))
+
 
 if __name__ == "__main__":
     unittest.main()
