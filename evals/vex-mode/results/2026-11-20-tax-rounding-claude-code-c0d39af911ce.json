@@ -1,0 +1,458 @@
+{
+  "kind": "eval",
+  "skill": "vex-mode",
+  "tree_sha256": "c0d39af911cea80408106fc20f443bb7e947382c142310e0b5a72741832a33e5",
+  "date": "2026-11-20",
+  "case": "tax-rounding",
+  "harness": "claude-code",
+  "run_dir": "/home/vex/.cache/vex-mode/runs/20261120-003232-291568",
+  "arms": {
+    "A": {
+      "model": "claude-sonnet-5-5",
+      "plugin_ref": "26292cff8fa6c4e6592e1c61e317248ea232f9f7",
+      "tree_sha256": "c8e9083ef54b4fd5a1da423d7f7b298969b3ee12d679942544641dcb352017b4",
+      "runs": [
+        {
+          "slot": 7,
+          "status": "SUCCESS",
+          "invalid": null,
+          "outcome": 0,
+          "compliance": 0.75,
+          "tokens": 268823,
+          "duration_s": 25.598,
+          "reads": 9,
+          "commands": 6,
+          "cost_usd": 0.1540476,
+          "label": "R8"
+        },
+        {
+          "slot": 4,
+          "status": "SUCCESS",
+          "invalid": null,
+          "outcome": 1,
+          "compliance": 0.5,
+          "tokens": 226270,
+          "duration_s": 20.016,
+          "reads": 7,
+          "commands": 5,
+          "cost_usd": 0.1377587,
+          "label": "R1",
+          "quality": {
+            "prod_lines": 7,
+            "test_lines": 0,
+            "removable_lines": 0,
+            "complexity_delta": 0.4721359549995796,
+            "verbosity": 0.0,
+            "comments_added": 1,
+            "docstrings_added": 0,
+            "security_findings": 0,
+            "judge_reuse": 1.0,
+            "judge_simplicity": 1.0,
+            "judge_contract": 0.0
+          },
+          "quality_errors": {}
+        },
+        {
+          "slot": 3,
+          "status": "SUCCESS",
+          "invalid": null,
+          "outcome": 0,
+          "compliance": 0.75,
+          "tokens": 291850,
+          "duration_s": 30.439,
+          "reads": 5,
+          "commands": 7,
+          "cost_usd": 0.157416,
+          "label": "R4"
+        }
+      ]
+    },
+    "B": {
+      "model": "claude-sonnet-5-5",
+      "plugin_ref": "f955c239d3ee39a041221e9fc36a42bfe8ec1ec4",
+      "tree_sha256": "c0d39af911cea80408106fc20f443bb7e947382c142310e0b5a72741832a33e5",
+      "runs": [
+        {
+          "slot": 9,
+          "status": "SUCCESS",
+          "invalid": null,
+          "outcome": 1,
+          "compliance": 0.5,
+          "tokens": 256434,
+          "duration_s": 22.505,
+          "reads": 5,
+          "commands": 6,
+          "cost_usd": 0.13991699999999999,
+          "label": "R2",
+          "quality": {
+            "prod_lines": 7,
+            "test_lines": 15,
+            "removable_lines": 0,
+            "complexity_delta": 0.4721359549995796,
+            "verbosity": 0.0,
+            "comments_added": 1,
+            "docstrings_added": 0,
+            "security_findings": 0,
+            "judge_reuse": 1.0,
+            "judge_simplicity": 1.0,
+            "judge_contract": 0.0
+          },
+          "quality_errors": {}
+        },
+        {
+          "slot": 5,
+          "status": "SUCCESS",
+          "invalid": null,
+          "outcome": 0,
+          "compliance": 0.75,
+          "tokens": 257824,
+          "duration_s": 22.921,
+          "reads": 5,
+          "commands": 6,
+          "cost_usd": 0.14107120000000004,
+          "label": "R5"
+        },
+        {
+          "slot": 1,
+          "status": "SUCCESS",
+          "invalid": null,
+          "outcome": 0,
+          "compliance": 0.75,
+          "tokens": 222968,
+          "duration_s": 22.022,
+          "reads": 5,
+          "commands": 5,
+          "cost_usd": 0.1347495,
+          "label": "R3"
+        }
+      ]
+    },
+    "C": {
+      "model": "claude-opus-5-5",
+      "plugin_ref": "26292cff8fa6c4e6592e1c61e317248ea232f9f7",
+      "tree_sha256": "c8e9083ef54b4fd5a1da423d7f7b298969b3ee12d679942544641dcb352017b4",
+      "runs": [
+        {
+          "slot": 8,
+          "status": "SUCCESS",
+          "invalid": null,
+          "outcome": 0,
+          "compliance": 0.75,
+          "tokens": 292986,
+          "duration_s": 52.737,
+          "reads": 5,
+          "commands": 7,
+          "cost_usd": 0.32969740000000003,
+          "label": "R6"
+        },
+        {
+          "slot": 6,
+          "status": "SUCCESS",
+          "invalid": null,
+          "outcome": 0,
+          "compliance": 0.75,
+          "tokens": 451373,
+          "duration_s": 73.144,
+          "reads": 14,
+          "commands": 9,
+          "cost_usd": 0.4468508,
+          "label": "R7"
+        },
+        {
+          "slot": 2,
+          "status": "SUCCESS",
+          "invalid": null,
+          "outcome": 0,
+          "compliance": 0.75,
+          "tokens": 449539,
+          "duration_s": 67.33,
+          "reads": 14,
+          "commands": 9,
+          "cost_usd": 0.4426577999999999,
+          "label": "R9"
+        }
+      ]
+    }
+  },
+  "judge": {
+    "provider": "openai",
+    "model": "gpt-6.2-sol",
+    "effort": "medium",
+    "error": null,
+    "usage": {
+      "input": 13683,
+      "output": 2485,
+      "reasoning": 321
+    }
+  },
+  "quality": {
+    "enabled": true,
+    "errors": [],
+    "judge_usage": {
+      "input": 10116,
+      "output": 1300,
+      "reasoning": 117
+    }
+  },
+  "metrics": {
+    "A": {
+      "compliance": {
+        "mean": 0.6666666666666666,
+        "min": 0.5,
+        "max": 0.75,
+        "spread": 0.25
+      },
+      "outcome": {
+        "mean": 0.3333333333333333,
+        "min": 0.0,
+        "max": 1.0,
+        "spread": 1.0
+      },
+      "tokens": {
+        "mean": 262314.3333333333,
+        "min": 226270.0,
+        "max": 291850.0,
+        "spread": 65580.0
+      },
+      "duration_s": {
+        "mean": 25.351,
+        "min": 20.016,
+        "max": 30.439,
+        "spread": 10.423000000000002
+      },
+      "prod_lines": {
+        "mean": 7.0,
+        "min": 7.0,
+        "max": 7.0,
+        "spread": 0.0
+      },
+      "removable_lines": {
+        "mean": 0.0,
+        "min": 0.0,
+        "max": 0.0,
+        "spread": 0.0
+      },
+      "complexity_delta": {
+        "mean": 0.4721359549995796,
+        "min": 0.4721359549995796,
+        "max": 0.4721359549995796,
+        "spread": 0.0
+      },
+      "verbosity": {
+        "mean": 0.0,
+        "min": 0.0,
+        "max": 0.0,
+        "spread": 0.0
+      },
+      "comments_added": {
+        "mean": 1.0,
+        "min": 1.0,
+        "max": 1.0,
+        "spread": 0.0
+      },
+      "security_findings": {
+        "mean": 0.0,
+        "min": 0.0,
+        "max": 0.0,
+        "spread": 0.0
+      },
+      "judge_reuse": {
+        "mean": 1.0,
+        "min": 1.0,
+        "max": 1.0,
+        "spread": 0.0
+      },
+      "judge_simplicity": {
+        "mean": 1.0,
+        "min": 1.0,
+        "max": 1.0,
+        "spread": 0.0
+      },
+      "judge_contract": {
+        "mean": 0.0,
+        "min": 0.0,
+        "max": 0.0,
+        "spread": 0.0
+      },
+      "test_lines": {
+        "mean": 0.0,
+        "min": 0.0,
+        "max": 0.0,
+        "spread": 0.0
+      },
+      "docstrings_added": {
+        "mean": 0.0,
+        "min": 0.0,
+        "max": 0.0,
+        "spread": 0.0
+      }
+    },
+    "B": {
+      "compliance": {
+        "mean": 0.6666666666666666,
+        "min": 0.5,
+        "max": 0.75,
+        "spread": 0.25
+      },
+      "outcome": {
+        "mean": 0.3333333333333333,
+        "min": 0.0,
+        "max": 1.0,
+        "spread": 1.0
+      },
+      "tokens": {
+        "mean": 245742.0,
+        "min": 222968.0,
+        "max": 257824.0,
+        "spread": 34856.0
+      },
+      "duration_s": {
+        "mean": 22.482666666666663,
+        "min": 22.022,
+        "max": 22.921,
+        "spread": 0.8990000000000009
+      },
+      "prod_lines": {
+        "mean": 7.0,
+        "min": 7.0,
+        "max": 7.0,
+        "spread": 0.0
+      },
+      "removable_lines": {
+        "mean": 0.0,
+        "min": 0.0,
+        "max": 0.0,
+        "spread": 0.0
+      },
+      "complexity_delta": {
+        "mean": 0.4721359549995796,
+        "min": 0.4721359549995796,
+        "max": 0.4721359549995796,
+        "spread": 0.0
+      },
+      "verbosity": {
+        "mean": 0.0,
+        "min": 0.0,
+        "max": 0.0,
+        "spread": 0.0
+      },
+      "comments_added": {
+        "mean": 1.0,
+        "min": 1.0,
+        "max": 1.0,
+        "spread": 0.0
+      },
+      "security_findings": {
+        "mean": 0.0,
+        "min": 0.0,
+        "max": 0.0,
+        "spread": 0.0
+      },
+      "judge_reuse": {
+        "mean": 1.0,
+        "min": 1.0,
+        "max": 1.0,
+        "spread": 0.0
+      },
+      "judge_simplicity": {
+        "mean": 1.0,
+        "min": 1.0,
+        "max": 1.0,
+        "spread": 0.0
+      },
+      "judge_contract": {
+        "mean": 0.0,
+        "min": 0.0,
+        "max": 0.0,
+        "spread": 0.0
+      },
+      "test_lines": {
+        "mean": 15.0,
+        "min": 15.0,
+        "max": 15.0,
+        "spread": 0.0
+      },
+      "docstrings_added": {
+        "mean": 0.0,
+        "min": 0.0,
+        "max": 0.0,
+        "spread": 0.0
+      }
+    },
+    "C": {
+      "compliance": {
+        "mean": 0.75,
+        "min": 0.75,
+        "max": 0.75,
+        "spread": 0.0
+      },
+      "outcome": {
+        "mean": 0.0,
+        "min": 0.0,
+        "max": 0.0,
+        "spread": 0.0
+      },
+      "tokens": {
+        "mean": 397966.0,
+        "min": 292986.0,
+        "max": 451373.0,
+        "spread": 158387.0
+      },
+      "duration_s": {
+        "mean": 64.40366666666667,
+        "min": 52.737,
+        "max": 73.144,
+        "spread": 20.407000000000004
+      },
+      "prod_lines": null,
+      "removable_lines": null,
+      "complexity_delta": null,
+      "verbosity": null,
+      "comments_added": null,
+      "security_findings": null,
+      "judge_reuse": null,
+      "judge_simplicity": null,
+      "judge_contract": null,
+      "test_lines": null,
+      "docstrings_added": null
+    }
+  },
+  "signals": {
+    "B_vs_A": {
+      "compliance": "noise",
+      "outcome": "noise",
+      "tokens": "noise",
+      "duration_s": "noise",
+      "prod_lines": "few",
+      "removable_lines": "few",
+      "complexity_delta": "few",
+      "verbosity": "few",
+      "comments_added": "few",
+      "security_findings": "few",
+      "judge_reuse": "few",
+      "judge_simplicity": "few",
+      "judge_contract": "few",
+      "test_lines": "few",
+      "docstrings_added": "few"
+    },
+    "C_vs_A": {
+      "compliance": "noise",
+      "outcome": "noise",
+      "tokens": "noise",
+      "duration_s": "worse",
+      "prod_lines": "few",
+      "removable_lines": "few",
+      "complexity_delta": "few",
+      "verbosity": "few",
+      "comments_added": "few",
+      "security_findings": "few",
+      "judge_reuse": "few",
+      "judge_simplicity": "few",
+      "judge_contract": "few",
+      "test_lines": "few",
+      "docstrings_added": "few"
+    }
+  },
+  "verdict": "promote",
+  "synthesis": "First run on Claude Code (sonnet A/B, opus C; 9/9 valid, ~US$2.08). B vs A is flat: outcome 1/3 vs 1/3, compliance 0.67 vs 0.67, tokens -6% and duration equal (noise). B never opened the five added files (all three B runs read the same 5: adapter, worker, bug-fix, fix-root-causes, prove-it-works), so the longer read-first list costs nothing here and also has no effect on a bug fix; the refactoring playbook's benefit needs the planned refactoring case. Failures are one shape in all arms, opus included (C 0/3): price to Decimal, quantity left float, so Decimal*1.5 raises; the judge also fails the two check-passing runs for keeping float math in line_total, which the hidden check misses. Criterion 1 fails in all 9 because the reply graded is the one after the Stop gate, which opens with evidence: a harness artifact, equal across arms. Promote: not worse on any measure."
+}

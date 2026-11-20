@@ -1,0 +1,7 @@
+{
+  "kind": "waiver",
+  "skill": "principle-redesign-from-first-principles",
+  "tree_sha256": "35475e34eb0404b9c0cfa65098f56cc7c75f9e5783804682383c4546f00e7ebb",
+  "date": "2026-11-19",
+  "reason": "Vendored unchanged from pstack@0b46ec3. Named by refactoring step 3 and the router's Core list; read only when named. No case invokes it on its own; the vex-mode tax-rounding eval in this PR measures the cost of the larger read-first list."
+}

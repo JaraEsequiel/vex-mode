@@ -1,0 +1,7 @@
+{
+  "kind": "waiver",
+  "skill": "principle-migrate-callers-then-delete-legacy-apis",
+  "tree_sha256": "3772dcf064d4e72aee79b320f0922b4135e3122a123c0e6d9d76097c43cbe98a",
+  "date": "2026-11-19",
+  "reason": "Vendored unchanged from pstack@0b46ec3, as upstream ships it: pstack#634 cut its rule on purpose (token savings, no eval cited); refactoring step 5 states the rule in full. Restore the e8d856f text only if a refactoring eval shows agents keeping shims."
+}
