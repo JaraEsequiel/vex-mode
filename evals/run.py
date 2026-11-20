@@ -403,6 +403,9 @@ def run_eval(repo: Path, skill: str, case: str, base: str | None = None,
               for arm in arm_list if arm.plugin_ref}
     trees = {arm.label: skill_tree_sha256(builds[arm.label] / "skills" / skill) if arm.plugin_ref else None
              for arm in arm_list}
+    if not calibrate and trees["A"] == trees["B"]:
+        raise EvalError(f"base {base} and variant {variant} have the same skill tree for {skill}, so there is nothing "
+                        f"to measure; pass --base with a commit from before the change")
     # Outside the eval cache (a forbidden root) so an arm may read its own plugin files.
     cc_trees = {arm.label: build_plugin.build_claude(repo, _cache() / "vex-cc" / stamp / arm.label, arm.plugin_ref)
                 for arm in arm_list if arm.plugin_ref} if claude else {}

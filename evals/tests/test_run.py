@@ -89,6 +89,12 @@ class RunTest(unittest.TestCase):
     def installed(self) -> str:
         return (self.plugins / "vex-mode/skills/x/SKILL.md").read_text()
 
+    def test_refuses_when_base_and_variant_are_the_same_skill(self):
+        # 2026-11-20 points-cleanup: no --base, the merge base already had the change, A and B were one plugin.
+        with self.assertRaisesRegex(run.EvalError, "same skill tree"):
+            run.run_eval(self.repo, "x", "c1", base="main", variant="main")
+        self.assertFalse((self.repo / "evals/x/results").exists())
+
     def test_end_to_end_with_fake_agy(self):
         path = self.run_eval()
         result = json.loads(path.read_text())
