@@ -1,0 +1,378 @@
+{
+  "kind": "eval",
+  "skill": "vex-mode",
+  "tree_sha256": "c0d39af911cea80408106fc20f443bb7e947382c142310e0b5a72741832a33e5",
+  "date": "2026-11-20",
+  "case": "shipping-cleanup",
+  "harness": "claude-code",
+  "run_dir": "/home/vex/.cache/vex-mode/runs/20261120-015215-070086",
+  "arms": {
+    "A": {
+      "model": "claude-sonnet-5-5",
+      "plugin_ref": "6b50812e847bf3c552caf304d0e8d61ef9dce28d",
+      "tree_sha256": "c8e9083ef54b4fd5a1da423d7f7b298969b3ee12d679942544641dcb352017b4",
+      "runs": [
+        {
+          "slot": 11,
+          "status": "SUCCESS",
+          "invalid": null,
+          "outcome": 1,
+          "compliance": 1.0,
+          "tokens": 193439,
+          "duration_s": 25.864,
+          "reads": 6,
+          "commands": 4,
+          "cost_usd": 0.1388773,
+          "label": "R12"
+        },
+        {
+          "slot": 6,
+          "status": "SUCCESS",
+          "invalid": null,
+          "outcome": 1,
+          "compliance": 1.0,
+          "tokens": 265377,
+          "duration_s": 41.435,
+          "reads": 6,
+          "commands": 6,
+          "cost_usd": 0.16078770000000003,
+          "label": "R2"
+        },
+        {
+          "slot": 4,
+          "status": "SUCCESS",
+          "invalid": null,
+          "outcome": 1,
+          "compliance": 1.0,
+          "tokens": 192743,
+          "duration_s": 32.36,
+          "reads": 6,
+          "commands": 4,
+          "cost_usd": 0.141091,
+          "label": "R10"
+        },
+        {
+          "slot": 15,
+          "status": "SUCCESS",
+          "invalid": null,
+          "outcome": 1,
+          "compliance": 1.0,
+          "tokens": 186513,
+          "duration_s": 25.33,
+          "reads": 0,
+          "commands": 4,
+          "cost_usd": 0.1298808,
+          "label": "R8"
+        },
+        {
+          "slot": 18,
+          "status": "SUCCESS",
+          "invalid": null,
+          "outcome": 1,
+          "compliance": 0.8,
+          "tokens": 193691,
+          "duration_s": 30.06,
+          "reads": 6,
+          "commands": 4,
+          "cost_usd": 0.14111410000000002,
+          "label": "R5"
+        },
+        {
+          "slot": 17,
+          "status": "SUCCESS",
+          "invalid": null,
+          "outcome": 1,
+          "compliance": 1.0,
+          "tokens": 227377,
+          "duration_s": 29.728,
+          "reads": 6,
+          "commands": 5,
+          "cost_usd": 0.1452803,
+          "label": "R15"
+        }
+      ]
+    },
+    "B": {
+      "model": "claude-sonnet-5-5",
+      "plugin_ref": "b2bffee3be2f13926563eff0ea8407ae2f9aa357",
+      "tree_sha256": "c0d39af911cea80408106fc20f443bb7e947382c142310e0b5a72741832a33e5",
+      "runs": [
+        {
+          "slot": 10,
+          "status": "SUCCESS",
+          "invalid": null,
+          "outcome": 1,
+          "compliance": 0.8,
+          "tokens": 225616,
+          "duration_s": 29.522,
+          "reads": 0,
+          "commands": 5,
+          "cost_usd": 0.13968840000000002,
+          "label": "R18"
+        },
+        {
+          "slot": 14,
+          "status": "SUCCESS",
+          "invalid": null,
+          "outcome": 1,
+          "compliance": 1.0,
+          "tokens": 227448,
+          "duration_s": 29.21,
+          "reads": 3,
+          "commands": 5,
+          "cost_usd": 0.1435966,
+          "label": "R3"
+        },
+        {
+          "slot": 8,
+          "status": "SUCCESS",
+          "invalid": null,
+          "outcome": 1,
+          "compliance": 1.0,
+          "tokens": 230795,
+          "duration_s": 35.39,
+          "reads": 5,
+          "commands": 5,
+          "cost_usd": 0.15146579999999998,
+          "label": "R1"
+        },
+        {
+          "slot": 13,
+          "status": "SUCCESS",
+          "invalid": null,
+          "outcome": 1,
+          "compliance": 1.0,
+          "tokens": 236265,
+          "duration_s": 42.502,
+          "reads": 6,
+          "commands": 5,
+          "cost_usd": 0.1623394,
+          "label": "R16"
+        },
+        {
+          "slot": 1,
+          "status": "SUCCESS",
+          "invalid": null,
+          "outcome": 1,
+          "compliance": 1.0,
+          "tokens": 230880,
+          "duration_s": 33.204,
+          "reads": 5,
+          "commands": 5,
+          "cost_usd": 0.1486159,
+          "label": "R14"
+        },
+        {
+          "slot": 9,
+          "status": "SUCCESS",
+          "invalid": null,
+          "outcome": 1,
+          "compliance": 1.0,
+          "tokens": 230552,
+          "duration_s": 33.633,
+          "reads": 5,
+          "commands": 5,
+          "cost_usd": 0.1463805,
+          "label": "R17"
+        }
+      ]
+    },
+    "C": {
+      "model": "claude-opus-5-5",
+      "plugin_ref": "6b50812e847bf3c552caf304d0e8d61ef9dce28d",
+      "tree_sha256": "c8e9083ef54b4fd5a1da423d7f7b298969b3ee12d679942544641dcb352017b4",
+      "runs": [
+        {
+          "slot": 5,
+          "status": "SUCCESS",
+          "invalid": null,
+          "outcome": 1,
+          "compliance": 1.0,
+          "tokens": 337721,
+          "duration_s": 87.371,
+          "reads": 0,
+          "commands": 8,
+          "cost_usd": 0.43131980000000003,
+          "label": "R6"
+        },
+        {
+          "slot": 2,
+          "status": "SUCCESS",
+          "invalid": null,
+          "outcome": 1,
+          "compliance": 1.0,
+          "tokens": 413609,
+          "duration_s": 85.463,
+          "reads": 0,
+          "commands": 10,
+          "cost_usd": 0.44393740000000004,
+          "label": "R7"
+        },
+        {
+          "slot": 7,
+          "status": "SUCCESS",
+          "invalid": null,
+          "outcome": 1,
+          "compliance": 1.0,
+          "tokens": 300098,
+          "duration_s": 74.809,
+          "reads": 0,
+          "commands": 6,
+          "cost_usd": 0.40815519999999994,
+          "label": "R11"
+        },
+        {
+          "slot": 3,
+          "status": "SUCCESS",
+          "invalid": null,
+          "outcome": 1,
+          "compliance": 1.0,
+          "tokens": 346541,
+          "duration_s": 85.505,
+          "reads": 0,
+          "commands": 8,
+          "cost_usd": 0.44969359999999997,
+          "label": "R9"
+        },
+        {
+          "slot": 16,
+          "status": "SUCCESS",
+          "invalid": null,
+          "outcome": 1,
+          "compliance": 1.0,
+          "tokens": 306044,
+          "duration_s": 100.386,
+          "reads": 0,
+          "commands": 8,
+          "cost_usd": 0.42430360000000006,
+          "label": "R4"
+        },
+        {
+          "slot": 12,
+          "status": "SUCCESS",
+          "invalid": null,
+          "outcome": 1,
+          "compliance": 0.8,
+          "tokens": 431147,
+          "duration_s": 126.549,
+          "reads": 0,
+          "commands": 9,
+          "cost_usd": 0.4946776,
+          "label": "R13"
+        }
+      ]
+    }
+  },
+  "judge": {
+    "provider": "openai",
+    "model": "gpt-6.2-sol",
+    "effort": "medium",
+    "error": null,
+    "usage": {
+      "input": 53248,
+      "output": 4670,
+      "reasoning": 597
+    }
+  },
+  "quality": {
+    "enabled": false,
+    "errors": [],
+    "judge_usage": {}
+  },
+  "metrics": {
+    "A": {
+      "compliance": {
+        "mean": 0.9666666666666667,
+        "min": 0.8,
+        "max": 1.0,
+        "spread": 0.19999999999999996
+      },
+      "outcome": {
+        "mean": 1.0,
+        "min": 1.0,
+        "max": 1.0,
+        "spread": 0.0
+      },
+      "tokens": {
+        "mean": 209856.66666666666,
+        "min": 186513.0,
+        "max": 265377.0,
+        "spread": 78864.0
+      },
+      "duration_s": {
+        "mean": 30.796166666666664,
+        "min": 25.33,
+        "max": 41.435,
+        "spread": 16.105000000000004
+      }
+    },
+    "B": {
+      "compliance": {
+        "mean": 0.9666666666666667,
+        "min": 0.8,
+        "max": 1.0,
+        "spread": 0.19999999999999996
+      },
+      "outcome": {
+        "mean": 1.0,
+        "min": 1.0,
+        "max": 1.0,
+        "spread": 0.0
+      },
+      "tokens": {
+        "mean": 230259.33333333334,
+        "min": 225616.0,
+        "max": 236265.0,
+        "spread": 10649.0
+      },
+      "duration_s": {
+        "mean": 33.91016666666667,
+        "min": 29.21,
+        "max": 42.502,
+        "spread": 13.292000000000002
+      }
+    },
+    "C": {
+      "compliance": {
+        "mean": 0.9666666666666667,
+        "min": 0.8,
+        "max": 1.0,
+        "spread": 0.19999999999999996
+      },
+      "outcome": {
+        "mean": 1.0,
+        "min": 1.0,
+        "max": 1.0,
+        "spread": 0.0
+      },
+      "tokens": {
+        "mean": 355860.0,
+        "min": 300098.0,
+        "max": 431147.0,
+        "spread": 131049.0
+      },
+      "duration_s": {
+        "mean": 93.34716666666667,
+        "min": 74.809,
+        "max": 126.549,
+        "spread": 51.74000000000001
+      }
+    }
+  },
+  "signals": {
+    "B_vs_A": {
+      "compliance": "noise",
+      "outcome": "noise",
+      "tokens": "noise",
+      "duration_s": "noise"
+    },
+    "C_vs_A": {
+      "compliance": "noise",
+      "outcome": "noise",
+      "tokens": "worse",
+      "duration_s": "worse"
+    }
+  },
+  "verdict": "inconclusive",
+  "synthesis": "Ceiling: all 18 runs pass the hidden check and every rubric criterion except one late mention of unchanged output per arm (compliance 0.967 on A, B and C). The refactoring playbook (B) changes nothing measurable here; Opus (C) costs 1.7x the tokens and 3x the time for the same result. Rejudged after fixing rubric criterion 3, which had failed 9 runs for keeping calc_shipping instead of shipping_cost although the prompt names neither. The case is too easy for Sonnet to measure the playbook."
+}
