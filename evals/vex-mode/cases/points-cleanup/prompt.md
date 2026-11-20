@@ -1,0 +1,1 @@
+/vex-mode Loyalty points are computed two different ways in points.py, plus a small helper that wraps one of them, and every rule change has to be made twice. Clean it up so there is one way to compute points. Every command in the README must keep printing exactly what it prints today.

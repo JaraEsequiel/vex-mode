@@ -2,6 +2,7 @@ import json
 import re
 import os
 import subprocess
+import shutil
 import sys
 import tempfile
 import unittest
@@ -87,6 +88,12 @@ class RunTest(unittest.TestCase):
 
     def installed(self) -> str:
         return (self.plugins / "vex-mode/skills/x/SKILL.md").read_text()
+
+    def test_refuses_when_base_and_variant_are_the_same_skill(self):
+        # 2026-11-20 points-cleanup: no --base, the merge base already had the change, A and B were one plugin.
+        with self.assertRaisesRegex(run.EvalError, "same skill tree"):
+            run.run_eval(self.repo, "x", "c1", base="main", variant="main")
+        self.assertFalse((self.repo / "evals/x/results").exists())
 
     def test_end_to_end_with_fake_agy(self):
         path = self.run_eval()
@@ -280,6 +287,22 @@ class RunTest(unittest.TestCase):
         self.assertTrue(all(line == "ledger-app" for line in listings), listings)
         self.assertEqual(list((self.cache / "vex-work").glob("*")), [])
         self.assertTrue(list((Path(result["run_dir"]) / "diffs").glob("*.diff")))
+
+    def test_a_branch_change_mid_eval_does_not_reach_the_runs(self):
+        # 2026-11-20: switching branches during an eval removed cases/<case>/, and check.py is read on every run.
+        real = run._fresh_workdir
+
+        def fresh_then_switch(project, work):
+            real(project, work)
+            shutil.rmtree(self.repo / "evals/x/cases/c1", ignore_errors=True)
+
+        run._fresh_workdir = fresh_then_switch
+        try:
+            result = json.loads(self.run_eval().read_text())
+        finally:
+            run._fresh_workdir = real
+        self.assertTrue(all(r["outcome"] == 1 for arm in "ABC" for r in result["arms"][arm]["runs"]))
+        self.assertTrue((Path(result["run_dir"]) / "case/check.py").is_file())
 
     def test_rejudge_uses_saved_diffs(self):
         path = self.run_eval()

@@ -202,6 +202,20 @@ class IsolationFalsePositiveTest(unittest.TestCase):
         self.assertEqual(self.check("cd \"$(git rev-parse --show-toplevel)\" && cat skills/x/SKILL.md"), [])
         self.assertTrue(self.check("cd \"$(pwd)\" && cat /cache/vex-work/cd34/habit-tracker/habits.py"))
 
+    def test_unbalanced_quotes_still_split_on_separators(self):
+        # 2026-11-20 points-cleanup slot 2: a heredoc with an apostrophe made shlex fail, and the fallback
+        # kept "habit-tracker;" as one token, which is not the workdir.
+        cmd = "cd /cache/vex-work/ab12/habit-tracker; cat > a.py <<'E'\nx = 'it''s\nE\ngit rm -q b.json"
+        self.assertEqual(self.check(cmd), [])
+        self.assertTrue(self.check("cd /cache/vex-work/ab12/habit-tracker; echo it's; cat ../../cd34/habit-tracker/a.py"))
+
+    def test_paths_inside_the_own_workdir_are_never_a_skill_copy(self):
+        # 2026-11-20 points-cleanup slot 6: a for-list of arm-relative names, read through $C/$f.
+        cmd = ("C=/plug/vex-mode; for f in skills/vex-mode/worker.md skills/vex-mode/playbooks/bug-fix.md; "
+               "do cat $C/$f; done")
+        self.assertEqual(self.check(cmd), [])
+        self.assertTrue(self.check("cat /elsewhere/skills/vex-mode/worker.md"))
+
     def test_other_workdir_and_markers_still_flagged(self):
         for cmd in ("cat /cache/vex-work/cd34/habit-tracker/habits.py", "ls ../../", "cat ~/.cache/vex-mode/runs/x"):
             self.assertTrue(self.check(cmd), cmd)

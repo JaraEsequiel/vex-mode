@@ -1,0 +1,261 @@
+{
+  "kind": "eval",
+  "skill": "vex-mode",
+  "tree_sha256": "c0d39af911cea80408106fc20f443bb7e947382c142310e0b5a72741832a33e5",
+  "date": "2026-11-20",
+  "case": "points-cleanup",
+  "harness": "claude-code",
+  "run_dir": "/home/vex/.cache/vex-mode/runs/20261120-100223-436573",
+  "arms": {
+    "A": {
+      "model": "claude-sonnet-5-5",
+      "plugin_ref": "6b50812e847bf3c552caf304d0e8d61ef9dce28d",
+      "tree_sha256": "c8e9083ef54b4fd5a1da423d7f7b298969b3ee12d679942544641dcb352017b4",
+      "runs": [
+        {
+          "slot": 2,
+          "status": "SUCCESS",
+          "invalid": null,
+          "outcome": 1,
+          "compliance": 1.0,
+          "tokens": 235050,
+          "duration_s": 28.884,
+          "reads": 5,
+          "commands": 5,
+          "cost_usd": 0.1609117,
+          "label": "R3"
+        },
+        {
+          "slot": 1,
+          "status": "SUCCESS",
+          "invalid": null,
+          "outcome": 1,
+          "compliance": 1.0,
+          "tokens": 274465,
+          "duration_s": 34.656,
+          "reads": 5,
+          "commands": 6,
+          "cost_usd": 0.1742918,
+          "label": "R4"
+        },
+        {
+          "slot": 9,
+          "status": "SUCCESS",
+          "invalid": null,
+          "outcome": 1,
+          "compliance": 0.8,
+          "tokens": 319931,
+          "duration_s": 44.968,
+          "reads": 6,
+          "commands": 7,
+          "cost_usd": 0.20236,
+          "label": "R9"
+        }
+      ]
+    },
+    "B": {
+      "model": "claude-sonnet-5-5",
+      "plugin_ref": "b6d3370712de30b0da22f2d2c1d03418f0bfb3d9",
+      "tree_sha256": "c0d39af911cea80408106fc20f443bb7e947382c142310e0b5a72741832a33e5",
+      "runs": [
+        {
+          "slot": 7,
+          "status": "SUCCESS",
+          "invalid": null,
+          "outcome": 1,
+          "compliance": 1.0,
+          "tokens": 259980,
+          "duration_s": 30.396,
+          "reads": 1,
+          "commands": 6,
+          "cost_usd": 0.1579003,
+          "label": "R7"
+        },
+        {
+          "slot": 5,
+          "status": "SUCCESS",
+          "invalid": null,
+          "outcome": 1,
+          "compliance": 0.6,
+          "tokens": 218219,
+          "duration_s": 26.255,
+          "reads": 0,
+          "commands": 5,
+          "cost_usd": 0.14184159999999998,
+          "label": "R8"
+        },
+        {
+          "slot": 4,
+          "status": "SUCCESS",
+          "invalid": null,
+          "outcome": 1,
+          "compliance": 0.8,
+          "tokens": 275619,
+          "duration_s": 39.543,
+          "reads": 4,
+          "commands": 6,
+          "cost_usd": 0.17227109999999998,
+          "label": "R5"
+        }
+      ]
+    },
+    "C": {
+      "model": "claude-opus-5-5",
+      "plugin_ref": "6b50812e847bf3c552caf304d0e8d61ef9dce28d",
+      "tree_sha256": "c8e9083ef54b4fd5a1da423d7f7b298969b3ee12d679942544641dcb352017b4",
+      "runs": [
+        {
+          "slot": 8,
+          "status": "SUCCESS",
+          "invalid": null,
+          "outcome": 1,
+          "compliance": 1.0,
+          "tokens": 397949,
+          "duration_s": 78.181,
+          "reads": 0,
+          "commands": 9,
+          "cost_usd": 0.49682339999999997,
+          "label": "R6"
+        },
+        {
+          "slot": 6,
+          "status": "SUCCESS",
+          "invalid": null,
+          "outcome": 1,
+          "compliance": 1.0,
+          "tokens": 443947,
+          "duration_s": 92.383,
+          "reads": 0,
+          "commands": 10,
+          "cost_usd": 0.5321005999999999,
+          "label": "R2"
+        },
+        {
+          "slot": 3,
+          "status": "SUCCESS",
+          "invalid": null,
+          "outcome": 1,
+          "compliance": 0.8,
+          "tokens": 319285,
+          "duration_s": 76.071,
+          "reads": 4,
+          "commands": 7,
+          "cost_usd": 0.4345308,
+          "label": "R1"
+        }
+      ]
+    }
+  },
+  "judge": {
+    "provider": "openai",
+    "model": "gpt-6.2-sol",
+    "effort": "medium",
+    "error": null,
+    "usage": {
+      "input": 34884,
+      "output": 3367,
+      "reasoning": 934
+    }
+  },
+  "quality": {
+    "enabled": false,
+    "errors": [],
+    "judge_usage": {}
+  },
+  "metrics": {
+    "A": {
+      "compliance": {
+        "mean": 0.9333333333333332,
+        "min": 0.8,
+        "max": 1.0,
+        "spread": 0.19999999999999996
+      },
+      "outcome": {
+        "mean": 1.0,
+        "min": 1.0,
+        "max": 1.0,
+        "spread": 0.0
+      },
+      "tokens": {
+        "mean": 276482.0,
+        "min": 235050.0,
+        "max": 319931.0,
+        "spread": 84881.0
+      },
+      "duration_s": {
+        "mean": 36.169333333333334,
+        "min": 28.884,
+        "max": 44.968,
+        "spread": 16.084000000000003
+      }
+    },
+    "B": {
+      "compliance": {
+        "mean": 0.7999999999999999,
+        "min": 0.6,
+        "max": 1.0,
+        "spread": 0.4
+      },
+      "outcome": {
+        "mean": 1.0,
+        "min": 1.0,
+        "max": 1.0,
+        "spread": 0.0
+      },
+      "tokens": {
+        "mean": 251272.66666666666,
+        "min": 218219.0,
+        "max": 275619.0,
+        "spread": 57400.0
+      },
+      "duration_s": {
+        "mean": 32.06466666666667,
+        "min": 26.255,
+        "max": 39.543,
+        "spread": 13.288
+      }
+    },
+    "C": {
+      "compliance": {
+        "mean": 0.9333333333333332,
+        "min": 0.8,
+        "max": 1.0,
+        "spread": 0.19999999999999996
+      },
+      "outcome": {
+        "mean": 1.0,
+        "min": 1.0,
+        "max": 1.0,
+        "spread": 0.0
+      },
+      "tokens": {
+        "mean": 387060.3333333333,
+        "min": 319285.0,
+        "max": 443947.0,
+        "spread": 124662.0
+      },
+      "duration_s": {
+        "mean": 82.21166666666666,
+        "min": 76.071,
+        "max": 92.383,
+        "spread": 16.311999999999998
+      }
+    }
+  },
+  "signals": {
+    "B_vs_A": {
+      "compliance": "noise",
+      "outcome": "noise",
+      "tokens": "noise",
+      "duration_s": "noise"
+    },
+    "C_vs_A": {
+      "compliance": "noise",
+      "outcome": "noise",
+      "tokens": "noise",
+      "duration_s": "worse"
+    }
+  },
+  "verdict": "inconclusive",
+  "synthesis": "Base 6b50812 (before the refactoring playbook) against the playbook. All 9 runs pass the hidden check: A without the playbook (compliance 0.93), B with it (0.80; one run skipped a project-wide search, one baseline omitted the banner example) and C on Opus (0.93). The playbook adds nothing measurable here: the base vex-mode already avoids the traps that catch Sonnet without any plugin (see the calibration). Tokens and time are noise between A and B."
+}

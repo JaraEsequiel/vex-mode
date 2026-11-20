@@ -1,0 +1,183 @@
+{
+  "kind": "calibration",
+  "skill": "vex-mode",
+  "tree_sha256": "c0d39af911cea80408106fc20f443bb7e947382c142310e0b5a72741832a33e5",
+  "date": "2026-11-20",
+  "case": "points-cleanup",
+  "harness": "claude-code",
+  "run_dir": "/home/vex/.cache/vex-mode/runs/20261120-095824-512647",
+  "arms": {
+    "A": {
+      "model": "claude-sonnet-5-5",
+      "plugin_ref": "d1dd1cfaed7946851b3966c137c8d407da3c1934",
+      "tree_sha256": "c0d39af911cea80408106fc20f443bb7e947382c142310e0b5a72741832a33e5",
+      "runs": [
+        {
+          "slot": 4,
+          "status": "SUCCESS",
+          "invalid": null,
+          "outcome": 1,
+          "compliance": 0.8,
+          "tokens": 278327,
+          "duration_s": 53.793,
+          "reads": 5,
+          "commands": 6,
+          "cost_usd": 0.17732749999999997,
+          "label": "R3"
+        },
+        {
+          "slot": 1,
+          "status": "SUCCESS",
+          "invalid": null,
+          "outcome": 1,
+          "compliance": 1.0,
+          "tokens": 280201,
+          "duration_s": 42.305,
+          "reads": 5,
+          "commands": 6,
+          "cost_usd": 0.1861204,
+          "label": "R4"
+        },
+        {
+          "slot": 5,
+          "status": "SUCCESS",
+          "invalid": null,
+          "outcome": 1,
+          "compliance": 1.0,
+          "tokens": 321624,
+          "duration_s": 42.917,
+          "reads": 5,
+          "commands": 7,
+          "cost_usd": 0.1919927,
+          "label": "R5"
+        }
+      ]
+    },
+    "N": {
+      "model": "claude-sonnet-5-5",
+      "plugin_ref": null,
+      "tree_sha256": null,
+      "runs": [
+        {
+          "slot": 6,
+          "status": "SUCCESS",
+          "invalid": null,
+          "outcome": 0,
+          "compliance": 0.4,
+          "tokens": 123746,
+          "duration_s": 18.809,
+          "reads": 0,
+          "commands": 4,
+          "cost_usd": 0.09335610000000001,
+          "label": "R1"
+        },
+        {
+          "slot": 3,
+          "status": "SUCCESS",
+          "invalid": null,
+          "outcome": 0,
+          "compliance": 0.4,
+          "tokens": 150181,
+          "duration_s": 20.802,
+          "reads": 0,
+          "commands": 5,
+          "cost_usd": 0.1035841,
+          "label": "R2"
+        },
+        {
+          "slot": 2,
+          "status": "SUCCESS",
+          "invalid": null,
+          "outcome": 1,
+          "compliance": 0.8,
+          "tokens": 123513,
+          "duration_s": 22.317,
+          "reads": 0,
+          "commands": 4,
+          "cost_usd": 0.100774,
+          "label": "R6"
+        }
+      ]
+    }
+  },
+  "judge": {
+    "provider": "openai",
+    "model": "gpt-6.2-sol",
+    "effort": "medium",
+    "error": null,
+    "usage": {
+      "input": 19564,
+      "output": 2291,
+      "reasoning": 474
+    }
+  },
+  "quality": {
+    "enabled": false,
+    "errors": [],
+    "judge_usage": {}
+  },
+  "metrics": {
+    "A": {
+      "compliance": {
+        "mean": 0.9333333333333332,
+        "min": 0.8,
+        "max": 1.0,
+        "spread": 0.19999999999999996
+      },
+      "outcome": {
+        "mean": 1.0,
+        "min": 1.0,
+        "max": 1.0,
+        "spread": 0.0
+      },
+      "tokens": {
+        "mean": 293384.0,
+        "min": 278327.0,
+        "max": 321624.0,
+        "spread": 43297.0
+      },
+      "duration_s": {
+        "mean": 46.33833333333333,
+        "min": 42.305,
+        "max": 53.793,
+        "spread": 11.488
+      }
+    },
+    "N": {
+      "compliance": {
+        "mean": 0.5333333333333333,
+        "min": 0.4,
+        "max": 0.8,
+        "spread": 0.4
+      },
+      "outcome": {
+        "mean": 0.3333333333333333,
+        "min": 0.0,
+        "max": 1.0,
+        "spread": 1.0
+      },
+      "tokens": {
+        "mean": 132480.0,
+        "min": 123513.0,
+        "max": 150181.0,
+        "spread": 26668.0
+      },
+      "duration_s": {
+        "mean": 20.642666666666667,
+        "min": 18.809,
+        "max": 22.317,
+        "spread": 3.507999999999999
+      }
+    }
+  },
+  "signals": {
+    "A_vs_N": {
+      "compliance": "noise",
+      "outcome": "noise",
+      "tokens": "worse",
+      "duration_s": "worse"
+    }
+  },
+  "verdict": "inconclusive",
+  "synthesis": "The plugin passes 3/3; no plugin 1/3. Both no-plugin failures are the traps the case sets: one keeps points_for forwarding to order_points, one deletes points_for from the code but keeps it as a shim in points_spec.py. Compliance 0.93 against 0.53. The earlier version of this case (test_points.py instead of points_spec.py, same traps) showed the same pattern: plugin 8/8 valid runs, no plugin 4/9. Still noise for the harness: with 3 runs a pass/fail outcome cannot clear the spread rule unless both arms are uniform. The plugin costs 2.2x the tokens."
+}

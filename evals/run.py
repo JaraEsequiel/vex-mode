@@ -389,17 +389,23 @@ def run_eval(repo: Path, skill: str, case: str, base: str | None = None,
         arm_list = arms_mod.calibration_arms(cfg, _commit(repo, base), judge_cfg["model"])
     else:
         arm_list = arms_mod.build_arms(cfg, _commit(repo, base), _commit(repo, variant), judge_cfg["model"])
-    prompt = (case_dir / "prompt.md").read_text().strip()
-    rubric = (case_dir / "rubric.md").read_text()
 
     stamp = dt.datetime.now().strftime("%Y%m%d-%H%M%S-%f")
     run_dir = _cache() / "vex-mode" / "runs" / stamp
     for sub in ("transcripts", "diffs", "checks"):
         (run_dir / sub).mkdir(parents=True)
+    # Every run reads the case from this snapshot, so a branch change during the eval cannot reach it.
+    shutil.copytree(case_dir, run_dir / "case", ignore=shutil.ignore_patterns("__pycache__"))
+    case_dir = run_dir / "case"
+    prompt = (case_dir / "prompt.md").read_text().strip()
+    rubric = (case_dir / "rubric.md").read_text()
     builds = {arm.label: build_plugin.build(repo, run_dir / "build" / arm.label, ref=arm.plugin_ref)
               for arm in arm_list if arm.plugin_ref}
     trees = {arm.label: skill_tree_sha256(builds[arm.label] / "skills" / skill) if arm.plugin_ref else None
              for arm in arm_list}
+    if not calibrate and trees["A"] == trees["B"]:
+        raise EvalError(f"base {base} and variant {variant} have the same skill tree for {skill}, so there is nothing "
+                        f"to measure; pass --base with a commit from before the change")
     # Outside the eval cache (a forbidden root) so an arm may read its own plugin files.
     cc_trees = {arm.label: build_plugin.build_claude(repo, _cache() / "vex-cc" / stamp / arm.label, arm.plugin_ref)
                 for arm in arm_list if arm.plugin_ref} if claude else {}

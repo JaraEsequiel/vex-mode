@@ -38,6 +38,8 @@ def _path_problem(path: PurePosixPath, *, plugin_root, forbidden, workdir, work_
         return "a forbidden path"
     if work_root is not None and _under(path, work_root) and not (workdir is not None and _under(path, workdir)):
         return "another project copy"
+    if workdir is not None and _under(path, workdir):  # the run's own fresh copy of the project
+        return None
     if "evals" in path.parts:
         return "an evals folder"
     parts = path.parts
@@ -71,8 +73,8 @@ def _segments(cmd: str) -> list[list[str]]:
         lexer = shlex.shlex(cmd, posix=True, punctuation_chars=True)
         lexer.whitespace_split = True
         tokens = list(lexer)
-    except ValueError:
-        tokens = cmd.split()
+    except ValueError:  # unbalanced quotes (a heredoc with an apostrophe): still cut at the separators
+        tokens = re.findall(r"[^\s;&|()]+|[;&|()]+", cmd)
     segments, current = [], []
     for tok in tokens:
         if tok and all(c in "&|;()" for c in tok):
