@@ -1,0 +1,24 @@
+name: check
+on:
+  push:
+  pull_request:
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install agy
+        uses: jdx/mise-action@v2
+        with:
+          install_args: antigravity-cli
+          mise_toml: |
+            [tools]
+            antigravity-cli = "latest"
+      - name: Install Claude Code
+        run: npm install -g @anthropic-ai/claude-code
+      - run: ./scripts/check

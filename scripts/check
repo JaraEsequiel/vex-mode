@@ -1,0 +1,11 @@
+#!/usr/bin/env bash
+set -euo pipefail
+cd "$(dirname "$0")/.."
+
+python3 -m unittest discover -s checks/tests
+python3 -m unittest discover -s scripts/tests
+python3 -m unittest discover -s hooks/tests
+python3 -m unittest discover -s evals/tests
+python3 checks/run.py
+python3 scripts/build_plugin.py --harness claude-code --check
+python3 scripts/validate_plugin.py
