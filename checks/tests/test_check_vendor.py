@@ -70,6 +70,11 @@ class CheckVendorTest(unittest.TestCase):
         errors = check_vendor.run(root)
         self.assertEqual(len(errors), 2, errors)
 
+    def test_scope_covers_harness_adapters(self):
+        root = make_repo({"adapters/claude-code.md": "a"}, lock())
+        errors = check_vendor.run(root)
+        self.assertTrue(any("adapters/claude-code.md" in e for e in errors), errors)
+
     def test_files_outside_scope_ignored(self):
         root = make_repo({"docs/x.md": "d", "checks/y.py": "c"}, lock())
         self.assertEqual(check_vendor.run(root), [])

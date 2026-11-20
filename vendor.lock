@@ -5,6 +5,25 @@
   },
   "files": [
     {
+      "path": "adapters/claude-code.md",
+      "upstream_path": "pstack/docs/harness/claude-code.md",
+      "upstream_sha256": "289a9127a3597d7b3fbbe10c40aea4aea3f15cd5361a75be43806a07b96f634f",
+      "pending_refs": [],
+      "upstream_commit": "0b46ec399d55f2829e88822998f53b84944837d3",
+      "adapted": true,
+      "removed_refs": [
+        "setup-pstack"
+      ],
+      "local_additions": [
+        "Antigravity (agy) names instead of Cursor names in every row; Cursor-only rows (readonly, cloud, resume, Bugbot, Automations, poteto-agent model line) dropped because no vex-mode text uses them",
+        "Row /vex-mode -> /vex-mode:vex-mode (plugin skills are namespaced: code.claude.com/docs/en/skills)",
+        "vex-agent row: no model in its file, runs on the session model (probe in docs/decisions/2026-11-19-claude-code-probes.md; avoids pstack#1270)",
+        "Cross-model reviewer row: keep `agy --model` when agy is installed, else skip (show-me-your-work needs another vendor's model)",
+        "Transcript slug: every character other than an ASCII letter or digit becomes '-' (pstack#1155; code.claude.com/docs/en/sessions)",
+        "Workspace hooks row and Antigravity-only features section (agent-ready Stop hook template is agy format; evals/run.py runs agy)"
+      ]
+    },
+    {
       "path": "skills/architect/SKILL.md",
       "upstream_path": "pstack/skills/architect/SKILL.md",
       "upstream_sha256": "aea83d7aa109eb73402182701b14c289844663ad9c8f959fedbef2df66787ce0",
