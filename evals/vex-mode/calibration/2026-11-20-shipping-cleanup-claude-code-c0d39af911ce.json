@@ -1,0 +1,183 @@
+{
+  "kind": "calibration",
+  "skill": "vex-mode",
+  "tree_sha256": "c0d39af911cea80408106fc20f443bb7e947382c142310e0b5a72741832a33e5",
+  "date": "2026-11-20",
+  "case": "shipping-cleanup",
+  "harness": "claude-code",
+  "run_dir": "/home/vex/.cache/vex-mode/runs/20261120-084137-797085",
+  "arms": {
+    "A": {
+      "model": "claude-sonnet-5-5",
+      "plugin_ref": "b2bffee3be2f13926563eff0ea8407ae2f9aa357",
+      "tree_sha256": "c0d39af911cea80408106fc20f443bb7e947382c142310e0b5a72741832a33e5",
+      "runs": [
+        {
+          "slot": 6,
+          "status": "SUCCESS",
+          "invalid": null,
+          "outcome": 1,
+          "compliance": 0.8,
+          "tokens": 231363,
+          "duration_s": 30.498,
+          "reads": 6,
+          "commands": 5,
+          "cost_usd": 0.1475152,
+          "label": "R6"
+        },
+        {
+          "slot": 4,
+          "status": "SUCCESS",
+          "invalid": null,
+          "outcome": 1,
+          "compliance": 1.0,
+          "tokens": 229384,
+          "duration_s": 31.087,
+          "reads": 0,
+          "commands": 6,
+          "cost_usd": 0.14735749999999997,
+          "label": "R3"
+        },
+        {
+          "slot": 2,
+          "status": "SUCCESS",
+          "invalid": null,
+          "outcome": 1,
+          "compliance": 0.8,
+          "tokens": 225070,
+          "duration_s": 27.6,
+          "reads": 0,
+          "commands": 6,
+          "cost_usd": 0.139056,
+          "label": "R2"
+        }
+      ]
+    },
+    "N": {
+      "model": "claude-sonnet-5-5",
+      "plugin_ref": null,
+      "tree_sha256": null,
+      "runs": [
+        {
+          "slot": 5,
+          "status": "SUCCESS",
+          "invalid": null,
+          "outcome": 1,
+          "compliance": 0.8,
+          "tokens": 118649,
+          "duration_s": 15.813,
+          "reads": 0,
+          "commands": 4,
+          "cost_usd": 0.0858642,
+          "label": "R5"
+        },
+        {
+          "slot": 1,
+          "status": "SUCCESS",
+          "invalid": null,
+          "outcome": 1,
+          "compliance": 0.8,
+          "tokens": 92766,
+          "duration_s": 13.372,
+          "reads": 0,
+          "commands": 3,
+          "cost_usd": 0.07939879999999999,
+          "label": "R4"
+        },
+        {
+          "slot": 3,
+          "status": "SUCCESS",
+          "invalid": null,
+          "outcome": 1,
+          "compliance": 1.0,
+          "tokens": 92969,
+          "duration_s": 15.44,
+          "reads": 0,
+          "commands": 3,
+          "cost_usd": 0.08272569999999999,
+          "label": "R1"
+        }
+      ]
+    }
+  },
+  "judge": {
+    "provider": "openai",
+    "model": "gpt-6.2-sol",
+    "effort": "medium",
+    "error": null,
+    "usage": {
+      "input": 13919,
+      "output": 1850,
+      "reasoning": 203
+    }
+  },
+  "quality": {
+    "enabled": false,
+    "errors": [],
+    "judge_usage": {}
+  },
+  "metrics": {
+    "A": {
+      "compliance": {
+        "mean": 0.8666666666666667,
+        "min": 0.8,
+        "max": 1.0,
+        "spread": 0.19999999999999996
+      },
+      "outcome": {
+        "mean": 1.0,
+        "min": 1.0,
+        "max": 1.0,
+        "spread": 0.0
+      },
+      "tokens": {
+        "mean": 228605.66666666666,
+        "min": 225070.0,
+        "max": 231363.0,
+        "spread": 6293.0
+      },
+      "duration_s": {
+        "mean": 29.728333333333335,
+        "min": 27.6,
+        "max": 31.087,
+        "spread": 3.4869999999999983
+      }
+    },
+    "N": {
+      "compliance": {
+        "mean": 0.8666666666666667,
+        "min": 0.8,
+        "max": 1.0,
+        "spread": 0.19999999999999996
+      },
+      "outcome": {
+        "mean": 1.0,
+        "min": 1.0,
+        "max": 1.0,
+        "spread": 0.0
+      },
+      "tokens": {
+        "mean": 101461.33333333333,
+        "min": 92766.0,
+        "max": 118649.0,
+        "spread": 25883.0
+      },
+      "duration_s": {
+        "mean": 14.875,
+        "min": 13.372,
+        "max": 15.813,
+        "spread": 2.4410000000000007
+      }
+    }
+  },
+  "signals": {
+    "A_vs_N": {
+      "compliance": "noise",
+      "outcome": "noise",
+      "tokens": "worse",
+      "duration_s": "worse"
+    }
+  },
+  "verdict": "inconclusive",
+  "synthesis": "Rerun after c901ac1 (the first run marked a plugin run invalid for reading its own arm). Plugin and no plugin both pass every run and tie on compliance (0.867). The one qualitative difference: without the plugin 2 of 3 runs captured the before output only after editing (git stash), while the plugin always pinned it first; the plugin instead misses the opening wording twice. The plugin costs 2.25x the tokens and 2x the time. The case does not separate the plugin from no plugin; it needs a harder refactor."
+}
