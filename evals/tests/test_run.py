@@ -125,10 +125,9 @@ class RunTest(unittest.TestCase):
     def test_peek_invalidates_run(self):
         os.environ["FAKE_AGY_MODE"] = "peek"
         os.environ["FAKE_PEEK"] = str(self.repo / "evals/x/cases/c1/rubric.md")
-        result = json.loads(self.run_eval().read_text())
-        runs = [r for arm in "ABC" for r in result["arms"][arm]["runs"]]
-        self.assertTrue(all(r["invalid"] for r in runs))
-        self.assertTrue(all(r["outcome"] == 0 for r in runs))
+        # Every run peeks, so every arm is left without a valid run and no result is written.
+        with self.assertRaisesRegex(run.EvalError, "no valid run"):
+            self.run_eval()
 
     def test_judge_missing_label_sets_error(self):
         os.environ["FAKE_AGY_MODE"] = "badjudge"
@@ -209,8 +208,8 @@ class RunTest(unittest.TestCase):
     def test_reading_the_secrets_file_invalidates_a_run(self):
         os.environ["FAKE_AGY_MODE"] = "peek"
         os.environ["FAKE_PEEK"] = os.environ["VEX_SECRETS"]
-        result = json.loads(self.run_eval().read_text())
-        self.assertTrue(all(r["invalid"] for arm in "ABC" for r in result["arms"][arm]["runs"]))
+        with self.assertRaisesRegex(run.EvalError, "no valid run"):
+            self.run_eval()
 
     def test_missing_key_fails_before_runs(self):
         os.environ.update({"VEX_JUDGE_PROVIDER": "openai", "VEX_JUDGE_MODEL": "gpt-6.2-sol"})
@@ -512,16 +511,39 @@ class ClaudeCodeRunTest(RunTest):
     def test_subagent_search_of_the_rubric_invalidates_run(self):
         os.environ["FAKE_CLAUDE_MODE"] = "peek"
         os.environ["FAKE_PEEK"] = str(self.repo / "evals/x/cases/c1")
-        result = json.loads(self.run_eval().read_text())
-        for arm in "ABC":
-            for r in result["arms"][arm]["runs"]:
-                self.assertIsNotNone(r["invalid"])
-                self.assertEqual(r["outcome"], 0)
+        with self.assertRaisesRegex(run.EvalError, "no valid run"):
+            self.run_eval()
 
-    def test_crashed_run_is_invalid(self):
-        os.environ["FAKE_CLAUDE_MODE"] = "crash"
-        result = json.loads(self.run_eval().read_text())
-        self.assertIn("UNFINISHED", result["arms"]["A"]["runs"][0]["invalid"])
+    def results(self) -> list[Path]:
+        return list((self.repo / "evals/x/results").glob("*.json"))
+
+    def test_arm_without_a_valid_run_writes_no_result(self):
+        os.environ["FAKE_CLAUDE_MODE"] = "crashA"
+        with self.assertRaisesRegex(run.EvalError, "arm A has no valid run"):
+            self.run_eval()
+        self.assertEqual(self.results(), [])
+
+    def test_quota_stops_the_eval_at_once(self):
+        os.environ["FAKE_CLAUDE_MODE"] = "quota"
+        with self.assertRaisesRegex(run.EvalError, "usage limit"):
+            self.run_eval()
+        self.assertEqual(len(self.calls()), 1)
+        self.assertEqual(self.results(), [])
+
+    def test_judge_sees_the_reply_before_the_stop_gate(self):
+        os.environ["FAKE_CLAUDE_MODE"] = "gate"
+        path = self.run_eval()
+        prompt = (Path(json.loads(path.read_text())["run_dir"]) / "judge-prompt.md").read_text()
+        self.assertIn("### Final reply\n\nFixed it: the reply.", prompt)
+        self.assertIn("### Follow-up after the Stop hook asked for evidence\n\ndone", prompt)
+
+    def test_rejudge_parses_claude_code_transcripts(self):
+        os.environ["FAKE_CLAUDE_MODE"] = "gate"
+        path = self.run_eval()
+        prompt_file = Path(json.loads(path.read_text())["run_dir"]) / "judge-prompt.md"
+        prompt_file.unlink()
+        run.rejudge(path)
+        self.assertIn("Fixed it: the reply.", prompt_file.read_text())
 
     def test_flag_runs_an_agy_case_with_its_claude_code_models(self):
         both = {**CASE, "claude_code": {"candidate_model": "claude-sonnet-5-5", "upgrade_model": "claude-opus-5-5"}}

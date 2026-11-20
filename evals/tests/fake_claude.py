@@ -32,7 +32,16 @@ def main(argv: list[str]) -> int:
         tool("t3", "Grep", {"pattern": "x", "path": os.environ["FAKE_PEEK"]}, parent="t2")
     if MODE == "crash":
         return 1
+    if MODE == "quota":
+        emit({"type": "result", "subtype": "success", "is_error": True, "result": "Claude usage limit reached",
+              "api_error_status": 429, "session_id": "s1"})
+        return 1
+    if MODE == "crashA" and "/A" in str(tree):
+        return 1
     Path("app.py").write_text("fixed\n")
+    if MODE == "gate":
+        emit({"type": "assistant", "parent_tool_use_id": None, "message": {"content": [{"type": "text", "text": "Fixed it: the reply."}]}})
+        emit({"type": "user", "message": {"content": [{"type": "text", "text": "Stop hook feedback:\nvex-mode: evidence"}]}})
     emit({"type": "result", "subtype": "success", "is_error": False, "result": "done", "duration_ms": 1500,
           "total_cost_usd": 0.05, "session_id": "s1",
           "modelUsage": {model: {"inputTokens": 40, "outputTokens": 60, "cacheReadInputTokens": 0, "cacheCreationInputTokens": 0}}})

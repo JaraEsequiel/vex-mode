@@ -84,6 +84,8 @@ If an eval was killed before it restored the user's plugin, the next eval refuse
 | The judge is set once in `evals/judge.json` and is from another model family than every candidate | `checks/check_evals.py` `evals/harness/arms.py` |
 | The judge's API key never reaches the repo, a result or the run dir | `evals/harness/judges.py` `evals/tests/test_run.py` |
 | Every eval measures compliance, outcome and cost on three fixed arms | `evals/harness/arms.py` `evals/tests/test_run.py` |
+| An eval stops at the first quota error and writes no result when an arm has no valid run | `evals/run.py` `evals/tests/test_run.py` |
+| On Claude Code the judge grades the reply the Stop gate interrupted, with the gate's follow-up shown apart | `evals/harness/transcript.py` `evals/run.py` `evals/tests/test_run.py` `evals/tests/test_harness.py` |
 | An eval never leaves a variant installed; on Claude Code it installs nothing (each arm loads its own build with `--plugin-dir`, and `--setting-sources project` keeps the user's plugins, skills, CLAUDE.md and MCP servers out) | `evals/run.py` `evals/tests/test_run.py` |
 | A run that read (by file or shell) the eval cache, the repo, another project copy, an `evals/` folder or another skill copy is invalid; on Claude Code this covers subagents and `Grep`/`Glob` paths too | `evals/harness/isolation.py` `evals/harness/transcript.py` `evals/tests/test_run.py` `evals/tests/test_harness.py` |
 | No AI PR merges itself: `gh pr merge` (any flags), `gh api` merges and main ref updates, a push to `main`/`master` (any refspec form, `--all`, `-c` push overrides) and tracking main pause (headless `agy -p`: blocked). A bare `git push` while on main is not caught | `hooks/irreversible.py` `hooks/tests/test_irreversible.py` |

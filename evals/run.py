@@ -43,6 +43,8 @@ METRICS = ("compliance", "outcome", "tokens", "duration_s")
 HARNESSES = ("agy", "claude-code")
 # Tools a Claude Code candidate may use without a person; edits are allowed by acceptEdits.
 CLAUDE_TOOLS = "Bash,Agent,TodoWrite"
+# A candidate that hit its quota makes every later run void too (2026-11-19: agy "Individual quota reached").
+QUOTA = re.compile(r"quota|usage limit|rate.?limit|\b429\b", re.I)
 VERDICTS = ("promote", "reject", "inconclusive")
 DIFF_LIMIT = 20000
 
@@ -93,7 +95,12 @@ def _diff(work: Path) -> str:
 def _material(t: transcript.Transcript, diff: str) -> str:
     diff = diff if len(diff) <= DIFF_LIMIT else diff[:DIFF_LIMIT] + "\n[diff truncated]"
     steps = "\n".join(f"{i}. {s}" for i, s in enumerate(t.steps, 1)) or "(none)"
-    return (f"### Final reply\n\n{t.response.strip()}\n\n### Tool calls, in order\n\n{steps}\n\n"
+    # On Claude Code the Stop gate's follow-up is the last message; the reply to the user came before it.
+    reply = f"### Final reply\n\n{t.response.strip()}"
+    if t.gate_reply.strip():
+        reply = (f"### Final reply\n\n{t.gate_reply.strip()}\n\n"
+                 f"### Follow-up after the Stop hook asked for evidence\n\n{t.response.strip()}")
+    return (f"{reply}\n\n### Tool calls, in order\n\n{steps}\n\n"
             f"### Diff\n\n```diff\n{diff}\n```")
 
 
@@ -274,7 +281,8 @@ def rejudge(path: Path) -> None:
             diff = run_dir / "diffs" / f"{r['slot']}.diff"
             if not diff.is_file():
                 raise EvalError(f"{diff} is missing; rerun the eval")
-            t = transcript.parse((run_dir / "transcripts" / f"{r['slot']}.ndjson").read_text())
+            parse = transcript.parse_claude if result.get("harness") == "claude-code" else transcript.parse
+            t = parse((run_dir / "transcripts" / f"{r['slot']}.ndjson").read_text())
             materials[r["slot"]] = _material(t, diff.read_text())
             r["compliance"] = None
     judge_cfg = _judge_config(repo)
@@ -413,6 +421,9 @@ def run_eval(repo: Path, skill: str, case: str, base: str | None = None,
                             t, wall = _run_claude(arm, prompt, cfg["timeout_s"], work, log, plugin_root)
                         else:
                             t, wall = _run_candidate(arm, prompt, cfg["timeout_s"], work, log)
+                        if QUOTA.search(t.error):
+                            raise EvalError(f"arm {arm.label}: the candidate model's quota ran out ({t.error[:200]}); "
+                                            f"stopped, no result written; run dir: {run_dir}")
                         bad = isolation.violations(t, plugin_root=plugin_root, forbidden=[_cache() / "vex-mode", repo, judges._secrets_file()],
                                                    workdir=work, work_root=work_root, home=Path.home())
                         invalid = "; ".join(bad) or (None if t.status == "SUCCESS" else f"status {t.status}")
@@ -440,6 +451,10 @@ def run_eval(repo: Path, skill: str, case: str, base: str | None = None,
             if not claude:
                 restore()
 
+        empty = [label for label, rec in records.items() if not any(r["invalid"] is None for r in rec["runs"])]
+        if empty:
+            raise EvalError(f"arm {empty[0]} has no valid run, so nothing can be compared; no result written; "
+                            f"run dir: {run_dir}")
         judge_error, judge_usage = _judge(records, materials, rubric, judge_cfg, run_dir, rng)
         quality_record = _quality(records, case_dir, cfg, prompt, judge_cfg, run_dir, rng)
     metrics, signals = _score(records, quality_record["enabled"])
