@@ -196,6 +196,13 @@ class IsolationFalsePositiveTest(unittest.TestCase):
                "skills/vex-mode/playbooks/refactoring.md; do echo \"=== $f\"; cat $f; done")
         self.assertEqual(self.check(cmd), [])
 
+    def test_code_punctuation_around_own_workdir_is_allowed(self):
+        # 2026-11-20 points-cleanup slot 17: a heredoc with sys.path[:0] = ["/tmp/pin", "<workdir>"].
+        cmd = ("cat > /tmp/pin/equiv.py <<'EOF'\nimport sys; sys.path[:0] = [\"/tmp/pin\", "
+               "\"/cache/vex-work/ab12/habit-tracker\"]\nEOF\npython3 -I /tmp/pin/equiv.py")
+        self.assertEqual(self.check(cmd), [])
+        self.assertTrue(self.check("python3 -c 'p = [\"/cache/vex-work/cd34/habit-tracker\"]'"))
+
     def test_variables_do_not_hide_a_forbidden_path(self):
         self.assertTrue(self.check("X=/repo/evals/x/cases/c; cat $X/rubric.md"))
         self.assertTrue(self.check("D=/cache/vex-work/cd34; cat ${D}/habit-tracker/habits.py"))
