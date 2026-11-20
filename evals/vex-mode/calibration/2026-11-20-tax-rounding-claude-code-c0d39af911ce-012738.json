@@ -1,0 +1,576 @@
+{
+  "kind": "calibration",
+  "skill": "vex-mode",
+  "tree_sha256": "c0d39af911cea80408106fc20f443bb7e947382c142310e0b5a72741832a33e5",
+  "date": "2026-11-20",
+  "case": "tax-rounding",
+  "harness": "claude-code",
+  "run_dir": "/home/vex/.cache/vex-mode/runs/20261120-012738-238518",
+  "arms": {
+    "A": {
+      "model": "claude-sonnet-5-5",
+      "plugin_ref": "b2bffee3be2f13926563eff0ea8407ae2f9aa357",
+      "tree_sha256": "c0d39af911cea80408106fc20f443bb7e947382c142310e0b5a72741832a33e5",
+      "runs": [
+        {
+          "slot": 2,
+          "status": "SUCCESS",
+          "invalid": null,
+          "outcome": 1,
+          "compliance": 0.75,
+          "tokens": 334655,
+          "duration_s": 30.504,
+          "reads": 5,
+          "commands": 8,
+          "cost_usd": 0.1626282,
+          "label": "R5",
+          "quality": {
+            "prod_lines": 8,
+            "test_lines": 9,
+            "removable_lines": 1,
+            "complexity_delta": 0.4721359549995796,
+            "verbosity": 0.0,
+            "comments_added": 1,
+            "docstrings_added": 0,
+            "security_findings": 0,
+            "judge_reuse": 0.0,
+            "judge_simplicity": 0.0,
+            "judge_contract": 0.0
+          },
+          "quality_errors": {}
+        },
+        {
+          "slot": 12,
+          "status": "SUCCESS",
+          "invalid": null,
+          "outcome": 1,
+          "compliance": 0.5,
+          "tokens": 228553,
+          "duration_s": 24.705,
+          "reads": 5,
+          "commands": 5,
+          "cost_usd": 0.14210810000000001,
+          "label": "R4",
+          "quality": {
+            "prod_lines": 4,
+            "test_lines": 15,
+            "removable_lines": 0,
+            "complexity_delta": 0.4721359549995796,
+            "verbosity": 0.0,
+            "comments_added": 1,
+            "docstrings_added": 0,
+            "security_findings": 0,
+            "judge_reuse": 1.0,
+            "judge_simplicity": 1.0,
+            "judge_contract": 0.0
+          },
+          "quality_errors": {}
+        },
+        {
+          "slot": 1,
+          "status": "SUCCESS",
+          "invalid": null,
+          "outcome": 1,
+          "compliance": 0.5,
+          "tokens": 225383,
+          "duration_s": 23.15,
+          "reads": 5,
+          "commands": 5,
+          "cost_usd": 0.1360497,
+          "label": "R11",
+          "quality": {
+            "prod_lines": 6,
+            "test_lines": 0,
+            "removable_lines": 0,
+            "complexity_delta": 0.4721359549995796,
+            "verbosity": 0.0,
+            "comments_added": 0,
+            "docstrings_added": 0,
+            "security_findings": 0,
+            "judge_reuse": 1.0,
+            "judge_simplicity": 1.0,
+            "judge_contract": 0.0
+          },
+          "quality_errors": {}
+        },
+        {
+          "slot": 8,
+          "status": "SUCCESS",
+          "invalid": null,
+          "outcome": 1,
+          "compliance": 0.5,
+          "tokens": 225355,
+          "duration_s": 20.649,
+          "reads": 5,
+          "commands": 5,
+          "cost_usd": 0.13622120000000001,
+          "label": "R7",
+          "quality": {
+            "prod_lines": 7,
+            "test_lines": 0,
+            "removable_lines": 0,
+            "complexity_delta": 0.4721359549995796,
+            "verbosity": 0.0,
+            "comments_added": 1,
+            "docstrings_added": 0,
+            "security_findings": 0,
+            "judge_reuse": 1.0,
+            "judge_simplicity": 1.0,
+            "judge_contract": 0.0
+          },
+          "quality_errors": {}
+        },
+        {
+          "slot": 4,
+          "status": "SUCCESS",
+          "invalid": null,
+          "outcome": 1,
+          "compliance": 0.75,
+          "tokens": 258382,
+          "duration_s": 26.121,
+          "reads": 0,
+          "commands": 6,
+          "cost_usd": 0.1420556,
+          "label": "R12",
+          "quality": {
+            "prod_lines": 7,
+            "test_lines": 15,
+            "removable_lines": 0,
+            "complexity_delta": 0.4721359549995796,
+            "verbosity": 0.0,
+            "comments_added": 2,
+            "docstrings_added": 0,
+            "security_findings": 0,
+            "judge_reuse": 0.0,
+            "judge_simplicity": 1.0,
+            "judge_contract": 0.0
+          },
+          "quality_errors": {}
+        },
+        {
+          "slot": 9,
+          "status": "SUCCESS",
+          "invalid": null,
+          "outcome": 1,
+          "compliance": 0.75,
+          "tokens": 265379,
+          "duration_s": 29.026,
+          "reads": 5,
+          "commands": 6,
+          "cost_usd": 0.1543916,
+          "label": "R8",
+          "quality": {
+            "prod_lines": 7,
+            "test_lines": 16,
+            "removable_lines": 0,
+            "complexity_delta": 0.4721359549995796,
+            "verbosity": 0.0,
+            "comments_added": 2,
+            "docstrings_added": 0,
+            "security_findings": 0,
+            "judge_reuse": 0.0,
+            "judge_simplicity": 1.0,
+            "judge_contract": 0.0
+          },
+          "quality_errors": {}
+        }
+      ]
+    },
+    "N": {
+      "model": "claude-sonnet-5-5",
+      "plugin_ref": null,
+      "tree_sha256": null,
+      "runs": [
+        {
+          "slot": 5,
+          "status": "SUCCESS",
+          "invalid": null,
+          "outcome": 1,
+          "compliance": 0.75,
+          "tokens": 112474,
+          "duration_s": 13.457,
+          "reads": 0,
+          "commands": 4,
+          "cost_usd": 0.07116259999999999,
+          "label": "R3",
+          "quality": {
+            "prod_lines": 8,
+            "test_lines": 0,
+            "removable_lines": 0,
+            "complexity_delta": 0.4721359549995796,
+            "verbosity": 0.0,
+            "comments_added": 2,
+            "docstrings_added": 0,
+            "security_findings": 0,
+            "judge_reuse": 1.0,
+            "judge_simplicity": 1.0,
+            "judge_contract": 0.0
+          },
+          "quality_errors": {}
+        },
+        {
+          "slot": 11,
+          "status": "SUCCESS",
+          "invalid": null,
+          "outcome": 1,
+          "compliance": 0.5,
+          "tokens": 112216,
+          "duration_s": 11.253,
+          "reads": 0,
+          "commands": 4,
+          "cost_usd": 0.0696962,
+          "label": "R6",
+          "quality": {
+            "prod_lines": 8,
+            "test_lines": 0,
+            "removable_lines": 0,
+            "complexity_delta": 0.4721359549995796,
+            "verbosity": 0.0,
+            "comments_added": 2,
+            "docstrings_added": 0,
+            "security_findings": 0,
+            "judge_reuse": 0.0,
+            "judge_simplicity": 1.0,
+            "judge_contract": 0.0
+          },
+          "quality_errors": {}
+        },
+        {
+          "slot": 10,
+          "status": "SUCCESS",
+          "invalid": null,
+          "outcome": 1,
+          "compliance": 0.25,
+          "tokens": 112242,
+          "duration_s": 11.864,
+          "reads": 0,
+          "commands": 4,
+          "cost_usd": 0.0698893,
+          "label": "R1",
+          "quality": {
+            "prod_lines": 7,
+            "test_lines": 0,
+            "removable_lines": 0,
+            "complexity_delta": 0.4721359549995796,
+            "verbosity": 0.0,
+            "comments_added": 1,
+            "docstrings_added": 0,
+            "security_findings": 0,
+            "judge_reuse": 0.0,
+            "judge_simplicity": 1.0,
+            "judge_contract": 0.0
+          },
+          "quality_errors": {}
+        },
+        {
+          "slot": 7,
+          "status": "SUCCESS",
+          "invalid": null,
+          "outcome": 1,
+          "compliance": 0.25,
+          "tokens": 112553,
+          "duration_s": 14.154,
+          "reads": 0,
+          "commands": 4,
+          "cost_usd": 0.07236540000000001,
+          "label": "R2",
+          "quality": {
+            "prod_lines": 8,
+            "test_lines": 0,
+            "removable_lines": 0,
+            "complexity_delta": 0.4721359549995796,
+            "verbosity": 0.0,
+            "comments_added": 2,
+            "docstrings_added": 0,
+            "security_findings": 0,
+            "judge_reuse": 1.0,
+            "judge_simplicity": 1.0,
+            "judge_contract": 0.0
+          },
+          "quality_errors": {}
+        },
+        {
+          "slot": 6,
+          "status": "SUCCESS",
+          "invalid": null,
+          "outcome": 1,
+          "compliance": 0.5,
+          "tokens": 112238,
+          "duration_s": 11.745,
+          "reads": 0,
+          "commands": 4,
+          "cost_usd": 0.0702258,
+          "label": "R9",
+          "quality": {
+            "prod_lines": 8,
+            "test_lines": 0,
+            "removable_lines": 0,
+            "complexity_delta": 0.4721359549995796,
+            "verbosity": 0.0,
+            "comments_added": 2,
+            "docstrings_added": 0,
+            "security_findings": 0,
+            "judge_reuse": 0.0,
+            "judge_simplicity": 1.0,
+            "judge_contract": 0.0
+          },
+          "quality_errors": {}
+        },
+        {
+          "slot": 3,
+          "status": "SUCCESS",
+          "invalid": null,
+          "outcome": 1,
+          "compliance": 0.5,
+          "tokens": 112412,
+          "duration_s": 11.379,
+          "reads": 0,
+          "commands": 4,
+          "cost_usd": 0.0701118,
+          "label": "R10",
+          "quality": {
+            "prod_lines": 7,
+            "test_lines": 0,
+            "removable_lines": 0,
+            "complexity_delta": 0.4721359549995796,
+            "verbosity": 0.0,
+            "comments_added": 1,
+            "docstrings_added": 0,
+            "security_findings": 0,
+            "judge_reuse": 0.0,
+            "judge_simplicity": 1.0,
+            "judge_contract": 0.0
+          },
+          "quality_errors": {}
+        }
+      ]
+    }
+  },
+  "judge": {
+    "provider": "openai",
+    "model": "gpt-6.2-sol",
+    "effort": "medium",
+    "error": null,
+    "usage": {
+      "input": 14418,
+      "output": 2649,
+      "reasoning": 207
+    }
+  },
+  "quality": {
+    "enabled": true,
+    "errors": [],
+    "judge_usage": {
+      "input": 38979,
+      "output": 6573,
+      "reasoning": 1471
+    }
+  },
+  "metrics": {
+    "A": {
+      "compliance": {
+        "mean": 0.625,
+        "min": 0.5,
+        "max": 0.75,
+        "spread": 0.25
+      },
+      "outcome": {
+        "mean": 1.0,
+        "min": 1.0,
+        "max": 1.0,
+        "spread": 0.0
+      },
+      "tokens": {
+        "mean": 256284.5,
+        "min": 225355.0,
+        "max": 334655.0,
+        "spread": 109300.0
+      },
+      "duration_s": {
+        "mean": 25.6925,
+        "min": 20.649,
+        "max": 30.504,
+        "spread": 9.855
+      },
+      "prod_lines": {
+        "mean": 6.5,
+        "min": 4.0,
+        "max": 8.0,
+        "spread": 4.0
+      },
+      "removable_lines": {
+        "mean": 0.16666666666666666,
+        "min": 0.0,
+        "max": 1.0,
+        "spread": 1.0
+      },
+      "complexity_delta": {
+        "mean": 0.4721359549995796,
+        "min": 0.4721359549995796,
+        "max": 0.4721359549995796,
+        "spread": 0.0
+      },
+      "verbosity": {
+        "mean": 0.0,
+        "min": 0.0,
+        "max": 0.0,
+        "spread": 0.0
+      },
+      "comments_added": {
+        "mean": 1.1666666666666667,
+        "min": 0.0,
+        "max": 2.0,
+        "spread": 2.0
+      },
+      "security_findings": {
+        "mean": 0.0,
+        "min": 0.0,
+        "max": 0.0,
+        "spread": 0.0
+      },
+      "judge_reuse": {
+        "mean": 0.5,
+        "min": 0.0,
+        "max": 1.0,
+        "spread": 1.0
+      },
+      "judge_simplicity": {
+        "mean": 0.8333333333333334,
+        "min": 0.0,
+        "max": 1.0,
+        "spread": 1.0
+      },
+      "judge_contract": {
+        "mean": 0.0,
+        "min": 0.0,
+        "max": 0.0,
+        "spread": 0.0
+      },
+      "test_lines": {
+        "mean": 9.166666666666666,
+        "min": 0.0,
+        "max": 16.0,
+        "spread": 16.0
+      },
+      "docstrings_added": {
+        "mean": 0.0,
+        "min": 0.0,
+        "max": 0.0,
+        "spread": 0.0
+      }
+    },
+    "N": {
+      "compliance": {
+        "mean": 0.4583333333333333,
+        "min": 0.25,
+        "max": 0.75,
+        "spread": 0.5
+      },
+      "outcome": {
+        "mean": 1.0,
+        "min": 1.0,
+        "max": 1.0,
+        "spread": 0.0
+      },
+      "tokens": {
+        "mean": 112355.83333333333,
+        "min": 112216.0,
+        "max": 112553.0,
+        "spread": 337.0
+      },
+      "duration_s": {
+        "mean": 12.308666666666667,
+        "min": 11.253,
+        "max": 14.154,
+        "spread": 2.901
+      },
+      "prod_lines": {
+        "mean": 7.666666666666667,
+        "min": 7.0,
+        "max": 8.0,
+        "spread": 1.0
+      },
+      "removable_lines": {
+        "mean": 0.0,
+        "min": 0.0,
+        "max": 0.0,
+        "spread": 0.0
+      },
+      "complexity_delta": {
+        "mean": 0.4721359549995796,
+        "min": 0.4721359549995796,
+        "max": 0.4721359549995796,
+        "spread": 0.0
+      },
+      "verbosity": {
+        "mean": 0.0,
+        "min": 0.0,
+        "max": 0.0,
+        "spread": 0.0
+      },
+      "comments_added": {
+        "mean": 1.6666666666666667,
+        "min": 1.0,
+        "max": 2.0,
+        "spread": 1.0
+      },
+      "security_findings": {
+        "mean": 0.0,
+        "min": 0.0,
+        "max": 0.0,
+        "spread": 0.0
+      },
+      "judge_reuse": {
+        "mean": 0.3333333333333333,
+        "min": 0.0,
+        "max": 1.0,
+        "spread": 1.0
+      },
+      "judge_simplicity": {
+        "mean": 1.0,
+        "min": 1.0,
+        "max": 1.0,
+        "spread": 0.0
+      },
+      "judge_contract": {
+        "mean": 0.0,
+        "min": 0.0,
+        "max": 0.0,
+        "spread": 0.0
+      },
+      "test_lines": {
+        "mean": 0.0,
+        "min": 0.0,
+        "max": 0.0,
+        "spread": 0.0
+      },
+      "docstrings_added": {
+        "mean": 0.0,
+        "min": 0.0,
+        "max": 0.0,
+        "spread": 0.0
+      }
+    }
+  },
+  "signals": {
+    "A_vs_N": {
+      "compliance": "noise",
+      "outcome": "noise",
+      "tokens": "worse",
+      "duration_s": "worse",
+      "prod_lines": "noise",
+      "removable_lines": "noise",
+      "complexity_delta": "noise",
+      "verbosity": "noise",
+      "comments_added": "noise",
+      "security_findings": "noise",
+      "judge_reuse": "noise",
+      "judge_simplicity": "noise",
+      "judge_contract": "noise",
+      "test_lines": "noise",
+      "docstrings_added": "noise"
+    }
+  },
+  "verdict": null,
+  "synthesis": null
+}
