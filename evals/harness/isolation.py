@@ -38,6 +38,8 @@ def _path_problem(path: PurePosixPath, *, plugin_root, forbidden, workdir, work_
         return "a forbidden path"
     if work_root is not None and _under(path, work_root) and not (workdir is not None and _under(path, workdir)):
         return "another project copy"
+    if workdir is not None and _under(path, workdir):  # the run's own fresh copy of the project
+        return None
     if "evals" in path.parts:
         return "an evals folder"
     parts = path.parts
