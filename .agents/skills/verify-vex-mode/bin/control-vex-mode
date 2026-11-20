@@ -1,0 +1,188 @@
+#!/usr/bin/env python3
+"""Verification harness for vex-mode (`control-vex-mode`).
+
+Drives the real vex-mode plugin hooks, build, and validator against an isolated temporary state
+and build directory (`VEX_VERIFY_DIR`), without mutating the user's installed plugin or live session state.
+"""
+import argparse
+import json
+import os
+import shutil
+import subprocess
+import sys
+from pathlib import Path
+
+REPO_ROOT = Path(__file__).resolve().parents[4]
+
+
+def verify_dir() -> Path:
+    raw = os.environ.get("VEX_VERIFY_DIR")
+    if not raw:
+        sys.exit("error: VEX_VERIFY_DIR is not set. Export VEX_VERIFY_DIR=/tmp/vex-mode-verify-$RUN_ID first.")
+    return Path(raw).resolve()
+
+
+def cmd_launch(_args: argparse.Namespace) -> int:
+    vdir = verify_dir()
+    if vdir.exists():
+        shutil.rmtree(vdir)
+    (vdir / "state").mkdir(parents=True)
+    build_dir = vdir / "build" / "agy"
+    cc_dir = vdir / "build" / "claude-code"
+    r1 = subprocess.run([sys.executable, str(REPO_ROOT / "scripts/build_plugin.py"), str(build_dir)],
+                        cwd=REPO_ROOT, capture_output=True, text=True)
+    if r1.returncode != 0:
+        sys.stderr.write(r1.stdout + r1.stderr)
+        return r1.returncode
+    r2 = subprocess.run([sys.executable, str(REPO_ROOT / "scripts/build_plugin.py"), "--harness", "claude-code", str(cc_dir)],
+                        cwd=REPO_ROOT, capture_output=True, text=True)
+    if r2.returncode != 0:
+        sys.stderr.write(r2.stdout + r2.stderr)
+        return r2.returncode
+    meta = {
+        "repo_root": str(REPO_ROOT),
+        "verify_dir": str(vdir),
+        "agy_build": str(build_dir),
+        "claude_code_build": str(cc_dir),
+        "state_dir": str(vdir / "state"),
+    }
+    (vdir / "instance.json").write_text(json.dumps(meta, indent=2) + "\n")
+    print(f"READY verify_dir={vdir}")
+    return 0
+
+
+def cmd_doctor(_args: argparse.Namespace) -> int:
+    vdir = verify_dir()
+    inst = vdir / "instance.json"
+    if not inst.is_file():
+        sys.stderr.write(f"doctor: missing {inst}; run `control-vex-mode launch` first\n")
+        return 1
+    meta = json.loads(inst.read_text())
+    agy_build = Path(meta["agy_build"])
+    cc_build = Path(meta["claude_code_build"])
+    for req in (agy_build / "plugin.json", agy_build / "hooks.json", agy_build / "skills/vex-mode/SKILL.md",
+                cc_build / ".claude-plugin/plugin.json", cc_build / "hooks/hooks.json"):
+        if not req.is_file():
+            sys.stderr.write(f"doctor: missing expected build artifact {req}\n")
+            return 1
+    manifest = json.loads((agy_build / "plugin.json").read_text())
+    if manifest.get("name") != "vex-mode":
+        sys.stderr.write(f"doctor: unexpected plugin name {manifest.get('name')!r}\n")
+        return 1
+    print(json.dumps({
+        "status": "healthy",
+        "name": manifest["name"],
+        "version": manifest.get("version"),
+        "verify_dir": str(vdir),
+        "agy_build": str(agy_build),
+        "claude_code_build": str(cc_build),
+    }))
+    return 0
+
+
+def cmd_hook(args: argparse.Namespace) -> int:
+    vdir = verify_dir()
+    inst = vdir / "instance.json"
+    if not inst.is_file():
+        sys.stderr.write("hook: instance not launched\n")
+        return 1
+    meta = json.loads(inst.read_text())
+    build = Path(meta["claude_code_build" if args.harness == "claude-code" else "agy_build"])
+    script = build / "hooks" / f"{args.hook}.py"
+    if not script.is_file():
+        sys.stderr.write(f"hook: unknown hook script {script}\n")
+        return 1
+    payload = sys.stdin.read() if args.payload == "-" else args.payload
+    env = dict(
+        os.environ,
+        PLUGIN_ROOT=str(build),
+        CLAUDE_PLUGIN_ROOT=str(build),
+        PLUGIN_DATA=str(vdir / "data"),
+        CLAUDE_PLUGIN_DATA=str(vdir / "data"),
+    )
+    r = subprocess.run([sys.executable, str(script)], input=payload, capture_output=True, text=True, env=env)
+    if args.artifact:
+        art = Path(args.artifact)
+        art.parent.mkdir(parents=True, exist_ok=True)
+        art.write_text(json.dumps({
+            "hook": args.hook,
+            "harness": args.harness,
+            "payload": json.loads(payload) if payload.strip().startswith("{") else payload,
+            "returncode": r.returncode,
+            "stdout": r.stdout,
+            "stderr": r.stderr,
+        }, indent=2) + "\n")
+    sys.stdout.write(r.stdout)
+    sys.stderr.write(r.stderr)
+    return r.returncode
+
+
+def cmd_validate(args: argparse.Namespace) -> int:
+    vdir = verify_dir()
+    inst = vdir / "instance.json"
+    if not inst.is_file():
+        sys.stderr.write("validate: instance not launched\n")
+        return 1
+    meta = json.loads(inst.read_text())
+    agy_build = Path(meta["agy_build"])
+    cc_build = Path(meta["claude_code_build"])
+    sys.path.insert(0, str(REPO_ROOT / "scripts"))
+    import validate_plugin
+    out = subprocess.run(["agy", "plugin", "validate", str(agy_build), "--json"], capture_output=True, text=True)
+    try:
+        report = json.loads(out.stdout)
+    except json.JSONDecodeError:
+        sys.stderr.write(out.stdout + out.stderr)
+        return 1
+    problems = validate_plugin.evaluate(report)
+    claude = subprocess.run(["claude", "plugin", "validate", "--strict", str(cc_build)], capture_output=True, text=True)
+    if claude.returncode != 0:
+        problems.append(f"claude plugin validate --strict {cc_build}:\n{claude.stdout}{claude.stderr}")
+    stdout = json.dumps(report.get("components", {})) + "\n" + "".join(f"{p}\n" for p in problems)
+    rc = 1 if problems else 0
+    if args.artifact:
+        art = Path(args.artifact)
+        art.parent.mkdir(parents=True, exist_ok=True)
+        art.write_text(json.dumps({
+            "command": f"agy plugin validate {agy_build} --json && claude plugin validate --strict {cc_build}",
+            "returncode": rc,
+            "stdout": stdout,
+            "stderr": out.stderr + claude.stderr,
+        }, indent=2) + "\n")
+    sys.stdout.write(stdout)
+    return rc
+
+
+def cmd_cleanup(_args: argparse.Namespace) -> int:
+    vdir = verify_dir()
+    if vdir.exists():
+        shutil.rmtree(vdir)
+    print(f"CLEANED verify_dir={vdir}")
+    return 0
+
+
+def main(argv: list[str]) -> int:
+    parser = argparse.ArgumentParser(prog="control-vex-mode", description=__doc__.splitlines()[0])
+    sub = parser.add_subparsers(dest="sub", required=True)
+    sub.add_parser("launch")
+    sub.add_parser("doctor")
+    p_hook = sub.add_parser("hook")
+    p_hook.add_argument("hook", choices=("activate", "irreversible", "stop_gate", "session_start"))
+    p_hook.add_argument("--harness", choices=("agy", "claude-code"), default="agy")
+    p_hook.add_argument("--payload", required=True, help="JSON string or '-' for stdin")
+    p_hook.add_argument("--artifact", help="Path outside VEX_VERIFY_DIR to record action + result")
+    p_val = sub.add_parser("validate")
+    p_val.add_argument("--artifact", help="Path outside VEX_VERIFY_DIR to record validation output")
+    sub.add_parser("cleanup")
+    args = parser.parse_args(argv)
+    return {
+        "launch": cmd_launch,
+        "doctor": cmd_doctor,
+        "hook": cmd_hook,
+        "validate": cmd_validate,
+        "cleanup": cmd_cleanup,
+    }[args.sub](args)
+
+
+if __name__ == "__main__":
+    sys.exit(main(sys.argv[1:]))

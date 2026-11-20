@@ -1,0 +1,241 @@
+#!/usr/bin/env python3
+"""Deterministic end-to-end verification runner for `verify-vex-mode`.
+
+Exercises every mapped feature journey in `.agents/skills/verify-vex-mode/features/` against
+an isolated build and state directory (`VEX_VERIFY_DIR`), asserts all outputs and on-disk side effects,
+verifies proof artifacts survive `control-vex-mode cleanup`, and replays every feature's `## Breaks`
+to prove each journey fails at the exact check that names the broken behavior.
+"""
+import json
+import os
+import re
+import shutil
+import subprocess
+import sys
+import time
+from pathlib import Path
+
+SKILL_DIR = Path(__file__).resolve().parents[1]
+CONTROL = SKILL_DIR / "bin" / "control-vex-mode"
+
+
+def run_control(vdir: Path, *args: str) -> subprocess.CompletedProcess:
+    env = dict(os.environ, VEX_VERIFY_DIR=str(vdir))
+    return subprocess.run([sys.executable, str(CONTROL), *args], capture_output=True, text=True, env=env)
+
+
+def assert_true(cond: bool, msg: str) -> None:
+    if not cond:
+        raise AssertionError(msg)
+
+
+def verify_journeys(vdir: Path, pdir: Path) -> list[str]:
+    results = []
+    r = run_control(vdir, "launch")
+    assert_true(r.returncode == 0 and "READY" in r.stdout, f"launch failed: {r.stdout}{r.stderr}")
+
+    r = run_control(vdir, "doctor")
+    assert_true(r.returncode == 0, f"doctor failed: {r.stderr}")
+    doc = json.loads(r.stdout)
+    assert_true(doc.get("status") == "healthy", f"unexpected doctor status: {doc}")
+    (pdir / "doctor.json").write_text(r.stdout)
+
+    # 1. build-and-validate.md
+    agy_build = Path(doc["agy_build"])
+    assert_true(not (agy_build / "evals").exists() and not (agy_build / "AGENTS.md").exists(),
+                "agy build leaked repo-only files (evals or AGENTS.md)")
+    r = run_control(vdir, "validate", "--artifact", str(pdir / "validate.json"))
+    assert_true(r.returncode == 0, f"validate failed: {r.stdout}{r.stderr}")
+    comp = json.loads(r.stdout.strip().splitlines()[0])
+    assert_true(comp.get("agents") == 1 and comp.get("hooks") == 3 and comp.get("rules") == 1,
+                f"unexpected component counts: {comp}")
+    results.append("build-and-validate: PASS (clean build + strict agy & claude validation)")
+
+    # 2. activate-and-inject.md
+    r = run_control(vdir, "hook", "activate", "--harness", "agy",
+                    "--payload", '{"hookEventName":"PreInvocation","conversationId":"conv-1","lastUserInput":"/vex-mode ship it"}',
+                    "--artifact", str(pdir / "activate-agy-1.json"))
+    assert_true(r.returncode == 0, "activate-agy-1 exited non-zero")
+    msg1 = json.loads(r.stdout)["injectSteps"][0]["systemMessage"]["systemMessage"]
+    assert_true("skills/vex-mode/SKILL.md" in msg1 and "skills/vex-mode/worker.md" in msg1,
+                "activate-agy-1 missing reading list paths")
+    assert_true((vdir / "data/state/active/conv-1").is_file(), "active/conv-1 state file missing")
+
+    r = run_control(vdir, "hook", "activate", "--harness", "agy",
+                    "--payload", '{"hookEventName":"PreInvocation","conversationId":"conv-1","lastUserInput":"next step"}',
+                    "--artifact", str(pdir / "activate-agy-2.json"))
+    assert_true(r.returncode == 0 and r.stdout.strip() == "{}", f"expected {{}} on second message, got {r.stdout!r}")
+
+    r = run_control(vdir, "hook", "activate", "--harness", "agy",
+                    "--payload", '{"hookEventName":"PreInvocation","conversationId":"conv-2","lastUserInput":"/correct"}',
+                    "--artifact", str(pdir / "activate-skill.json"))
+    msg_skill = json.loads(r.stdout)["injectSteps"][0]["systemMessage"]["systemMessage"]
+    assert_true("# Correct" in msg_skill and "skills/correct" in msg_skill, "skill injection missing # Correct")
+    assert_true(not (vdir / "data/state/active/conv-2").exists(), "conv-2 should not activate full vex-mode")
+
+    r = run_control(vdir, "hook", "session_start", "--harness", "claude-code",
+                    "--payload", '{"hook_event_name":"SessionStart","session_id":"sess-1","source":"startup"}',
+                    "--artifact", str(pdir / "cc-session-start.json"))
+    ctx_ss = json.loads(r.stdout)["hookSpecificOutput"]["additionalContext"]
+    assert_true("# vex-mode core" in ctx_ss and "adapters/claude-code.md" in ctx_ss,
+                "cc-session-start missing core or adapter")
+
+    r = run_control(vdir, "hook", "activate", "--harness", "claude-code",
+                    "--payload", '{"hook_event_name":"UserPromptSubmit","session_id":"sess-1","prompt":"/vex-mode:vex-mode fix bug"}',
+                    "--artifact", str(pdir / "cc-activate.json"))
+    ctx_act = json.loads(r.stdout)["hookSpecificOutput"]["additionalContext"]
+    assert_true("adapters/claude-code.md" in ctx_act and "skills/vex-mode/SKILL.md" in ctx_act,
+                "cc-activate missing adapter or SKILL.md")
+    assert_true((vdir / "data/state/active/sess-1").is_file(), "active/sess-1 state file missing")
+    results.append("activate-and-inject: PASS (agy once, agy skill injection, CC SessionStart & UserPromptSubmit)")
+
+    # 3. irreversible-guard.md
+    r = run_control(vdir, "hook", "irreversible", "--harness", "agy",
+                    "--payload", '{"hookEventName":"PreToolUse","conversationId":"conv-1","toolCall":{"name":"run_command","args":{"CommandLine":"git push --force origin feature"}}}',
+                    "--artifact", str(pdir / "irreversible-force-push.json"))
+    out_fp = json.loads(r.stdout)
+    assert_true(out_fp.get("decision") == "force_ask" and "git push --force" in out_fp.get("reason", ""),
+                f"unexpected force-push response: {out_fp}")
+
+    r = run_control(vdir, "hook", "irreversible", "--harness", "agy",
+                    "--payload", '{"hookEventName":"PreToolUse","conversationId":"conv-1","toolCall":{"name":"run_command","args":{"CommandLine":"gh pr merge 12 --squash"}}}',
+                    "--artifact", str(pdir / "irreversible-merge.json"))
+    out_mg = json.loads(r.stdout)
+    assert_true(out_mg.get("decision") == "force_ask" and "gh pr merge (only the user merges)" in out_mg.get("reason", ""),
+                f"unexpected merge guard response: {out_mg}")
+
+    r = run_control(vdir, "hook", "irreversible", "--harness", "claude-code",
+                    "--payload", '{"hook_event_name":"PreToolUse","session_id":"sess-1","tool_name":"Bash","tool_input":{"command":"git push origin HEAD:main"}}',
+                    "--artifact", str(pdir / "irreversible-cc-main.json"))
+    out_cc = json.loads(r.stdout)["hookSpecificOutput"]
+    assert_true(out_cc.get("permissionDecision") == "ask" and "git push to main" in out_cc.get("permissionDecisionReason", ""),
+                f"unexpected CC push-to-main response: {out_cc}")
+
+    r = run_control(vdir, "hook", "irreversible", "--harness", "agy",
+                    "--payload", '{"hookEventName":"PreToolUse","conversationId":"conv-1","toolCall":{"name":"run_command","args":{"CommandLine":"git status -sb && python3 checks/run.py"}}}',
+                    "--artifact", str(pdir / "irreversible-safe.json"))
+    assert_true(r.returncode == 0 and r.stdout == "", f"expected empty stdout on safe command, got {r.stdout!r}")
+    results.append("irreversible-guard: PASS (force push, gh pr merge, CC push to main, safe neutral)")
+
+    # 4. stop-gate.md
+    r = run_control(vdir, "hook", "stop_gate", "--harness", "agy",
+                    "--payload", '{"hookEventName":"Stop","conversationId":"idle-conv","terminationReason":"NO_TOOL_CALL","lastUserInput":"hello"}',
+                    "--artifact", str(pdir / "stop-inactive.json"))
+    assert_true(r.stdout.strip() == "{}", f"expected {{}} for inactive conv, got {r.stdout!r}")
+
+    run_control(vdir, "hook", "activate", "--harness", "agy",
+                "--payload", '{"hookEventName":"PreInvocation","conversationId":"active-conv","lastUserInput":"/vex-mode fix bug"}',
+                "--artifact", str(pdir / "stop-activate.json"))
+    assert_true((vdir / "data/state/active/active-conv").is_file(), "active/active-conv missing")
+
+    r = run_control(vdir, "hook", "stop_gate", "--harness", "agy",
+                    "--payload", '{"hookEventName":"Stop","conversationId":"active-conv","terminationReason":"NO_TOOL_CALL","lastUserInput":"/vex-mode fix bug"}',
+                    "--artifact", str(pdir / "stop-first.json"))
+    out_s1 = json.loads(r.stdout)
+    assert_true(out_s1.get("decision") == "continue" and "show verification evidence from the real artifact" in out_s1.get("reason", ""),
+                f"unexpected first stop output: {out_s1}")
+
+    r = run_control(vdir, "hook", "stop_gate", "--harness", "agy",
+                    "--payload", '{"hookEventName":"Stop","conversationId":"active-conv","terminationReason":"NO_TOOL_CALL","lastUserInput":"/vex-mode fix bug"}',
+                    "--artifact", str(pdir / "stop-second.json"))
+    assert_true(r.stdout.strip() == "{}", f"expected {{}} on second stop in same turn, got {r.stdout!r}")
+
+    r = run_control(vdir, "hook", "stop_gate", "--harness", "agy",
+                    "--payload", '{"hookEventName":"Stop","conversationId":"active-conv","terminationReason":"NO_TOOL_CALL","lastUserInput":"now add tests"}',
+                    "--artifact", str(pdir / "stop-next-turn.json"))
+    assert_true(json.loads(r.stdout).get("decision") == "continue", "expected continue on new user turn")
+
+    r = run_control(vdir, "hook", "stop_gate", "--harness", "claude-code",
+                    "--payload", '{"hook_event_name":"Stop","session_id":"sess-1","prompt_id":"p1","stop_hook_active":false}',
+                    "--artifact", str(pdir / "stop-cc-first.json"))
+    assert_true(json.loads(r.stdout).get("decision") == "block", f"expected block in CC stop gate, got {r.stdout!r}")
+
+    r = run_control(vdir, "hook", "stop_gate", "--harness", "claude-code",
+                    "--payload", '{"hook_event_name":"Stop","session_id":"sess-1","prompt_id":"p1","stop_hook_active":false}',
+                    "--artifact", str(pdir / "stop-cc-second.json"))
+    assert_true(r.stdout == "", f"expected empty stdout on second CC stop for p1, got {r.stdout!r}")
+    results.append("stop-gate: PASS (inactive, agy once-per-turn, agy next-turn, CC once-per-prompt)")
+
+    # Cleanup & verify proof survival
+    r = run_control(vdir, "cleanup")
+    assert_true(r.returncode == 0 and not vdir.exists(), "cleanup did not remove VEX_VERIFY_DIR")
+    artifacts = sorted(p.name for p in pdir.glob("*.json"))
+    assert_true(len(artifacts) == 18, f"expected 18 surviving proof artifacts, found {len(artifacts)}: {artifacts}")
+    results.append(f"cleanup-and-proof-survival: PASS ({len(artifacts)} proof JSON files survived in {pdir})")
+    return results
+
+
+def verify_breaks(vdir: Path) -> list[str]:
+    results = []
+
+    # Break 1: activate-and-inject.md — reading_list() returns []
+    run_control(vdir, "launch")
+    act_py = vdir / "build/agy/hooks/activate.py"
+    act_py.write_text(act_py.read_text().replace("return paths", "return []"))
+    r = run_control(vdir, "hook", "activate", "--harness", "agy",
+                    "--payload", '{"hookEventName":"PreInvocation","conversationId":"conv-1","lastUserInput":"/vex-mode ship it"}')
+    msg = json.loads(r.stdout)["injectSteps"][0]["systemMessage"]["systemMessage"]
+    assert_true("skills/vex-mode/worker.md" not in msg, "activate break did not fail Activate in agy check")
+    run_control(vdir, "cleanup")
+    results.append("break activate-and-inject (reading_list -> []): FAILED as expected at 'Activate in agy'")
+
+    # Break 2: irreversible-guard.md — remove 'merge' from _gh()
+    run_control(vdir, "launch")
+    irr_py = vdir / "build/agy/hooks/irreversible.py"
+    irr_py.write_text(irr_py.read_text().replace('["pr", "merge"]', '["pr", "nope"]'))
+    r = run_control(vdir, "hook", "irreversible", "--harness", "agy",
+                    "--payload", '{"hookEventName":"PreToolUse","conversationId":"conv-1","toolCall":{"name":"run_command","args":{"CommandLine":"gh pr merge 12 --squash"}}}')
+    assert_true(r.stdout == "", f"irreversible break did not fail Self-merge guard check: {r.stdout!r}")
+    run_control(vdir, "cleanup")
+    results.append("break irreversible-guard (remove 'merge' from _gh): FAILED as expected at 'Self-merge guard in agy'")
+
+    # Break 3: stop-gate.md — comment out asked.write_text(key)
+    run_control(vdir, "launch")
+    sg_py = vdir / "build/agy/hooks/stop_gate.py"
+    sg_py.write_text(re.sub(r"asked\.write_text\(key\)", "pass", sg_py.read_text()))
+    run_control(vdir, "hook", "activate", "--harness", "agy",
+                "--payload", '{"hookEventName":"PreInvocation","conversationId":"active-conv","lastUserInput":"/vex-mode fix bug"}')
+    run_control(vdir, "hook", "stop_gate", "--harness", "agy",
+                "--payload", '{"hookEventName":"Stop","conversationId":"active-conv","terminationReason":"NO_TOOL_CALL","lastUserInput":"/vex-mode fix bug"}')
+    r = run_control(vdir, "hook", "stop_gate", "--harness", "agy",
+                    "--payload", '{"hookEventName":"Stop","conversationId":"active-conv","terminationReason":"NO_TOOL_CALL","lastUserInput":"/vex-mode fix bug"}')
+    assert_true(r.stdout.strip() != "{}", "stop_gate break did not fail Second stop in same turn check")
+    run_control(vdir, "cleanup")
+    results.append("break stop-gate (skip asked.write_text): FAILED as expected at 'Second stop in same turn allows finish'")
+
+    # Break 4: build-and-validate.md — delete "version" from plugin.json
+    run_control(vdir, "launch")
+    pj = vdir / "build/agy/plugin.json"
+    data = json.loads(pj.read_text())
+    data.pop("version", None)
+    pj.write_text(json.dumps(data))
+    r = run_control(vdir, "validate")
+    assert_true(r.returncode != 0 and "plugin.json" in r.stdout,
+                f"build-and-validate break did not fail strict validation: rc={r.returncode} out={r.stdout!r}")
+    run_control(vdir, "cleanup")
+    results.append("break build-and-validate (delete version from plugin.json): FAILED as expected at 'Run strict plugin validation'")
+
+    return results
+
+
+def main() -> int:
+    run_id = f"all-{int(time.time())}-{os.getpid()}"
+    vdir = Path(f"/tmp/vex-mode-verify-{run_id}")
+    pdir = Path(os.environ.get("VEX_PROOF_DIR", f"/tmp/vex-mode-proof-{run_id}"))
+    if pdir.exists():
+        shutil.rmtree(pdir)
+    pdir.mkdir(parents=True)
+    try:
+        for line in verify_journeys(vdir, pdir):
+            print(f"[JOURNEY] {line}")
+        for line in verify_breaks(vdir):
+            print(f"[BREAK]   {line}")
+        print(f"ALL VERIFIED proof_dir={pdir}")
+        return 0
+    finally:
+        if vdir.exists():
+            shutil.rmtree(vdir, ignore_errors=True)
+
+
+if __name__ == "__main__":
+    sys.exit(main())

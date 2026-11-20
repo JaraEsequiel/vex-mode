@@ -1,0 +1,7 @@
+{
+  "agent-ready-check": {
+    "Stop": [
+      {"type": "command", "command": "python3 check_on_stop.py ../scripts/check", "timeout": 300}
+    ]
+  }
+}
