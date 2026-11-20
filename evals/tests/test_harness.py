@@ -218,6 +218,27 @@ class IsolationFalsePositiveTest(unittest.TestCase):
         self.assertEqual(self.check(cmd), [])
         self.assertTrue(self.check("cd /cache/vex-work/ab12/habit-tracker; echo it's; cat ../../cd34/habit-tracker/a.py"))
 
+    def test_a_worktree_the_run_made_next_to_its_workdir_is_its_own(self):
+        # 2026-11-20 points-cleanup (#36) arm C, 4 of 10 runs: `git worktree add ../loyalty-one-points` puts the
+        # worktree in the run's private folder (vex-work/<token>/), which no other run ever uses.
+        self.assertEqual(self.check("git worktree add -q -b refactor/x ../habit-tracker-x master && "
+                                    "cd ../habit-tracker-x && python3 habits.py"), [])
+        self.assertEqual(self.check("cd /cache/vex-work/ab12/habit-tracker-x && git log --oneline -2"), [])
+        roots = dict(plugin_root=Path("/plug/vex-mode"), forbidden=[Path("/cache/vex-mode")],
+                     workdir=Path("/cache/vex-work/ab12/habit-tracker"), work_root=Path("/cache/vex-work"))
+        t = transcript.Transcript(reads=["/cache/vex-work/ab12/habit-tracker-x/habits.py"])
+        self.assertEqual(isolation.violations(t, **roots), [])
+
+    def test_the_own_private_folder_passes_the_shell_markers(self):
+        # 2026-11-20 points-cleanup slot C/4 (f926): a scratch file in vex-work/<token>/ hit the "vex-work" marker.
+        self.assertEqual(self.check("echo x > /cache/vex-work/ab12/.pin; rm -f /cache/vex-work/ab12/.pin"), [])
+        self.assertTrue(self.check("cat /cache/vex-work/cd34/.pin"))
+
+    def test_the_work_root_and_other_private_folders_stay_forbidden(self):
+        for cmd in ("ls /cache/vex-work", "cd .. && ls ..", "cd .. && cat ../cd34/habit-tracker/habits.py",
+                    "cat /cache/vex-work/ab12x/habit-tracker/habits.py"):
+            self.assertTrue(self.check(cmd), cmd)
+
     def test_paths_inside_the_own_workdir_are_never_a_skill_copy(self):
         # 2026-11-20 points-cleanup slot 6: a for-list of arm-relative names, read through $C/$f.
         cmd = ("C=/plug/vex-mode; for f in skills/vex-mode/worker.md skills/vex-mode/playbooks/bug-fix.md; "
