@@ -95,12 +95,13 @@ def parse_claude(text: str) -> Transcript:
         if not isinstance(event, dict):
             continue
         kind = event.get("type")
-        content = (event.get("message") or {}).get("content")
+        # A hook denial arrives as {"type": "system", "subtype": "permission_denied", "message": "<reason>"}.
+        message = event.get("message") if isinstance(event.get("message"), dict) else {}
+        content = message.get("content")
         if kind == "system" and event.get("subtype") == "init":
             t.model = event.get("model")
             t.conversation_id = event.get("session_id")
         elif kind == "assistant" and isinstance(content, list):
-            message = event.get("message") or {}
             if message.get("id") not in counted and isinstance(message.get("usage"), dict):
                 counted.add(message.get("id"))
                 t.step_tokens += _claude_tokens(message["usage"])
