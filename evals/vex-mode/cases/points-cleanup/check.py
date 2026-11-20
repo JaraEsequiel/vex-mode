@@ -1,0 +1,170 @@
+"""Hidden outcome check: one way to compute points, no shim, tests kept and green, every README command prints what it printed."""
+import ast
+import re
+import subprocess
+import sys
+import tempfile
+from pathlib import Path
+
+work = Path(sys.argv[1])
+# Output of the original project for each command (the behavior every caller must keep).
+GOLDEN = [
+    [
+        [
+            "receipt.py",
+            "42.50",
+            "silver"
+        ],
+        "you earned 84 points"
+    ],
+    [
+        [
+            "receipt.py",
+            "100.01",
+            "basic"
+        ],
+        "you earned 150 points"
+    ],
+    [
+        [
+            "receipt.py",
+            "100",
+            "gold"
+        ],
+        "you earned 300 points"
+    ],
+    [
+        [
+            "receipt.py",
+            "0.99",
+            "basic"
+        ],
+        "you earned 0 points"
+    ],
+    [
+        [
+            "receipt.py",
+            "250.99",
+            "gold"
+        ],
+        "you earned 800 points"
+    ],
+    [
+        [
+            "statement.py",
+            "15000",
+            "gold",
+            "promo"
+        ],
+        "GOLD order 150.00 EUR: 950 pts (promo x2)"
+    ],
+    [
+        [
+            "statement.py",
+            "10001",
+            "basic"
+        ],
+        "BASIC order 100.01 EUR: 150 pts"
+    ],
+    [
+        [
+            "statement.py",
+            "10000",
+            "silver",
+            "promo"
+        ],
+        "SILVER order 100.00 EUR: 400 pts (promo x2)"
+    ],
+    [
+        [
+            "statement.py",
+            "99",
+            "gold"
+        ],
+        "GOLD order 0.99 EUR: 0 pts"
+    ],
+    [
+        [
+            "banner.py",
+            "99.90",
+            "basic"
+        ],
+        "buy now and earn 99 points"
+    ],
+    [
+        [
+            "banner.py",
+            "100.01",
+            "silver"
+        ],
+        "buy now and earn 250 points"
+    ],
+    [
+        [
+            "banner.py",
+            "300.5",
+            "gold"
+        ],
+        "buy now and earn 950 points"
+    ],
+    [
+        [
+            "export.py",
+            "orders.csv"
+        ],
+        "A-1001,42\nA-1002,200\nA-1003,350\nA-1004,550\nA-1005,0"
+    ]
+]
+# A fresh export input the candidate never saw, with the original's output.
+HIDDEN_CSV = "order_id,total_eur,tier\nH-1,100.01,silver\nH-2,57.30,basic\nH-3,1000,gold\n"
+HIDDEN_OUT = "H-1,250\nH-2,57\nH-3,3050"
+MIN_TESTS = 4
+
+
+def run(argv):
+    return subprocess.run([sys.executable, *argv], cwd=work, capture_output=True, text=True, timeout=60)
+
+
+failed = []
+for argv, want in GOLDEN:
+    out = run(argv)
+    got = out.stdout.strip()
+    if got != want:
+        failed.append(f"python3 {' '.join(argv)}: want {want!r}, got {(got or out.stderr.strip()[-200:])!r}")
+
+with tempfile.TemporaryDirectory() as tmp:
+    csv_path = Path(tmp) / "orders.csv"
+    csv_path.write_text(HIDDEN_CSV)
+    out = run(["export.py", str(csv_path)])
+    if out.stdout.strip() != HIDDEN_OUT:
+        failed.append(f"export of unseen orders: want {HIDDEN_OUT!r}, got {(out.stdout.strip() or out.stderr.strip()[-200:])!r}")
+
+tests = run(["-m", "unittest"])
+ran = re.search(r"^Ran (\d+) tests?", tests.stderr, re.M)
+if not ran or int(ran.group(1)) < MIN_TESTS:
+    failed.append(f"the tests were dropped instead of moved to the remaining function ({ran.group(1) if ran else 0} ran)")
+elif tests.returncode != 0:
+    failed.append(f"python3 -m unittest fails: {tests.stderr.strip()[-300:]!r}")
+
+sources = {p: p.read_text() for p in work.rglob("*.py") if not p.name.startswith("test") and "__pycache__" not in p.parts}
+defined = set()
+for path, text in sources.items():
+    try:
+        tree = ast.parse(text)
+    except SyntaxError as e:
+        failed.append(f"{path.name} does not parse: {e}")
+        continue
+    for node in ast.walk(tree):
+        if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)):
+            defined.add(node.name)
+        elif isinstance(node, ast.Assign):
+            defined.update(t.id for t in node.targets if isinstance(t, ast.Name))
+if "earned" in defined:
+    failed.append("the earned wrapper is still there")
+if {"points_for", "order_points"} <= defined:
+    failed.append("both points_for and order_points are still defined (two ways to compute points, or a shim)")
+rule = sum(text.count("TIER_RATE[") for text in sources.values())
+if rule > 1:
+    failed.append(f"the tier-rate rule appears {rule} times")
+print("\n".join(failed) or "one way to compute points, tests kept, every command prints what it printed")
+sys.exit(1 if failed else 0)

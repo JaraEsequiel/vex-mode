@@ -1,0 +1,6 @@
+order_id,total_eur,tier
+A-1001,42.50,basic
+A-1002,100.00,silver
+A-1003,100.01,gold
+A-1004,250.99,silver
+A-1005,0.99,gold
