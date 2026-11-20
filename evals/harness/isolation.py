@@ -2,7 +2,8 @@
 
 A run is invalid when its parent conversation reads, by read_file or through a shell command:
 anything under a forbidden root (the eval cache, the repo), another run's project copy, any
-`evals/` folder, or a skill file outside the arm's install. Subagent reads are not visible
+`evals/` folder, or a skill file outside the arm's install. A run owns its whole private folder
+(`vex-work/<token>/`), not only its workdir: a worktree it adds next to the workdir is its own. Subagent reads are not visible
 (separate conversations; see docs/decisions/2026-11-18-m2-first-eval.md).
 """
 import os
@@ -49,18 +50,30 @@ def _path_problem(path: PurePosixPath, *, plugin_root, forbidden, workdir, work_
     return None
 
 
+def _own_folder(workdir: Path | None, work_root: Path | None) -> Path | None:
+    """The run's private folder under work_root (vex-work/<token>/), which holds its workdir and nothing of other runs."""
+    if workdir is None or work_root is None:
+        return workdir
+    path, root = _norm(str(workdir), None, None), PurePosixPath(os.path.normpath(str(work_root)))
+    if root not in path.parents:
+        return workdir
+    return Path(str(root / path.relative_to(root).parts[0]))
+
+
 def violations(t: Transcript, *, plugin_root: Path, forbidden: list[Path], workdir: Path | None = None,
                work_root: Path | None = None, home: Path | None = None, cache: Path | None = None) -> list[str]:
     names = _skill_names(plugin_root)
     roots = list(forbidden) + ([cache / "vex-mode"] if cache is not None else [])
-    ctx = dict(plugin_root=plugin_root, forbidden=roots, workdir=workdir, work_root=work_root, names=names)
+    own = _own_folder(workdir, work_root)
+    ctx = dict(plugin_root=plugin_root, forbidden=roots, workdir=own, work_root=work_root, names=names)
     found = []
     for raw in t.reads:
         if problem := _path_problem(_norm(raw, workdir, home), **ctx):
             found.append(f"read {problem}: {raw}")
     for cmd in t.commands:
-        own = cmd.replace(str(workdir), ".") if workdir is not None else cmd  # the run's own copy is allowed
-        if any(m in own for m in SHELL_MARKERS):
+        # the run's own folder is allowed; the lookahead keeps a longer name (another token) intact
+        mine = re.sub(re.escape(str(own)) + r"(?![\w.-])", ".", cmd) if own is not None else cmd
+        if any(m in mine for m in SHELL_MARKERS):
             found.append(f"command touches eval files: {cmd}")
             continue
         if problem := _command_problem(cmd, workdir, home, ctx):
