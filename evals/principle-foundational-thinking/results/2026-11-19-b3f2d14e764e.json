@@ -1,0 +1,7 @@
+{
+  "kind": "waiver",
+  "skill": "principle-foundational-thinking",
+  "tree_sha256": "b3f2d14e764e77196a9229c16e0271a4cb0f4e1f0f2fd07abd7cfe1fb125f5c9",
+  "date": "2026-11-19",
+  "reason": "Vendored unchanged from pstack@0b46ec3. Named by refactoring step 3 and the router's Core list; disable-model-invocation, so it is read only when named. No case invokes it on its own; the vex-mode tax-rounding eval in this PR measures the cost of the larger read-first list."
+}

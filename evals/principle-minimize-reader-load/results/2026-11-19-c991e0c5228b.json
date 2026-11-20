@@ -1,0 +1,7 @@
+{
+  "kind": "waiver",
+  "skill": "principle-minimize-reader-load",
+  "tree_sha256": "c991e0c5228b4152d2ffb7c78d4357ed51963d88782bdcfd42ccf8ef99f20ee8",
+  "date": "2026-11-19",
+  "reason": "Vendored unchanged from pstack@0b46ec3. It is the success measure of refactoring step 7 and sits in the router's Core list; read only when named. A refactoring eval case is the follow-up that can measure it; none exists yet."
+}
