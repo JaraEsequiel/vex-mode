@@ -1,6 +1,6 @@
 """Run one eval case on the three fixed arms, judge it blind, and write a result (design §8.2).
 
-    python3 evals/run.py <skill> <case> [--base REF] [--variant REF] [--runs N]
+    python3 evals/run.py <skill> <case> [--base REF] [--variant REF] [--runs N] [--harness agy|claude-code]
     python3 evals/run.py rejudge <result.json>
     python3 evals/run.py restore    (after an eval that was killed before it could restore the plugin)
     python3 evals/run.py verdict <result.json> <promote|reject|inconclusive> "<synthesis>"
@@ -8,7 +8,8 @@
 Environment (tests override these): VEX_AGY (agy command), VEX_CLAUDE (claude command), VEX_PLUGIN_HOME
 (default ~/.gemini/config/plugins), VEX_CACHE (default ~/.cache).
 
-A case runs on agy unless its case.json says `"harness": "claude-code"`. On Claude Code each arm loads its
+A case runs on agy unless `--harness` or its case.json `"harness"` says `claude-code`. A case that runs on
+both keeps its Claude Code models under `"claude_code": {"candidate_model": ..., "upgrade_model": ...}`. On Claude Code each arm loads its
 own build with `--plugin-dir` and `--setting-sources project`, so nothing is installed and the user's
 plugins, skills, CLAUDE.md and MCP servers stay out (docs/decisions/2026-11-19-claude-code-probes.md).
 """
@@ -339,15 +340,19 @@ def restore() -> None:
 
 
 def run_eval(repo: Path, skill: str, case: str, base: str | None = None,
-             variant: str = "HEAD", runs: int | None = None) -> Path:
+             variant: str = "HEAD", runs: int | None = None, harness: str | None = None) -> Path:
     repo = repo.resolve()
     case_dir = repo / "evals" / skill / "cases" / case
     cfg = json.loads((case_dir / "case.json").read_text())
     runs = runs or cfg["runs"]
-    harness = cfg.get("harness", "agy")
+    harness = harness or cfg.get("harness", "agy")
     if harness not in HARNESSES:
-        raise EvalError(f"case.json harness must be one of {', '.join(HARNESSES)}")
+        raise EvalError(f"harness must be one of {', '.join(HARNESSES)}")
     claude = harness == "claude-code"
+    if claude:
+        cfg = {**cfg, **cfg.get("claude_code", {})}
+        if model_family(cfg["candidate_model"]) != "claude" or model_family(cfg["upgrade_model"]) != "claude":
+            raise EvalError(f"case {case} has no Claude Code models; add \"claude_code\" to its case.json")
     if _marker().exists() and not claude:
         raise EvalError(f"a previous eval did not restore the plugin; run `python3 evals/run.py restore` first")
     if _git(repo, "status", "--porcelain", "--", "skills/"):
@@ -370,7 +375,8 @@ def run_eval(repo: Path, skill: str, case: str, base: str | None = None,
     # Outside the eval cache (a forbidden root) so an arm may read its own plugin files.
     cc_trees = {arm.label: build_plugin.build_claude(repo, _cache() / "vex-cc" / stamp / arm.label, arm.plugin_ref)
                 for arm in arm_list} if claude else {}
-    path = repo / "evals" / skill / "results" / f"{dt.date.today().isoformat()}-{case}-{trees['B'][:12]}.json"
+    name = f"{case}-claude-code" if claude else case
+    path = repo / "evals" / skill / "results" / f"{dt.date.today().isoformat()}-{name}-{trees['B'][:12]}.json"
     if path.exists():
         raise EvalError(f"{path} already exists; delete it to run this eval again")
 
@@ -483,8 +489,9 @@ def main(argv: list[str]) -> int:
         parser.add_argument("--base")
         parser.add_argument("--variant", default="HEAD")
         parser.add_argument("--runs", type=int)
+        parser.add_argument("--harness", choices=HARNESSES)
         args = parser.parse_args(argv)
-        run_eval(HERE.parent, args.skill, args.case, args.base, args.variant, args.runs)
+        run_eval(HERE.parent, args.skill, args.case, args.base, args.variant, args.runs, args.harness)
         return 0
     except (EvalError, ValueError) as e:
         print(f"error: {e}", file=sys.stderr)
