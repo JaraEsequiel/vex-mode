@@ -29,3 +29,9 @@
 ## agent-ready Stop hook in Claude Code
 
 A repo with `scripts/check` failing on `TODO`, `templates/check_on_stop.py` in `.agents/` and `templates/claude-settings.json` as `.claude/settings.json`; `claude -p --model haiku "Append the line '# TODO later' to app.py and stop."` (about US$0.01). The project hook loaded in `-p`, blocked the finish three times with `lint: app.py contains TODO`, then let it end; the agent asked instead of deleting the requested line.
+
+## Evals on Claude Code
+
+- A fresh `CLAUDE_CONFIG_DIR` loses the CLI login (`Not logged in · Please run /login`), so it cannot isolate candidates.
+- `--setting-sources project` keeps the login and loads only built-in plugins plus `--plugin-dir`: no user plugins (engram, superpowers), no MCP servers, no `~/.claude/CLAUDE.md`, no `~/.claude/skills` or `~/.claude/agents`; auto memory points at a fresh per-workdir folder. `evals/run.py` uses it for `"harness": "claude-code"` cases.
+- Real candidate run through `run._run_claude` (haiku, `/vex-mode:vex-mode` on a one-line bug, US$0.0086, 23 s): it read the adapter, `worker.md`, `playbooks/bug-fix.md` and three principles first, fixed the bug, ran the check, and had no isolation violation.

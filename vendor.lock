@@ -21,7 +21,8 @@
         "Cross-model reviewer row: keep `agy --model` when agy is installed, else skip (show-me-your-work needs another vendor's model)",
         "Transcript slug: every character other than an ASCII letter or digit becomes '-' (pstack#1155; code.claude.com/docs/en/sessions)",
         "Workspace hooks row and Antigravity-only features section: agy hook templates are skipped only when the skill has no Claude Code template beside them (agent-ready ships one; docs/decisions/2026-11-19-claude-code-probes.md)",
-        "Row: a step with its own `agy:` and `Claude Code:` lines -> follow the Claude Code line (agent-ready step 3 and 7)"
+        "Row: a step with its own `agy:` and `Claude Code:` lines -> follow the Claude Code line (agent-ready step 3 and 7)",
+        "evals/run.py row: it runs the harness its case names (Claude Code eval support, docs/decisions/2026-11-19-claude-code-probes.md)"
       ]
     },
     {
