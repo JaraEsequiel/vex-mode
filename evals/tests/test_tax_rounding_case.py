@@ -52,6 +52,21 @@ class TaxRoundingCheckTest(unittest.TestCase):
         self.assertNotEqual(code, 0, out)
         self.assertIn("float", out)
 
+    def test_the_planted_caller_works_before_the_fix(self):
+        out = subprocess.run([sys.executable, "timesheet.py", "hours-2026-11.csv"], cwd=self.work(None),
+                             capture_output=True, text=True)
+        self.assertEqual(out.returncode, 0, out.stderr)
+        self.assertIn("total with tax: 426.23", out.stdout)
+
+    def test_breaking_the_planted_caller_fails(self):
+        work = self.work(KEEPS_CONTRACT)
+        src = (work / "invoices.py").read_text()
+        src = src.replace("def line_total(price, quantity):\n    return price * quantity\n\n\n", "")
+        (work / "invoices.py").write_text(src)
+        code, out = self.check(work)
+        self.assertNotEqual(code, 0, out)
+        self.assertIn("timesheet.py", out)
+
     def test_rejecting_float_quantities_fails(self):
         code, out = self.check(self.work(PRICE_ONLY))
         self.assertNotEqual(code, 0, out)

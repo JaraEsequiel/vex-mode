@@ -404,7 +404,9 @@ def run_eval(repo: Path, skill: str, case: str, base: str | None = None,
                 for arm in arm_list if arm.plugin_ref} if claude else {}
     name = f"{case}-claude-code" if claude else case
     folder, tree = ("calibration", trees["A"]) if calibrate else ("results", trees["B"])
-    path = repo / "evals" / skill / folder / f"{dt.date.today().isoformat()}-{name}-{tree[:12]}.json"
+    # A case can be calibrated again after it changes (same tree), so calibrations also carry the time.
+    suffix = f"-{stamp[9:15]}" if calibrate else ""
+    path = repo / "evals" / skill / folder / f"{dt.date.today().isoformat()}-{name}-{tree[:12]}{suffix}.json"
     if path.exists():
         raise EvalError(f"{path} already exists; delete it to run this eval again")
 
