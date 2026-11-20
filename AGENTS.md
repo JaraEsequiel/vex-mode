@@ -82,6 +82,7 @@ If an eval was killed before it restored the user's plugin, the next eval refuse
 | No finishing without evidence in vex-mode | `hooks/stop_gate.py` `hooks/tests/test_stop_gate.py` |
 | In Claude Code the Stop gate skips the ask when the turn's last main-agent tool call ran a command (read from `transcript_path`, keyed by `promptId`); a turn without tools or an unreadable transcript is asked | `hooks/stop_gate.py` `hooks/tests/test_claude_code.py` |
 | A PR that changes a skill carries an eval result or waiver for that skill's tree hash | `checks/check_evals.py` `checks/tests/test_check_evals.py` |
+| The vex-mode tree hash also covers `hooks/`, `hooks.json`, `rules/`, `agents/` and `plugin.json` (not tests), so a hook change can be evaluated and an old result does not cover it | `checks/_util.py` `checks/check_evals.py` `evals/run.py` `checks/tests/test_check_evals.py` |
 | Nothing a candidate sees contains a banned word | `checks/check_evals.py` `checks/tests/test_check_evals.py` |
 | The judge is set once in `evals/judge.json` and is from another model family than every candidate | `checks/check_evals.py` `evals/harness/arms.py` |
 | The judge's API key and API root (`VEX_OPENAI_BASE_URL`, `VEX_ANTHROPIC_BASE_URL`) come from the environment, else the secrets file; a secrets file the judge cannot read fails before any run; API calls send an explicit `User-Agent` and fall back to `certifi` when the SSL default context has an empty CA store | `evals/harness/judges.py` `evals/run.py` `evals/tests/test_judges.py` `evals/tests/test_run.py` |

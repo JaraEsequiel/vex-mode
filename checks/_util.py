@@ -45,6 +45,27 @@ def skill_tree_sha256(skill_dir: Path) -> str:
     return hashlib.sha256("".join(lines).encode()).hexdigest()
 
 
+# Plugin parts that change how every /vex-mode run behaves, so they belong to the vex-mode skill's identity.
+PLUGIN_WIDE = ("hooks", "hooks.json", "rules", "agents", "plugin.json")
+
+
+def plugin_tree_sha256(root: Path, skill: str) -> str:
+    """The skill's tree hash; for vex-mode it also covers the plugin-wide parts (tests and __pycache__ left out),
+    so a hook change is measurable and old evidence stops matching. `root` is a repo or a plugin build."""
+    import hashlib
+
+    if skill != "vex-mode":
+        return skill_tree_sha256(root / "skills" / skill)
+    lines = [f"skills/vex-mode\0{skill_tree_sha256(root / 'skills' / skill)}\n"]
+    for part in PLUGIN_WIDE:
+        top = root / part
+        files = [top] if top.is_file() else sorted(top.rglob("*")) if top.is_dir() else []
+        for p in files:
+            if p.is_file() and not {"tests", "__pycache__"} & set(p.relative_to(root).parts):
+                lines.append(f"{p.relative_to(root).as_posix()}\0{hashlib.sha256(p.read_bytes()).hexdigest()}\n")
+    return hashlib.sha256("".join(lines).encode()).hexdigest()
+
+
 def model_family(model: str) -> str:
     """claude-* / gemini-* / gpt-* by prefix; anything else is its text before the first '-'."""
     for family in ("claude", "gemini", "gpt"):
