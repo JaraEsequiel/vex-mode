@@ -1,5 +1,7 @@
 ### Feature
 
+**Read first:** `skills/principle-model-the-domain/SKILL.md`, `skills/principle-separate-before-serializing-shared-state/SKILL.md`, `skills/principle-prove-it-works/SKILL.md`, `skills/principle-sequence-verifiable-units/SKILL.md`.
+
 **You own the design. Plan, review, verify.** Delegate implementation. Stay in the lead.
 
 1. Trace the affected subsystem.

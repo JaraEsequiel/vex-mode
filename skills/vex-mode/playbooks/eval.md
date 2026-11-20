@@ -1,5 +1,7 @@
 ### Eval
 
+**Read first:** `skills/principle-explain-the-number/SKILL.md`.
+
 **You own the experiment design. Plan, blind, run, synthesize.**
 
 **Non-negotiables for blinding:**

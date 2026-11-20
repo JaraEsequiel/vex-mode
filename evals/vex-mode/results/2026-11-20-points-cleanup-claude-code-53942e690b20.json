@@ -1,0 +1,543 @@
+{
+  "kind": "eval",
+  "skill": "vex-mode",
+  "tree_sha256": "53942e690b20022e663be03774297eeddd88a765f88e4c1a4d5c667e28203e5c",
+  "date": "2026-11-20",
+  "case": "points-cleanup",
+  "harness": "claude-code",
+  "jobs": 4,
+  "run_dir": "/home/vex/.cache/vex-mode/runs/20261120-143546-788386",
+  "arms": {
+    "A": {
+      "model": "claude-sonnet-5-5",
+      "plugin_ref": "eff897ef4a3a2c1005529413b4201abd72453ca9",
+      "tree_sha256": "ff09b51f8f41b1ebfe4ff4559352437125695185ed3733abf5444c0a36ab4e2b",
+      "runs": [
+        {
+          "slot": 6,
+          "status": "SUCCESS",
+          "invalid": null,
+          "outcome": 1,
+          "compliance": 0.8,
+          "tokens": 212184,
+          "duration_s": 37.522,
+          "reads": 5,
+          "commands": 5,
+          "cost_usd": 0.1774157,
+          "label": "R25"
+        },
+        {
+          "slot": 9,
+          "status": "SUCCESS",
+          "invalid": null,
+          "outcome": 1,
+          "compliance": 0.8,
+          "tokens": 206584,
+          "duration_s": 28.886,
+          "reads": 5,
+          "commands": 5,
+          "cost_usd": 0.157527,
+          "label": "R22"
+        },
+        {
+          "slot": 4,
+          "status": "SUCCESS",
+          "invalid": null,
+          "outcome": 1,
+          "compliance": 0.8,
+          "tokens": 334595,
+          "duration_s": 48.779,
+          "reads": 6,
+          "commands": 8,
+          "cost_usd": 0.21230950000000004,
+          "label": "R12"
+        },
+        {
+          "slot": 25,
+          "status": "SUCCESS",
+          "invalid": null,
+          "outcome": 1,
+          "compliance": 0.6,
+          "tokens": 362605,
+          "duration_s": 44.554,
+          "reads": 5,
+          "commands": 9,
+          "cost_usd": 0.19564939999999997,
+          "label": "R28"
+        },
+        {
+          "slot": 27,
+          "status": "SUCCESS",
+          "invalid": null,
+          "outcome": 1,
+          "compliance": 1.0,
+          "tokens": 329354,
+          "duration_s": 57.285,
+          "reads": 3,
+          "commands": 8,
+          "cost_usd": 0.21142000000000002,
+          "label": "R11"
+        },
+        {
+          "slot": 14,
+          "status": "SUCCESS",
+          "invalid": null,
+          "outcome": 1,
+          "compliance": 0.6,
+          "tokens": 163910,
+          "duration_s": 27.125,
+          "reads": 5,
+          "commands": 4,
+          "cost_usd": 0.14900180000000002,
+          "label": "R8"
+        },
+        {
+          "slot": 10,
+          "status": "SUCCESS",
+          "invalid": null,
+          "outcome": 1,
+          "compliance": 1.0,
+          "tokens": 249180,
+          "duration_s": 42.702,
+          "reads": 5,
+          "commands": 6,
+          "cost_usd": 0.18787180000000003,
+          "label": "R27"
+        },
+        {
+          "slot": 7,
+          "status": "SUCCESS",
+          "invalid": null,
+          "outcome": 1,
+          "compliance": 0.8,
+          "tokens": 167377,
+          "duration_s": 28.482,
+          "reads": 5,
+          "commands": 4,
+          "cost_usd": 0.15215920000000002,
+          "label": "R1"
+        },
+        {
+          "slot": 26,
+          "status": "SUCCESS",
+          "invalid": null,
+          "outcome": 1,
+          "compliance": 0.8,
+          "tokens": 239324,
+          "duration_s": 32.569,
+          "reads": 6,
+          "commands": 6,
+          "cost_usd": 0.16423169999999998,
+          "label": "R14"
+        },
+        {
+          "slot": 28,
+          "status": "SUCCESS",
+          "invalid": null,
+          "outcome": 1,
+          "compliance": 0.6,
+          "tokens": 210879,
+          "duration_s": 47.077,
+          "reads": 5,
+          "commands": 5,
+          "cost_usd": 0.1829081,
+          "label": "R13"
+        }
+      ]
+    },
+    "B": {
+      "model": "claude-sonnet-5-5",
+      "plugin_ref": "a1c988134a0f6fb34fcecf6a406e9b1e542225fa",
+      "tree_sha256": "53942e690b20022e663be03774297eeddd88a765f88e4c1a4d5c667e28203e5c",
+      "runs": [
+        {
+          "slot": 19,
+          "status": "SUCCESS",
+          "invalid": null,
+          "outcome": 1,
+          "compliance": 1.0,
+          "tokens": 155552,
+          "duration_s": 24.988,
+          "reads": 3,
+          "commands": 4,
+          "cost_usd": 0.1359915,
+          "label": "R6"
+        },
+        {
+          "slot": 13,
+          "status": "SUCCESS",
+          "invalid": null,
+          "outcome": 1,
+          "compliance": 0.8,
+          "tokens": 189793,
+          "duration_s": 27.787,
+          "reads": 3,
+          "commands": 5,
+          "cost_usd": 0.1444327,
+          "label": "R24"
+        },
+        {
+          "slot": 3,
+          "status": "SUCCESS",
+          "invalid": null,
+          "outcome": 1,
+          "compliance": 0.6,
+          "tokens": 157045,
+          "duration_s": 28.444,
+          "reads": 2,
+          "commands": 4,
+          "cost_usd": 0.1419248,
+          "label": "R5"
+        },
+        {
+          "slot": 30,
+          "status": "SUCCESS",
+          "invalid": null,
+          "outcome": 1,
+          "compliance": 0.8,
+          "tokens": 255017,
+          "duration_s": 34.298,
+          "reads": 3,
+          "commands": 7,
+          "cost_usd": 0.15753289999999998,
+          "label": "R26"
+        },
+        {
+          "slot": 5,
+          "status": "SUCCESS",
+          "invalid": null,
+          "outcome": 1,
+          "compliance": 0.8,
+          "tokens": 189119,
+          "duration_s": 30.628,
+          "reads": 3,
+          "commands": 5,
+          "cost_usd": 0.1462993,
+          "label": "R9"
+        },
+        {
+          "slot": 24,
+          "status": "SUCCESS",
+          "invalid": null,
+          "outcome": 1,
+          "compliance": 0.6,
+          "tokens": 152631,
+          "duration_s": 24.982,
+          "reads": 3,
+          "commands": 4,
+          "cost_usd": 0.1336387,
+          "label": "R29"
+        },
+        {
+          "slot": 2,
+          "status": "SUCCESS",
+          "invalid": null,
+          "outcome": 1,
+          "compliance": 0.6,
+          "tokens": 151127,
+          "duration_s": 20.576,
+          "reads": 3,
+          "commands": 4,
+          "cost_usd": 0.1254798,
+          "label": "R7"
+        },
+        {
+          "slot": 23,
+          "status": "SUCCESS",
+          "invalid": null,
+          "outcome": 1,
+          "compliance": 0.8,
+          "tokens": 188958,
+          "duration_s": 28.47,
+          "reads": 3,
+          "commands": 5,
+          "cost_usd": 0.1471509,
+          "label": "R21"
+        },
+        {
+          "slot": 18,
+          "status": "SUCCESS",
+          "invalid": null,
+          "outcome": 1,
+          "compliance": 0.4,
+          "tokens": 152191,
+          "duration_s": 27.965,
+          "reads": 3,
+          "commands": 4,
+          "cost_usd": 0.1337891,
+          "label": "R20"
+        },
+        {
+          "slot": 15,
+          "status": "SUCCESS",
+          "invalid": null,
+          "outcome": 1,
+          "compliance": 1.0,
+          "tokens": 152354,
+          "duration_s": 25.836,
+          "reads": 3,
+          "commands": 4,
+          "cost_usd": 0.1308894,
+          "label": "R18"
+        }
+      ]
+    },
+    "C": {
+      "model": "claude-opus-5-5",
+      "plugin_ref": "eff897ef4a3a2c1005529413b4201abd72453ca9",
+      "tree_sha256": "ff09b51f8f41b1ebfe4ff4559352437125695185ed3733abf5444c0a36ab4e2b",
+      "runs": [
+        {
+          "slot": 17,
+          "status": "SUCCESS",
+          "invalid": null,
+          "outcome": 1,
+          "compliance": 0.8,
+          "tokens": 292641,
+          "duration_s": 83.014,
+          "reads": 0,
+          "commands": 8,
+          "cost_usd": 0.4045278,
+          "label": "R10"
+        },
+        {
+          "slot": 16,
+          "status": "SUCCESS",
+          "invalid": null,
+          "outcome": 1,
+          "compliance": 0.6,
+          "tokens": 211630,
+          "duration_s": 70.201,
+          "reads": 0,
+          "commands": 6,
+          "cost_usd": 0.37124,
+          "label": "R16"
+        },
+        {
+          "slot": 1,
+          "status": "SUCCESS",
+          "invalid": null,
+          "outcome": 1,
+          "compliance": 0.8,
+          "tokens": 246325,
+          "duration_s": 71.02,
+          "reads": 0,
+          "commands": 7,
+          "cost_usd": 0.3820204,
+          "label": "R23"
+        },
+        {
+          "slot": 21,
+          "status": "SUCCESS",
+          "invalid": null,
+          "outcome": 1,
+          "compliance": 0.6,
+          "tokens": 298051,
+          "duration_s": 81.472,
+          "reads": 0,
+          "commands": 8,
+          "cost_usd": 0.4334894,
+          "label": "R17"
+        },
+        {
+          "slot": 12,
+          "status": "SUCCESS",
+          "invalid": null,
+          "outcome": 1,
+          "compliance": 0.8,
+          "tokens": 455674,
+          "duration_s": 104.627,
+          "reads": 0,
+          "commands": 11,
+          "cost_usd": 0.5195402,
+          "label": "R15"
+        },
+        {
+          "slot": 11,
+          "status": "SUCCESS",
+          "invalid": null,
+          "outcome": 1,
+          "compliance": 0.8,
+          "tokens": 306861,
+          "duration_s": 114.667,
+          "reads": 0,
+          "commands": 7,
+          "cost_usd": 0.5825902000000001,
+          "label": "R2"
+        },
+        {
+          "slot": 20,
+          "status": "SUCCESS",
+          "invalid": null,
+          "outcome": 1,
+          "compliance": 0.8,
+          "tokens": 251366,
+          "duration_s": 73.224,
+          "reads": 0,
+          "commands": 7,
+          "cost_usd": 0.392726,
+          "label": "R19"
+        },
+        {
+          "slot": 8,
+          "status": "SUCCESS",
+          "invalid": null,
+          "outcome": 1,
+          "compliance": 0.6,
+          "tokens": 296012,
+          "duration_s": 108.416,
+          "reads": 0,
+          "commands": 6,
+          "cost_usd": 0.4632004,
+          "label": "R4"
+        },
+        {
+          "slot": 22,
+          "status": "SUCCESS",
+          "invalid": null,
+          "outcome": 1,
+          "compliance": 0.6,
+          "tokens": 465493,
+          "duration_s": 100.323,
+          "reads": 0,
+          "commands": 12,
+          "cost_usd": 0.5488520000000001,
+          "label": "R30"
+        },
+        {
+          "slot": 29,
+          "status": "SUCCESS",
+          "invalid": null,
+          "outcome": 1,
+          "compliance": 0.8,
+          "tokens": 250782,
+          "duration_s": 75.798,
+          "reads": 0,
+          "commands": 7,
+          "cost_usd": 0.3978374,
+          "label": "R3"
+        }
+      ]
+    }
+  },
+  "judge": {
+    "provider": "openai",
+    "model": "gpt-6.2-sol",
+    "effort": "medium",
+    "error": null,
+    "usage": {
+      "input": 104141,
+      "output": 7590,
+      "reasoning": 1246
+    }
+  },
+  "quality": {
+    "enabled": false,
+    "errors": [],
+    "judge_usage": {}
+  },
+  "metrics": {
+    "A": {
+      "compliance": {
+        "mean": 0.78,
+        "min": 0.6,
+        "max": 1.0,
+        "spread": 0.4
+      },
+      "outcome": {
+        "mean": 1.0,
+        "min": 1.0,
+        "max": 1.0,
+        "spread": 0.0
+      },
+      "tokens": {
+        "mean": 247599.2,
+        "min": 163910.0,
+        "max": 362605.0,
+        "spread": 198695.0
+      },
+      "duration_s": {
+        "mean": 39.4981,
+        "min": 27.125,
+        "max": 57.285,
+        "spread": 30.159999999999997
+      }
+    },
+    "B": {
+      "compliance": {
+        "mean": 0.74,
+        "min": 0.4,
+        "max": 1.0,
+        "spread": 0.6
+      },
+      "outcome": {
+        "mean": 1.0,
+        "min": 1.0,
+        "max": 1.0,
+        "spread": 0.0
+      },
+      "tokens": {
+        "mean": 174378.7,
+        "min": 151127.0,
+        "max": 255017.0,
+        "spread": 103890.0
+      },
+      "duration_s": {
+        "mean": 27.397399999999998,
+        "min": 20.576,
+        "max": 34.298,
+        "spread": 13.722000000000001
+      }
+    },
+    "C": {
+      "compliance": {
+        "mean": 0.72,
+        "min": 0.6,
+        "max": 0.8,
+        "spread": 0.20000000000000007
+      },
+      "outcome": {
+        "mean": 1.0,
+        "min": 1.0,
+        "max": 1.0,
+        "spread": 0.0
+      },
+      "tokens": {
+        "mean": 307483.5,
+        "min": 211630.0,
+        "max": 465493.0,
+        "spread": 253863.0
+      },
+      "duration_s": {
+        "mean": 88.27619999999999,
+        "min": 70.201,
+        "max": 114.667,
+        "spread": 44.46600000000001
+      }
+    }
+  },
+  "signals": {
+    "B_vs_A": {
+      "compliance": "noise",
+      "compliance_p": 0.369,
+      "outcome": "noise",
+      "outcome_p": 1.0,
+      "tokens": "better",
+      "tokens_p": 0.002,
+      "duration_s": "better",
+      "duration_s_p": 0.001
+    },
+    "C_vs_A": {
+      "compliance": "noise",
+      "compliance_p": 0.244,
+      "outcome": "noise",
+      "outcome_p": 1.0,
+      "tokens": "noise",
+      "tokens_p": 0.053,
+      "duration_s": "worse",
+      "duration_s_p": 0.0
+    }
+  },
+  "verdict": "promote",
+  "synthesis": "Base eff897e (18-file Read first list, refactoring playbook) against per-playbook reading lists with the refactoring playbook removed; 10 runs per arm, sonnet A/B, opus C on B. B reads only adapter, worker.md and opening-a-pr.md (no principle in 10/10; A read refactoring 10/10, migrate-callers 9/10, laziness 9/10). Tokens 248k to 174k mean (better, p 0.002), duration 39 to 27 s (better, p 0.001); outcome 10/10 both; compliance 0.78 vs 0.74 (noise, p 0.37). Watch criterion 1 (project-wide search before the first edit): A fails 2/10, B 4/10, plausibly the missing migrate-callers read; too few runs to call. C's slot 17 was a false isolation hit (code punctuation around its own workdir), fixed in this branch and rejudged: C passes 10/10."
+}

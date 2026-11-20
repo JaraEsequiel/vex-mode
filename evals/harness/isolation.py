@@ -85,6 +85,7 @@ def _segments(cmd: str) -> list[list[str]]:
     return [*segments, current]
 
 
+CODE_PUNCTUATION = "[]{}<>,'\""  # around a path in code (a heredoc, `python -c`), not part of it
 ASSIGN = re.compile(r"^([A-Za-z_][A-Za-z0-9_]*)=(.*)$")
 
 
@@ -101,7 +102,7 @@ def _command_problem(cmd: str, workdir: Path | None, home: Path | None, ctx: dic
         if len(seg) == 1 and (m := ASSIGN.match(seg[0])) and "$" not in m.group(2) and "`" not in m.group(2):
             env[m.group(1)] = m.group(2)
         for raw in seg:
-            token = _expand(raw, env)
+            token = _expand(raw, env).strip(CODE_PUNCTUATION)
             if "$" in token or "`" in token:  # a shell expansion is not a path we can resolve
                 continue
             if "/" not in token and token not in ("..", "~"):
