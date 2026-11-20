@@ -87,7 +87,8 @@ If an eval was killed before it restored the user's plugin, the next eval refuse
 | The judge's API key never reaches the repo, a result or the run dir | `evals/harness/judges.py` `evals/tests/test_run.py` |
 | Every eval measures compliance, outcome and cost on three fixed arms | `evals/harness/arms.py` `evals/tests/test_run.py` |
 | A calibration runs the base plugin against no plugin on the same model, gives the no-plugin arm the prompt without the command, and never counts as evidence for a skill | `evals/run.py` `evals/harness/arms.py` `evals/tests/test_run.py` |
-| An eval stops at the first quota error and writes no result when an arm has no valid run | `evals/run.py` `evals/tests/test_run.py` |
+| An eval stops at the first quota error (runs in flight are killed, none new starts) and writes no result when an arm has no valid run | `evals/run.py` `evals/tests/test_run.py` |
+| On Claude Code candidates run `--jobs` at once (default 4) with slots fixed up front; agy refuses more than one; a signal kills every run in flight | `evals/run.py` `evals/tests/test_run.py` `evals/tests/fake_claude.py` |
 | On Claude Code the judge grades the reply the Stop gate interrupted, with the gate's follow-up shown apart | `evals/harness/transcript.py` `evals/run.py` `evals/tests/test_run.py` `evals/tests/test_harness.py` |
 | An eval refuses a base and variant with the same skill tree (nothing to measure) | `evals/run.py` `evals/tests/test_run.py` |
 | An eval reads its case (prompt, rubric, check, project) from a snapshot in its run dir, so a branch change during the eval cannot reach its runs; `rejudge` reads the current rubric on purpose | `evals/run.py` `evals/tests/test_run.py` |

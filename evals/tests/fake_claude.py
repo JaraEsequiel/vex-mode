@@ -25,6 +25,17 @@ def main(argv: list[str]) -> int:
     tree = Path(argv[argv.index("--plugin-dir") + 1]) if "--plugin-dir" in argv else None
     model = argv[argv.index("--model") + 1]
     emit({"type": "system", "subtype": "init", "session_id": "s1", "model": model, "cwd": os.getcwd()})
+    if MODE in ("slow", "hang"):
+        import time
+        with open(HOME / "spans.log", "a") as f:
+            f.write(f"start {time.time()}\n")
+        if MODE == "hang" and not (HOME / "signalled").exists():
+            (HOME / "signalled").write_text("")
+            import signal
+            os.kill(int(os.environ["FAKE_PARENT"]), signal.SIGTERM)
+        time.sleep(0.5 if MODE == "slow" else 30)
+        with open(HOME / "spans.log", "a") as f:
+            f.write(f"end {time.time()}\n")
     if tree is not None:
         tool("t1", "Read", {"file_path": str(next((tree / "skills").glob("*/SKILL.md")))})
     if MODE == "peek":
