@@ -599,6 +599,12 @@ class CalibrateTest(ClaudeCodeRunTest):
             self.assertEqual(argv[-1], "the total is wrong")
             self.assertEqual(argv[argv.index("--setting-sources") + 1], "project")
 
+    def test_calibrating_again_writes_a_new_file(self):
+        first = self.calibrate()
+        import time
+        time.sleep(1.1)
+        self.assertNotEqual(self.calibrate(), first)
+
     def test_agy_cannot_calibrate(self):
         write(self.repo, {"evals/x/cases/c1/case.json": json.dumps(CASE)})
         git(self.repo, "commit", "-qam", "agy case")
