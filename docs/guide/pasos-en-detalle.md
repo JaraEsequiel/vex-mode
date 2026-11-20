@@ -9,14 +9,14 @@ La fuente de cada playbook está en `skills/vex-mode/playbooks/`. Si esta págin
 Cuando escribes `/vex-mode <tarea>`:
 
 1. `hooks/activate.py` crea un marcador para la conversación en el directorio de estado del plugin. Ese marcador es lo que hace que `stop_gate.py` actúe después.
-2. El hook inyecta la lista de lectura una sola vez. El agente lee `worker.md`, los playbooks y las skills de principios antes de hacer nada.
+2. El hook inyecta la lista de lectura una sola vez. El agente lee `worker.md` y el playbook de abrir un PR antes de hacer nada. Después lee el playbook que corresponde a la tarea y las skills de principios que ese playbook nombra en su línea **Read first**. Así no carga en contexto lo que la tarea no usa.
 3. El agente aplica las reglas fijas del router `skills/vex-mode/SKILL.md`:
    - Repite el objetivo y el cambio mínimo en el primer mensaje.
    - Si una duda se resuelve corriendo algo, hace un prototipo en vez de preguntar.
    - Antes de escribir código, nombra la forma de los datos. Si el cambio cruza una función, usa `architect`.
    - Pasa todo texto por `unslop`, y la documentación, los PRs y los commits también por `technical-writing`.
    - Juzga cada comentario de un bot de revisión por su contenido, sin aceptarlo de forma automática.
-4. Elige el playbook que corresponde y copia sus pasos a la lista de tareas.
+4. Elige el playbook que corresponde y copia sus pasos a la lista de tareas. Los playbooks son bug fix, feature, abrir un PR y eval. Una tarea que no encaja en ninguno, como una limpieza de código, sigue el núcleo y las skills de principios.
 
 Si el agente lanza un subagente, la primera línea de su encargo es `Read <ruta>/worker.md before anything else.` Así las reglas llegan también a los subagentes, que no cargan las skills por su cuenta.
 
@@ -53,18 +53,14 @@ Un trabajo acoplado, como una feature o una migración, va a un solo dueño. Ese
 
 La respuesta final dice qué se construyó, qué se eligió y por qué, el plan de paralelismo y las decisiones abiertas.
 
-## Playbook de refactoring
+## Limpiezas y refactors
 
-El agente es dueño del contrato. La estructura cambia y el comportamiento no. Si aparece un bug o una feature que falta, la separa y envía primero el cambio de estructura.
+No hay un playbook de refactoring. Se sacó porque en las evals no mejoraba los resultados (shipping-cleanup y points-cleanup). En su lugar, la regla "Changing code" del núcleo vale siempre:
 
-1. **Fijar el comportamiento.** Escribe un test de caracterización, un snapshot o una comparación antes de mover nada. El type check y el lint no cuentan como fijación.
-2. **Nombrar la estructura que falta.** Por ejemplo, una máquina de estados, un modelo tipado o una tabla. El cambio tiene que borrar ramas o estados inválidos, no agregar capas. El código simple y claro se queda como está.
-3. **Nombrar la forma final.** Describe cómo serían los módulos, los tipos y las llamadas si el código se escribiera hoy. Si cruza una función, corre `architect`.
-4. **Restar antes de sumar.** Borra código muerto, wrappers con un solo caller, validaciones repetidas y referencias huérfanas. Después construye la forma nueva.
-5. **Mover en pasos chicos.** Cada paso mantiene el test del paso 1 en verde. Si cambia una API interna, migra todos los callers y borra la vieja en la misma ola, sin capas de compatibilidad. Revisa cada renombre en los archivos, porque se escapan usos en strings y en texto.
-6. **Probar que nada cambió.** Para cambios grandes, compara salidas viejas contra nuevas con un script o con una corrida grabada.
-7. **Confirmar que vale la pena.** Si el diff no hace el código más fácil de leer en algún lugar, el agente lo revierte.
-8. **Ordenar los commits.** Primero la resta, después la nueva forma y al final la limpieza. Después abre el PR.
+- Antes de la primera edición, el agente busca en todo el proyecto cada uso de lo que va a cambiar: código, tests, configuración y documentación.
+- Si reemplaza algo, mueve cada uso a lo nuevo en el mismo cambio y borra lo viejo. No deja alias, shims ni wrappers, tampoco en los tests.
+
+Con esa regla, las skills `principle-laziness-protocol`, `principle-subtract-before-you-add` y `principle-migrate-callers-then-delete-legacy-apis` guían la forma del cambio, y `principle-prove-it-works` pide comparar el comportamiento antes y después sobre lo real.
 
 ## Playbook de abrir un PR
 
@@ -92,7 +88,7 @@ En corto, `python3 evals/run.py <skill> <caso>` compara tres brazos con candidat
 | `session_start.py` | Inicio de sesión (solo Claude Code) | Carga `rules/AGENTS.md` como contexto y le dice al agente que lea el adaptador de Claude Code. |
 | `activate.py` | Antes de cada mensaje | Con `/vex-mode`, activa el modo completo e inyecta la lista de lectura una vez. Con otro `/<skill>` del plugin, inyecta el texto de esa skill. |
 | `irreversible.py` | Antes de cada comando de shell | Pide confirmación ante comandos irreversibles. Nunca aprueba por su cuenta. En modo no interactivo (`agy -p` o `claude -p`) el comando no corre. |
-| `stop_gate.py` | Cuando el agente quiere terminar | En modo completo, pide una vez por mensaje la evidencia de verificación. No crea un ciclo: si el agente ya respondió a ese pedido, lo deja terminar. |
+| `stop_gate.py` | Cuando el agente quiere terminar | En modo completo, pide una vez por mensaje la evidencia de verificación. No crea un ciclo: si el agente ya respondió a ese pedido, lo deja terminar. En Claude Code no pide nada si la última herramienta del turno fue un comando de shell, porque el agente ya verificó después de su último cambio. |
 
 El hook de pausa analiza el comando completo. Sigue `bash -c`, `eval`, `sudo`, `env` y comandos encadenados con `&&`, `;` o `|`. Un `git push` sin argumentos estando en `main` no lo detecta; por eso también frena que una rama siga a `main`.
 
@@ -137,7 +133,7 @@ El agente lee cada una entera cuando la aplica. Esta tabla dice cuándo entra ca
 | `maintain-verification-skill` | Revisa que la skill de verificación siga al día con la app. |
 | `correct` | Convierte errores repetidos en checks que los hacen imposibles. |
 | `reflect` | Saca lecciones de la conversación y propone ediciones a skills. Espera tu aprobación. |
-| `show-me-your-work` | Lleva un log TSV de decisiones para trabajo largo o desatendido. |
+| `show-me-your-work` | Lleva un log TSV de decisiones para trabajo largo o desatendido. Cada fila se escribe con `scripts/log.sh`, y `log.sh --check` valida el log antes de la auditoría final. |
 | `unslop` | Quita patrones de texto generado por IA. |
 | `technical-writing` | Aplica el estándar de documentación. |
 

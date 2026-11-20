@@ -12,6 +12,7 @@ Sin escribir ningún comando, cada sesión tiene estas reglas:
 - **Autonomía.** El trabajo reversible avanza sin preguntar. Eso incluye editar archivos, crear ramas, correr tests y lanzar evals.
 - **Pausa ante lo irreversible.** Un hook frena estos comandos y te pide confirmación: `git push --force` y sus variantes, un push a `main` o `master`, `gh pr merge`, `rm -rf` sobre rutas absolutas o del home, `terraform apply` y `destroy`, `kubectl delete` y SQL con `DROP` o `TRUNCATE`.
 - **Respuestas cortas con evidencia.** Cada afirmación trae su prueba o una etiqueta: medido, inferido o suposición.
+- **Cambiar código sin dejar restos.** Antes de la primera edición, el agente busca en todo el proyecto cada uso de lo que cambia. Si reemplaza algo, mueve todos los usos y borra lo viejo, sin alias ni wrappers.
 - **Probar sobre lo real.** El agente verifica corriendo la feature o leyendo el valor real. "Compila" no cuenta como prueba.
 - **Puede decir que no.** Si le preguntas si algo vale la pena, te da su juicio real, aunque sea "no".
 
@@ -28,9 +29,9 @@ Escribe `/vex-mode <tarea>` cuando la tarea tenga alguna de estas formas:
 
 Al activarlo pasan tres cosas:
 
-1. El hook `activate.py` marca la conversación como activa y le da al agente la lista de lectura: `worker.md`, cuatro playbooks (bug fix, feature, refactoring y abrir un PR) y trece skills de principios.
-2. El agente elige el playbook que corresponde a la tarea y copia sus pasos a la lista de tareas.
-3. Antes de terminar, el hook `stop_gate.py` le pide una vez por mensaje la evidencia de verificación. Si no la mostró, vuelve a trabajar.
+1. El hook `activate.py` marca la conversación como activa y le da al agente la lista de lectura: `worker.md` y el playbook de abrir un PR. Después el agente lee el playbook de la tarea (bug fix o feature) y las skills de principios que ese playbook nombra.
+2. El agente elige el playbook que corresponde a la tarea y copia sus pasos a la lista de tareas. Una limpieza o un refactor no tiene playbook propio: sigue las reglas del núcleo y las skills de principios.
+3. Antes de terminar, el hook `stop_gate.py` le pide una vez por mensaje la evidencia de verificación. Si no la mostró, vuelve a trabajar. En Claude Code no lo pide si la última herramienta del turno fue un comando, porque ese comando ya es la verificación.
 
 El modo dura toda la conversación. No hace falta repetir el comando en cada mensaje.
 
@@ -89,14 +90,11 @@ Si quieres opinar sobre el diseño antes del código, ejecuta `/architect` prime
 /vex-mode simplifica el módulo de descuentos, tiene tres caminos que hacen lo mismo
 ```
 
-1. El agente fija el comportamiento actual con un test de caracterización antes de mover nada.
-2. Nombra la estructura que falta y la forma final.
-3. Borra código muerto primero y construye sobre la base más simple.
-4. Mueve en pasos chicos que mantienen el test verde.
-5. Prueba que el comportamiento no cambió.
-6. Revierte el cambio si no reduce lo que hay que leer para entender el código.
+No hay un playbook de refactoring, así que el agente sigue el núcleo y las skills de principios:
 
-Si en el camino aparece un bug real o una feature que falta, el agente la separa en otro PR.
+1. Antes de la primera edición, busca en todo el proyecto cada uso del código que va a tocar, incluidos tests y documentación.
+2. Unifica los tres caminos en uno, mueve todos los usos y borra los viejos, sin dejar wrappers.
+3. Prueba sobre lo real que el comportamiento no cambió, por ejemplo comparando la salida de los mismos comandos antes y después.
 
 ### Al terminar el día: guardar lo aprendido
 
@@ -131,7 +129,7 @@ Cada check nuevo se prueba contra un error real del pasado.
 
 Si vas a dejar al agente trabajando solo, dilo en el mensaje: "no pares", "me voy a dormir" o "sigue hasta terminar". El agente sigue sin pausar en lo reversible. Lo irreversible sigue pausado.
 
-Agrega `/show-me-your-work` para que deje un log TSV con una fila por decisión: qué hizo, por qué, la evidencia y el resultado. Cuando vuelves, lees el log en vez de la conversación entera.
+Agrega `/show-me-your-work` para que deje un log TSV con una fila por decisión: qué hizo, por qué, la evidencia y el resultado. Cuando vuelves, lees el log en vez de la conversación entera. Lo renderizas en la terminal con `column -s$'\t' -t decisions.tsv`.
 
 ### Escribir tests primero
 
