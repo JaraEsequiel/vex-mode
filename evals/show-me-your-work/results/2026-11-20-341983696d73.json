@@ -1,0 +1,7 @@
+{
+  "kind": "waiver",
+  "skill": "show-me-your-work",
+  "tree_sha256": "341983696d734395d3c4045ca888c780af850dbc1436eb64efa3e70d7195f0f3",
+  "date": "2026-11-20",
+  "reason": "Adds `log.sh --check` (header, six non-empty cells, UTC ts) and makes the writer refuse an empty cell; both are pinned by 11 tests in scripts/tests/test_show_me_your_work_log.py, including that every row log.sh writes passes its own check. The SKILL.md text now requires log.sh for every row, runs the check at the start of the audit, and copies the transcript into the work dir before the cross-model review (issues #39 and #40, from a vex-fitness /reflect). Manual-only skill and no case measures it; the cross-model step needs agy, whose quota is exhausted until about 2026-11-25, so the sandbox claim in #39 is backed by docs/decisions/2026-11-19-m3-dry-run.md (agy's sandbox blocked git outside the workspace) and not probed for this change."
+}
