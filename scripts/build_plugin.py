@@ -207,6 +207,20 @@ def write_claude(src: Path, tree: Path) -> Path:
     return tree
 
 
+def build_claude(repo_root: Path, out: Path, ref: str) -> Path:
+    """The Claude Code tree of a commit, for an eval arm (`claude -p --plugin-dir <out>`)."""
+    archive = subprocess.run(["git", "-C", str(repo_root), "archive", "--format=tar", ref],
+                             check=True, capture_output=True).stdout
+    with tempfile.TemporaryDirectory(prefix="vex-cc-src-") as tmp:
+        with tarfile.open(fileobj=io.BytesIO(archive)) as tar:
+            tar.extractall(tmp, filter="data")
+        return write_claude(Path(tmp), out)
+
+
+def claude_command() -> list[str]:
+    return shlex.split(os.environ.get("VEX_CLAUDE", "claude"))
+
+
 def agy_command() -> list[str]:
     return shlex.split(os.environ.get("VEX_AGY", "agy"))
 

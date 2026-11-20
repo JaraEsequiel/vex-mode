@@ -45,4 +45,4 @@ Claude Code has no agy brain artifacts, agy plugin commands, or agy hook format.
 | agy | Claude Code |
 | --- | --- |
 | A step that installs an agy hook template with no Claude Code template beside it | Skip with the line. |
-| A script that runs `agy` itself, such as `evals/run.py` | Run it as written. It calls agy whatever harness you are in. That is not a skip, so write no line. |
+| A script that runs `agy` itself, such as `evals/run.py` | Run it as written. `evals/run.py` runs the harness its case names (`"harness"` in `case.json`, agy by default), whatever harness you are in. That is not a skip, so write no line. |

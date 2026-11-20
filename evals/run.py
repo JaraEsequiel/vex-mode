@@ -5,8 +5,12 @@
     python3 evals/run.py restore    (after an eval that was killed before it could restore the plugin)
     python3 evals/run.py verdict <result.json> <promote|reject|inconclusive> "<synthesis>"
 
-Environment (tests override these): VEX_AGY (agy command), VEX_PLUGIN_HOME (default
-~/.gemini/config/plugins), VEX_CACHE (default ~/.cache).
+Environment (tests override these): VEX_AGY (agy command), VEX_CLAUDE (claude command), VEX_PLUGIN_HOME
+(default ~/.gemini/config/plugins), VEX_CACHE (default ~/.cache).
+
+A case runs on agy unless its case.json says `"harness": "claude-code"`. On Claude Code each arm loads its
+own build with `--plugin-dir` and `--setting-sources project`, so nothing is installed and the user's
+plugins, skills, CLAUDE.md and MCP servers stay out (docs/decisions/2026-11-19-claude-code-probes.md).
 """
 import argparse
 import contextlib
@@ -35,6 +39,9 @@ from harness import arms as arms_mod  # noqa: E402
 from harness import isolation, judge, judges, quality, quality_judge, stats, transcript  # noqa: E402
 
 METRICS = ("compliance", "outcome", "tokens", "duration_s")
+HARNESSES = ("agy", "claude-code")
+# Tools a Claude Code candidate may use without a person; edits are allowed by acceptEdits.
+CLAUDE_TOOLS = "Bash,Agent,TodoWrite"
 VERDICTS = ("promote", "reject", "inconclusive")
 DIFF_LIMIT = 20000
 
@@ -100,6 +107,20 @@ def _run_candidate(arm, prompt: str, timeout_s: int, work: Path, log: Path) -> t
     except subprocess.TimeoutExpired:
         pass
     return transcript.parse(log.read_text()), time.monotonic() - start
+
+
+def _run_claude(arm, prompt: str, timeout_s: int, work: Path, log: Path, tree: Path) -> tuple[transcript.Transcript, float]:
+    cmd = [*build_plugin.claude_command(), "--model", arm.model, "--plugin-dir", str(tree), "--add-dir", str(tree),
+           "--setting-sources", "project", "--permission-mode", "acceptEdits", "--allowedTools", CLAUDE_TOOLS,
+           "--output-format", "stream-json", "--verbose", "-p", prompt]
+    start = time.monotonic()
+    try:
+        with open(log, "w") as out:
+            subprocess.run(cmd, cwd=work, stdin=subprocess.DEVNULL, stdout=out, stderr=subprocess.DEVNULL,
+                           timeout=timeout_s, env=judges.agent_env())
+    except subprocess.TimeoutExpired:
+        pass
+    return transcript.parse_claude(log.read_text()), time.monotonic() - start
 
 
 def _outcome(case_dir: Path, work: Path, record: Path) -> int:
@@ -323,7 +344,11 @@ def run_eval(repo: Path, skill: str, case: str, base: str | None = None,
     case_dir = repo / "evals" / skill / "cases" / case
     cfg = json.loads((case_dir / "case.json").read_text())
     runs = runs or cfg["runs"]
-    if _marker().exists():
+    harness = cfg.get("harness", "agy")
+    if harness not in HARNESSES:
+        raise EvalError(f"case.json harness must be one of {', '.join(HARNESSES)}")
+    claude = harness == "claude-code"
+    if _marker().exists() and not claude:
         raise EvalError(f"a previous eval did not restore the plugin; run `python3 evals/run.py restore` first")
     if _git(repo, "status", "--porcelain", "--", "skills/"):
         raise EvalError("skills/ has uncommitted changes; the variant must be a commit")
@@ -342,6 +367,9 @@ def run_eval(repo: Path, skill: str, case: str, base: str | None = None,
         (run_dir / sub).mkdir(parents=True)
     builds = {arm.label: build_plugin.build(repo, run_dir / "build" / arm.label, ref=arm.plugin_ref) for arm in arm_list}
     trees = {label: skill_tree_sha256(b / "skills" / skill) for label, b in builds.items()}
+    # Outside the eval cache (a forbidden root) so an arm may read its own plugin files.
+    cc_trees = {arm.label: build_plugin.build_claude(repo, _cache() / "vex-cc" / stamp / arm.label, arm.plugin_ref)
+                for arm in arm_list} if claude else {}
     path = repo / "evals" / skill / "results" / f"{dt.date.today().isoformat()}-{case}-{trees['B'][:12]}.json"
     if path.exists():
         raise EvalError(f"{path} already exists; delete it to run this eval again")
@@ -355,15 +383,18 @@ def run_eval(repo: Path, skill: str, case: str, base: str | None = None,
     materials: dict[int, str] = {}
     with _locked():
         backup = run_dir / "installed-backup"
-        if installed.is_dir():
-            shutil.copytree(installed, backup)
-        _marker().write_text(str(backup) if backup.is_dir() else "-")
+        if not claude:
+            if installed.is_dir():
+                shutil.copytree(installed, backup)
+            _marker().write_text(str(backup) if backup.is_dir() else "-")
         saved = {sig: signal.signal(sig, _raise_interrupt) for sig in (signal.SIGTERM, signal.SIGHUP)}
         try:
             for arm in arm_list:
-                build_plugin.install(builds[arm.label])
-                if skill_tree_sha256(installed / "skills" / skill) != trees[arm.label]:
-                    raise EvalError(f"arm {arm.label}: installed skill does not match the build")
+                plugin_root = cc_trees[arm.label] if claude else installed
+                if not claude:
+                    build_plugin.install(builds[arm.label])
+                    if skill_tree_sha256(installed / "skills" / skill) != trees[arm.label]:
+                        raise EvalError(f"arm {arm.label}: installed skill does not match the build")
                 arm_runs = []
                 for _ in range(runs):
                     slot = slots.pop()
@@ -371,9 +402,12 @@ def run_eval(repo: Path, skill: str, case: str, base: str | None = None,
                     work = private / cfg["workdir"]
                     _fresh_workdir(case_dir / "project", work)
                     try:
-                        t, wall = _run_candidate(arm, prompt, cfg["timeout_s"], work,
-                                                 run_dir / "transcripts" / f"{slot}.ndjson")
-                        bad = isolation.violations(t, plugin_root=installed, forbidden=[_cache() / "vex-mode", repo, judges._secrets_file()],
+                        log = run_dir / "transcripts" / f"{slot}.ndjson"
+                        if claude:
+                            t, wall = _run_claude(arm, prompt, cfg["timeout_s"], work, log, plugin_root)
+                        else:
+                            t, wall = _run_candidate(arm, prompt, cfg["timeout_s"], work, log)
+                        bad = isolation.violations(t, plugin_root=plugin_root, forbidden=[_cache() / "vex-mode", repo, judges._secrets_file()],
                                                    workdir=work, work_root=work_root, home=Path.home())
                         invalid = "; ".join(bad) or (None if t.status == "SUCCESS" else f"status {t.status}")
                         diff = _diff(work)
@@ -390,20 +424,22 @@ def run_eval(repo: Path, skill: str, case: str, base: str | None = None,
                                      "compliance": 0.0 if invalid else None,
                                      "tokens": t.total_tokens if finished else t.step_tokens,
                                      "duration_s": t.duration_s if finished else wall,
-                                     "reads": len(t.reads), "commands": len(t.commands)})
+                                     "reads": len(t.reads), "commands": len(t.commands),
+                                     **({"cost_usd": t.cost_usd} if claude else {})})
                 records[arm.label] = {"model": arm.model, "plugin_ref": arm.plugin_ref,
                                       "tree_sha256": trees[arm.label], "runs": arm_runs}
         finally:
             for sig, handler in saved.items():
                 signal.signal(sig, handler)
-            restore()
+            if not claude:
+                restore()
 
         judge_error, judge_usage = _judge(records, materials, rubric, judge_cfg, run_dir, rng)
         quality_record = _quality(records, case_dir, cfg, prompt, judge_cfg, run_dir, rng)
     metrics, signals = _score(records, quality_record["enabled"])
     result = {
         "kind": "eval", "skill": skill, "tree_sha256": trees["B"], "date": dt.date.today().isoformat(),
-        "case": case, "run_dir": str(run_dir), "arms": records,
+        "case": case, "harness": harness, "run_dir": str(run_dir), "arms": records,
         "judge": _judge_record(judge_cfg, judge_error, judge_usage), "quality": quality_record,
         "metrics": metrics, "signals": signals, "verdict": None, "synthesis": None,
     }
