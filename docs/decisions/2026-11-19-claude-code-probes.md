@@ -18,3 +18,10 @@
 ## Not probed
 
 `ask` in an interactive session (the docs say it prompts), `SessionStart` on `resume`, `clear` and `compact`, installing from a GitHub marketplace.
+
+## Smoke test of the generated tree
+
+`claude -p --plugin-dir harness/claude-code --model haiku`, in an empty git repo, about US$0.01 per run:
+
+- `/vex-mode:vex-mode ...`: `SessionStart` injected `# vex-mode core`; the activation context listed `adapters/claude-code.md`, `skills/vex-mode/SKILL.md` and `worker.md` first; the agent ended its reply, then the Stop gate made it show verification evidence once (state files `active`, `injected`, `asked` under `~/.claude/plugins/data/vex-mode-inline/state/`).
+- `git push --force origin main`: denied with `vex-mode: irreversible action (git push --force)`; the agent did not retry. A relative `rm -rf ./junk` runs, as in agy: the guard covers absolute, home, variable and parent paths only.
