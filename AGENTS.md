@@ -70,11 +70,13 @@ If an eval was killed before it restored the user's plugin, the next eval refuse
 | No dangling skill, playbook or link references | `checks/check_skills.py` |
 | Size budgets (SKILL ≤ 16 KB, rule ≤ 24 KB) | `checks/check_skills.py` |
 | Every rule has an enforcer | `checks/check_rules.py` |
+| Deliberate broken rule without enforcer | none |
 | The plugin is installed only from a clean build (no repo files in the installed copy) | `scripts/build_plugin.py` `scripts/tests/test_build_plugin.py` |
 | Plugin manifest, skills, agents and rules load in agy; the marketplace and the Claude Code tree pass `claude plugin validate --strict` | `scripts/validate_plugin.py` `scripts/tests/test_validate_plugin.py` `.github/workflows/ci.yml` |
 | The committed Claude Code tree matches a fresh build, and every agy name a skill uses has a row in the Claude Code adapter | `scripts/build_plugin.py` `scripts/tests/test_build_plugin.py` `.github/workflows/ci.yml` |
 | In Claude Code the always-on core loads at session start, and the hooks keep their agy behavior (ask, never allow; block once per prompt; no loop) | `hooks/session_start.py` `hooks/tests/test_claude_code.py` |
-| Every check and test runs on every push and PR | `.github/workflows/ci.yml` |
+| Every check and test runs on every push, PR, and before the agent stops with unpushed changes | `scripts/check` `.agents/check_on_stop.py` `.agents/hooks.json` `.github/workflows/check.yml` `.github/workflows/ci.yml` |
+| User-facing plugin behavior (build/validate, activation, irreversible guard, stop gate) is verified with a project-local verification skill | `.agents/skills/verify-vex-mode/SKILL.md` `.agents/skills/verify-vex-mode/bin/control-vex-mode` `.agents/skills/verify-vex-mode/features/README.md` |
 | Full mode activates only via /vex-mode (`/vex-mode:vex-mode` in Claude Code), reading list injected once | `hooks/activate.py` `hooks/tests/test_activate.py` `hooks/tests/test_claude_code.py` |
 | Any other `/<skill>` of the plugin gets that skill's text and folder injected (in `agy -p` a plugin slash command does not expand) | `hooks/activate.py` `hooks/tests/test_activate.py` |
 | Pause before irreversible actions (force_ask, never allow) | `hooks/irreversible.py` `hooks/tests/test_irreversible.py` |
@@ -97,7 +99,7 @@ If an eval was killed before it restored the user's plugin, the next eval refuse
 | `agy -p` is written last in skills and rules (it takes the next word as the prompt) | `checks/check_skills.py` `checks/tests/test_check_skills.py` |
 | The generated Stop hook (agy and Claude Code) never loops, never blocks a clean finish, a cancel or an error, and treats a check that can't run or hangs as a failure | `skills/agent-ready/templates/check_on_stop.py` `scripts/tests/test_check_on_stop.py` |
 | The design's HTML matches its Markdown | `scripts/render_design.py` `scripts/tests/test_render_design.py` |
-| A pass/fail outcome is compared with a one-sided Fisher exact test (α 0.05) and keeps its p; the spread rule is for the other measures | `evals/harness/stats.py` `evals/run.py` `evals/tests/test_harness.py` `evals/tests/test_run.py` |
+| A pass/fail outcome is compared with a one-sided Fisher exact test, every other measure (compliance, tokens, time, quality) with a one-sided exact Mann-Whitney test (α 0.05); each keeps its p | `evals/harness/stats.py` `evals/run.py` `evals/tests/test_harness.py` `evals/tests/test_run.py` |
 | Quality is measured only on runs that pass; promote is refused when outcome or a blocking quality measure is worse or errored | `evals/run.py` `checks/check_evals.py` `evals/tests/test_run.py` `checks/tests/test_check_evals.py` |
 | Every blocking deterministic quality measure scores a planted worse patch worse than the good fix | `evals/harness/quality.py` `evals/tests/test_quality.py` |
 | A PreToolUse hook with no opinion prints nothing (`{}` denies the tool) | `hooks/tests/test_irreversible.py` `docs/decisions/2026-11-18-hook-probe.md` |

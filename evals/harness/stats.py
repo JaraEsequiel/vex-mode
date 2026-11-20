@@ -1,4 +1,4 @@
-"""Numbers with their spread (principle-explain-the-number): a gap within the spread is noise."""
+"""Numbers with their spread (principle-explain-the-number), and the tests that say whether a gap is noise."""
 
 
 def summarize(xs: list[float]) -> dict:
@@ -8,15 +8,45 @@ def summarize(xs: list[float]) -> dict:
     return {"mean": sum(xs) / len(xs), "min": lo, "max": hi, "spread": hi - lo}
 
 
-def signal(a: dict, b: dict) -> str:
-    """Direction of b against a; higher is better. Pass negated values for costs."""
-    gap = b["mean"] - a["mean"]
-    if abs(gap) <= max(a["spread"], b["spread"]):
-        return "noise"
-    return "better" if gap > 0 else "worse"
-
-
 ALPHA = 0.05
+
+
+def rank_p(a: list[float], b: list[float]) -> float:
+    """One-sided exact Mann-Whitney test: the chance of b's ranks summing at least as high as they did if
+    both arms came from one distribution. Exact over every split of the pooled runs, ties as mid-ranks."""
+    from math import comb
+
+    if not a or not b:
+        return 1.0
+    pooled = sorted(a + b)
+    twice = {}  # doubled mid-rank of each value, so every rank is an integer
+    i = 0
+    while i < len(pooled):
+        j = i
+        while j < len(pooled) and pooled[j] == pooled[i]:
+            j += 1
+        twice[pooled[i]] = i + 1 + j
+        i = j
+    ways = [{0: 1}] + [{} for _ in b]  # ways[k][s]: subsets of k runs whose doubled ranks sum to s
+    for v in a + b:
+        for k in range(len(b), 0, -1):
+            for s, n in ways[k - 1].items():
+                ways[k][s + twice[v]] = ways[k].get(s + twice[v], 0) + n
+    observed = sum(twice[v] for v in b)
+    return sum(n for s, n in ways[len(b)].items() if s >= observed) / comb(len(pooled), len(b))
+
+
+def rank_signal(a: list[float], b: list[float], lower_is_better: bool = False) -> tuple[str, float]:
+    """Direction of b against a, with its p-value. The spread rule (a gap inside max - min is noise) let one
+    run at each end hide a gap ten runs agreed on, so the measures get a rank test like outcome gets Fisher."""
+    if lower_is_better:
+        a, b = [-x for x in a], [-x for x in b]
+    better, worse = rank_p(a, b), rank_p(b, a)
+    if better <= ALPHA:
+        return "better", round(better, 3)
+    if worse <= ALPHA:
+        return "worse", round(worse, 3)
+    return "noise", round(min(better, worse, 1.0), 3)
 
 
 def fisher_p(a: list[int], b: list[int]) -> float:

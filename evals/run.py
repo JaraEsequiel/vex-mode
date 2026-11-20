@@ -259,11 +259,10 @@ def _score(records: dict, with_quality: bool = False, pairs: dict = PAIRS) -> tu
             elif name == "outcome":
                 s[name], s["outcome_p"] = stats.outcome_signal([r["outcome"] for r in records[a]["runs"]],
                                                                [r["outcome"] for r in records[b]["runs"]])
-            elif name in ("tokens", "duration_s"):
-                s[name] = stats.signal({"mean": -x["mean"], "spread": x["spread"]},
-                                       {"mean": -y["mean"], "spread": y["spread"]})
             else:
-                s[name] = stats.signal(x, y)
+                s[name], s[f"{name}_p"] = stats.rank_signal(
+                    [float(r[name]) for r in records[a]["runs"]], [float(r[name]) for r in records[b]["runs"]],
+                    lower_is_better=name in ("tokens", "duration_s"))
         for name in QUALITY_ALL if with_quality else ():
             (xs, x_err), (ys, y_err) = _quality_metric(records[a], name), _quality_metric(records[b], name)
             if x_err or y_err:
@@ -271,10 +270,7 @@ def _score(records: dict, with_quality: bool = False, pairs: dict = PAIRS) -> tu
             elif min(len(xs), len(ys)) < 2:
                 s[name] = "few"
             else:
-                sign = -1 if name in quality.DETERMINISTIC else 1
-                x, y = metrics[a][name], metrics[b][name]
-                s[name] = stats.signal({"mean": sign * x["mean"], "spread": x["spread"]},
-                                       {"mean": sign * y["mean"], "spread": y["spread"]})
+                s[name], s[f"{name}_p"] = stats.rank_signal(xs, ys, lower_is_better=name in quality.DETERMINISTIC)
         signals[pair] = s
     return metrics, signals
 

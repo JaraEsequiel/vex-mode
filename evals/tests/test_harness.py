@@ -226,11 +226,33 @@ class StatsTest(unittest.TestCase):
         self.assertEqual(stats.summarize([1.0, 0.0, 0.5]), {"mean": 0.5, "min": 0.0, "max": 1.0, "spread": 1.0})
         self.assertEqual(stats.summarize([]), {"mean": 0.0, "min": 0.0, "max": 0.0, "spread": 0.0})
 
-    def test_signal_noise_and_direction(self):
-        a = stats.summarize([0.5, 0.5, 0.5])
-        self.assertEqual(stats.signal(a, stats.summarize([1.0, 1.0, 1.0])), "better")
-        self.assertEqual(stats.signal(a, stats.summarize([0.0, 0.0, 0.0])), "worse")
-        self.assertEqual(stats.signal(a, stats.summarize([0.0, 1.0, 1.0])), "noise")
+    def test_rank_p_matches_brute_force_with_ties(self):
+        from itertools import combinations
+
+        a, b = [1, 2, 2, 3, 5], [2, 3, 3, 4]
+        pooled = a + b
+        order = sorted(pooled)
+        rank = {v: (order.index(v) + 1 + len(order) - order[::-1].index(v)) / 2 for v in pooled}
+        observed = sum(rank[v] for v in b)
+        sums = [sum(rank[pooled[i]] for i in c) for c in combinations(range(len(pooled)), len(b))]
+        self.assertAlmostEqual(stats.rank_p(a, b), sum(s >= observed for s in sums) / len(sums))
+
+    def test_rank_signal_direction_and_p(self):
+        # 2026-11-20 backlog: compliance 0.90 against 0.50 over 10 runs read as noise under the spread rule,
+        # because one run at each end stretched the spread past the gap.
+        bare = [0.5] * 8 + [0.0, 1.0]
+        plugin = [0.9] * 8 + [0.5, 1.0]
+        signal, p = stats.rank_signal(bare, plugin)
+        self.assertEqual(signal, "better")
+        self.assertLess(p, 0.01)
+        self.assertEqual(stats.rank_signal(plugin, bare)[0], "worse")
+        self.assertEqual(stats.rank_signal([0.5, 0.5, 0.5], [1.0, 1.0, 1.0]), ("better", 0.05))
+        self.assertEqual(stats.rank_signal([0.5, 0.5, 0.5], [0.0, 1.0, 1.0])[0], "noise")
+        self.assertEqual(stats.rank_signal([1.0, 1.0], [1.0, 1.0]), ("noise", 1.0))
+
+    def test_rank_signal_lower_is_better_for_costs(self):
+        self.assertEqual(stats.rank_signal([900, 1000, 1100], [400, 500, 600], lower_is_better=True),
+                         ("better", 0.05))
 
     def test_fisher_one_sided_p(self):
         self.assertAlmostEqual(stats.fisher_p([0, 0, 0], [1, 1, 1]), 0.05)
