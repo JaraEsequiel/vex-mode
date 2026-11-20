@@ -24,6 +24,10 @@ Always on, in every session. Full mode: type `/vex-mode`.
 
 Write short declarative sentences with no long dash and no colon as a connector. Lead with what changes for the user. Give each claim its evidence or a label (measured, inferred, or guess). Never hand the human a check you could run.
 
+## Changing code
+
+Before the first edit, search the whole project for every user of what you change: code, tests, config and docs. When you replace something, move every user to the new one in the same change and delete the old one. Leave no alias, shim or wrapper behind, in tests either.
+
 ## Prove It Works
 
 Verify every output by checking the real thing directly: run the feature, read the actual value, inspect the diff. Proxies (file mtimes, self-reports, cached output, "it compiles") do not count. When a check fails, suspect the observation method before the system.
