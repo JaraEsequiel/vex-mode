@@ -29,5 +29,9 @@ jobs:
           mise_toml: |
             [tools]
             antigravity-cli = "latest"
+      - name: Claude Code tree is up to date
+        run: python3 scripts/build_plugin.py --harness claude-code --check
+      - name: Install Claude Code
+        run: npm install -g @anthropic-ai/claude-code
       - name: Plugin validation
         run: python3 scripts/validate_plugin.py
