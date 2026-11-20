@@ -1,0 +1,366 @@
+{
+  "kind": "calibration",
+  "skill": "vex-mode",
+  "tree_sha256": "c0d39af911cea80408106fc20f443bb7e947382c142310e0b5a72741832a33e5",
+  "date": "2026-11-20",
+  "case": "points-cleanup",
+  "harness": "claude-code",
+  "run_dir": "/home/vex/.cache/vex-mode/runs/20261120-102125-748484",
+  "arms": {
+    "A": {
+      "model": "claude-sonnet-5-5",
+      "plugin_ref": "0a2e7c17ff80fc1fca74f36331d84fb229a59a9c",
+      "tree_sha256": "c0d39af911cea80408106fc20f443bb7e947382c142310e0b5a72741832a33e5",
+      "runs": [
+        {
+          "slot": 17,
+          "status": "SUCCESS",
+          "invalid": null,
+          "outcome": 1,
+          "compliance": 0.8,
+          "tokens": 281663,
+          "duration_s": 34.947,
+          "reads": 5,
+          "commands": 6,
+          "cost_usd": 0.1804748,
+          "label": "R9"
+        },
+        {
+          "slot": 14,
+          "status": "SUCCESS",
+          "invalid": null,
+          "outcome": 1,
+          "compliance": 1.0,
+          "tokens": 284403,
+          "duration_s": 38.942,
+          "reads": 5,
+          "commands": 6,
+          "cost_usd": 0.18589350000000002,
+          "label": "R7"
+        },
+        {
+          "slot": 13,
+          "status": "SUCCESS",
+          "invalid": null,
+          "outcome": 1,
+          "compliance": 1.0,
+          "tokens": 263189,
+          "duration_s": 27.461,
+          "reads": 2,
+          "commands": 6,
+          "cost_usd": 0.15553580000000003,
+          "label": "R16"
+        },
+        {
+          "slot": 11,
+          "status": "SUCCESS",
+          "invalid": null,
+          "outcome": 1,
+          "compliance": 0.8,
+          "tokens": 279588,
+          "duration_s": 35.102,
+          "reads": 4,
+          "commands": 6,
+          "cost_usd": 0.17578320000000003,
+          "label": "R5"
+        },
+        {
+          "slot": 15,
+          "status": "SUCCESS",
+          "invalid": null,
+          "outcome": 1,
+          "compliance": 1.0,
+          "tokens": 248642,
+          "duration_s": 36.806,
+          "reads": 5,
+          "commands": 5,
+          "cost_usd": 0.1793769,
+          "label": "R8"
+        },
+        {
+          "slot": 12,
+          "status": "SUCCESS",
+          "invalid": null,
+          "outcome": 1,
+          "compliance": 1.0,
+          "tokens": 251739,
+          "duration_s": 37.406,
+          "reads": 5,
+          "commands": 5,
+          "cost_usd": 0.18314229999999998,
+          "label": "R18"
+        },
+        {
+          "slot": 1,
+          "status": "SUCCESS",
+          "invalid": null,
+          "outcome": 1,
+          "compliance": 0.8,
+          "tokens": 237073,
+          "duration_s": 30.461,
+          "reads": 5,
+          "commands": 5,
+          "cost_usd": 0.16157359999999998,
+          "label": "R13"
+        },
+        {
+          "slot": 5,
+          "status": "SUCCESS",
+          "invalid": null,
+          "outcome": 1,
+          "compliance": 0.8,
+          "tokens": 285998,
+          "duration_s": 37.867,
+          "reads": 6,
+          "commands": 6,
+          "cost_usd": 0.18141649999999998,
+          "label": "R15"
+        },
+        {
+          "slot": 16,
+          "status": "SUCCESS",
+          "invalid": null,
+          "outcome": 1,
+          "compliance": 0.8,
+          "tokens": 277777,
+          "duration_s": 35.339,
+          "reads": 6,
+          "commands": 6,
+          "cost_usd": 0.17426709999999998,
+          "label": "R2"
+        },
+        {
+          "slot": 3,
+          "status": "SUCCESS",
+          "invalid": null,
+          "outcome": 1,
+          "compliance": 1.0,
+          "tokens": 235137,
+          "duration_s": 26.161,
+          "reads": 2,
+          "commands": 5,
+          "cost_usd": 0.1550879,
+          "label": "R20"
+        }
+      ]
+    },
+    "N": {
+      "model": "claude-sonnet-5-5",
+      "plugin_ref": null,
+      "tree_sha256": null,
+      "runs": [
+        {
+          "slot": 9,
+          "status": "SUCCESS",
+          "invalid": null,
+          "outcome": 0,
+          "compliance": 0.2,
+          "tokens": 96233,
+          "duration_s": 16.508,
+          "reads": 0,
+          "commands": 3,
+          "cost_usd": 0.08829429999999999,
+          "label": "R10"
+        },
+        {
+          "slot": 7,
+          "status": "SUCCESS",
+          "invalid": null,
+          "outcome": 0,
+          "compliance": 0.4,
+          "tokens": 123944,
+          "duration_s": 18.863,
+          "reads": 0,
+          "commands": 4,
+          "cost_usd": 0.097548,
+          "label": "R19"
+        },
+        {
+          "slot": 19,
+          "status": "SUCCESS",
+          "invalid": null,
+          "outcome": 0,
+          "compliance": 0.4,
+          "tokens": 122108,
+          "duration_s": 18.419,
+          "reads": 0,
+          "commands": 4,
+          "cost_usd": 0.091344,
+          "label": "R11"
+        },
+        {
+          "slot": 4,
+          "status": "SUCCESS",
+          "invalid": null,
+          "outcome": 0,
+          "compliance": 0.2,
+          "tokens": 94814,
+          "duration_s": 17.366,
+          "reads": 0,
+          "commands": 3,
+          "cost_usd": 0.085096,
+          "label": "R12"
+        },
+        {
+          "slot": 8,
+          "status": "SUCCESS",
+          "invalid": null,
+          "outcome": 1,
+          "compliance": 0.8,
+          "tokens": 124978,
+          "duration_s": 20.935,
+          "reads": 0,
+          "commands": 4,
+          "cost_usd": 0.1009991,
+          "label": "R14"
+        },
+        {
+          "slot": 10,
+          "status": "SUCCESS",
+          "invalid": null,
+          "outcome": 1,
+          "compliance": 0.8,
+          "tokens": 185882,
+          "duration_s": 33.79,
+          "reads": 0,
+          "commands": 5,
+          "cost_usd": 0.1373866,
+          "label": "R4"
+        },
+        {
+          "slot": 18,
+          "status": "SUCCESS",
+          "invalid": null,
+          "outcome": 0,
+          "compliance": 0.2,
+          "tokens": 96389,
+          "duration_s": 15.977,
+          "reads": 0,
+          "commands": 3,
+          "cost_usd": 0.08640070000000001,
+          "label": "R3"
+        },
+        {
+          "slot": 6,
+          "status": "SUCCESS",
+          "invalid": null,
+          "outcome": 1,
+          "compliance": 0.8,
+          "tokens": 123771,
+          "duration_s": 21.531,
+          "reads": 0,
+          "commands": 4,
+          "cost_usd": 0.10097980000000001,
+          "label": "R17"
+        },
+        {
+          "slot": 2,
+          "status": "SUCCESS",
+          "invalid": null,
+          "outcome": 1,
+          "compliance": 0.8,
+          "tokens": 96789,
+          "duration_s": 16.9,
+          "reads": 0,
+          "commands": 3,
+          "cost_usd": 0.0902201,
+          "label": "R1"
+        },
+        {
+          "slot": 20,
+          "status": "SUCCESS",
+          "invalid": null,
+          "outcome": 1,
+          "compliance": 0.4,
+          "tokens": 126711,
+          "duration_s": 27.569,
+          "reads": 0,
+          "commands": 4,
+          "cost_usd": 0.1119631,
+          "label": "R6"
+        }
+      ]
+    }
+  },
+  "judge": {
+    "provider": "openai",
+    "model": "gpt-6.2-sol",
+    "effort": "medium",
+    "error": null,
+    "usage": {
+      "input": 57766,
+      "output": 5457,
+      "reasoning": 950
+    }
+  },
+  "quality": {
+    "enabled": false,
+    "errors": [],
+    "judge_usage": {}
+  },
+  "metrics": {
+    "A": {
+      "compliance": {
+        "mean": 0.9,
+        "min": 0.8,
+        "max": 1.0,
+        "spread": 0.19999999999999996
+      },
+      "outcome": {
+        "mean": 1.0,
+        "min": 1.0,
+        "max": 1.0,
+        "spread": 0.0
+      },
+      "tokens": {
+        "mean": 264520.9,
+        "min": 235137.0,
+        "max": 285998.0,
+        "spread": 50861.0
+      },
+      "duration_s": {
+        "mean": 34.0492,
+        "min": 26.161,
+        "max": 38.942,
+        "spread": 12.780999999999999
+      }
+    },
+    "N": {
+      "compliance": {
+        "mean": 0.5,
+        "min": 0.2,
+        "max": 0.8,
+        "spread": 0.6000000000000001
+      },
+      "outcome": {
+        "mean": 0.5,
+        "min": 0.0,
+        "max": 1.0,
+        "spread": 1.0
+      },
+      "tokens": {
+        "mean": 119161.9,
+        "min": 94814.0,
+        "max": 185882.0,
+        "spread": 91068.0
+      },
+      "duration_s": {
+        "mean": 20.785800000000002,
+        "min": 15.977,
+        "max": 33.79,
+        "spread": 17.813
+      }
+    }
+  },
+  "signals": {
+    "A_vs_N": {
+      "compliance": "noise",
+      "outcome": "better",
+      "outcome_p": 0.016,
+      "tokens": "worse",
+      "duration_s": "noise"
+    }
+  },
+  "verdict": "promote",
+  "synthesis": "10 runs per arm. The plugin passes 10/10, no plugin 5/10: outcome better with Fisher's exact test, p = 0.016. Every no-plugin failure is a trap the case sets: two functions kept with one forwarding to the other (3 runs), or that plus the earned wrapper (2 runs). One no-plugin run that passes the check is borderline: a new points(cents) with points_for kept as a euro adapter forwarding to it; the judge counted it as a wrapper; counted as a fail, p = 0.005. Compliance 0.90 against 0.50, still noise under the spread rule. The plugin costs 2.2x the tokens. This case measures the plugin."
+}
