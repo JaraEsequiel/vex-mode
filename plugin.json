@@ -1,6 +1,9 @@
 {
   "name": "vex-mode",
   "version": "0.1.0",
-  "description": "Vex's agent working mode for Antigravity: rigorous playbooks, verified work, rules enforced by structure. Built on pstack.",
+  "description": "Vex's agent working mode for Antigravity and Claude Code: rigorous playbooks, verified work, rules enforced by structure. Built on pstack.",
+  "author": {
+    "name": "Vex"
+  },
   "repository": "https://github.com/JaraEsequiel/vex-mode"
 }
