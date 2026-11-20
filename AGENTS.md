@@ -96,6 +96,7 @@ If an eval was killed before it restored the user's plugin, the next eval refuse
 | `agy -p` is written last in skills and rules (it takes the next word as the prompt) | `checks/check_skills.py` `checks/tests/test_check_skills.py` |
 | The generated Stop hook (agy and Claude Code) never loops, never blocks a clean finish, a cancel or an error, and treats a check that can't run or hangs as a failure | `skills/agent-ready/templates/check_on_stop.py` `scripts/tests/test_check_on_stop.py` |
 | The design's HTML matches its Markdown | `scripts/render_design.py` `scripts/tests/test_render_design.py` |
+| A pass/fail outcome is compared with a one-sided Fisher exact test (α 0.05) and keeps its p; the spread rule is for the other measures | `evals/harness/stats.py` `evals/run.py` `evals/tests/test_harness.py` `evals/tests/test_run.py` |
 | Quality is measured only on runs that pass; promote is refused when outcome or a blocking quality measure is worse or errored | `evals/run.py` `checks/check_evals.py` `evals/tests/test_run.py` `checks/tests/test_check_evals.py` |
 | Every blocking deterministic quality measure scores a planted worse patch worse than the good fix | `evals/harness/quality.py` `evals/tests/test_quality.py` |
 | A PreToolUse hook with no opinion prints nothing (`{}` denies the tool) | `hooks/tests/test_irreversible.py` `docs/decisions/2026-11-18-hook-probe.md` |

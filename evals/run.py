@@ -254,6 +254,9 @@ def _score(records: dict, with_quality: bool = False, pairs: dict = PAIRS) -> tu
             x, y = metrics[a][name], metrics[b][name]
             if x is None or y is None:
                 s[name] = None
+            elif name == "outcome":
+                s[name], s["outcome_p"] = stats.outcome_signal([r["outcome"] for r in records[a]["runs"]],
+                                                               [r["outcome"] for r in records[b]["runs"]])
             elif name in ("tokens", "duration_s"):
                 s[name] = stats.signal({"mean": -x["mean"], "spread": x["spread"]},
                                        {"mean": -y["mean"], "spread": y["spread"]})

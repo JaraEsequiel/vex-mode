@@ -89,6 +89,15 @@ class RunTest(unittest.TestCase):
     def installed(self) -> str:
         return (self.plugins / "vex-mode/skills/x/SKILL.md").read_text()
 
+    def test_outcome_signal_uses_the_exact_test_and_keeps_its_p(self):
+        def arm(outcomes):
+            return {"runs": [{"outcome": o, "compliance": 1.0, "tokens": 1, "duration_s": 1.0} for o in outcomes]}
+
+        records = {"N": arm([1] * 4 + [0] * 6), "A": arm([1] * 10)}
+        _, signals = run._score(records, pairs=run.CALIBRATION_PAIRS)
+        self.assertEqual(signals["A_vs_N"]["outcome"], "better")
+        self.assertEqual(signals["A_vs_N"]["outcome_p"], 0.005)
+
     def test_refuses_when_base_and_variant_are_the_same_skill(self):
         # 2026-11-20 points-cleanup: no --base, the merge base already had the change, A and B were one plugin.
         with self.assertRaisesRegex(run.EvalError, "same skill tree"):
