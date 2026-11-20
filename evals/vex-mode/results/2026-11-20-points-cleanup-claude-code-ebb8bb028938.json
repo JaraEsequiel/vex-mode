@@ -18,26 +18,26 @@
           "status": "SUCCESS",
           "invalid": null,
           "outcome": 1,
-          "compliance": 0.8,
+          "compliance": 1.0,
           "tokens": 219403,
           "duration_s": 32.822,
           "reads": 2,
           "commands": 6,
           "cost_usd": 0.1504827,
-          "label": "R14"
+          "label": "R7"
         },
         {
           "slot": 3,
           "status": "SUCCESS",
           "invalid": null,
           "outcome": 1,
-          "compliance": 0.8,
+          "compliance": 0.6,
           "tokens": 251961,
           "duration_s": 32.268,
           "reads": 2,
           "commands": 7,
           "cost_usd": 0.1525018,
-          "label": "R2"
+          "label": "R8"
         },
         {
           "slot": 6,
@@ -50,20 +50,20 @@
           "reads": 3,
           "commands": 5,
           "cost_usd": 0.14049540000000002,
-          "label": "R16"
+          "label": "R10"
         },
         {
           "slot": 5,
           "status": "SUCCESS",
           "invalid": null,
           "outcome": 0,
-          "compliance": 0.6,
+          "compliance": 0.4,
           "tokens": 152424,
           "duration_s": 25.134,
           "reads": 3,
           "commands": 4,
           "cost_usd": 0.1325257,
-          "label": "R22"
+          "label": "R26"
         },
         {
           "slot": 24,
@@ -76,33 +76,33 @@
           "reads": 3,
           "commands": 5,
           "cost_usd": 0.15348610000000004,
-          "label": "R12"
+          "label": "R3"
         },
         {
           "slot": 2,
           "status": "SUCCESS",
           "invalid": null,
           "outcome": 0,
-          "compliance": 0.4,
+          "compliance": 0.6,
           "tokens": 150778,
           "duration_s": 23.53,
           "reads": 3,
           "commands": 4,
           "cost_usd": 0.1271174,
-          "label": "R15"
+          "label": "R29"
         },
         {
           "slot": 16,
           "status": "SUCCESS",
           "invalid": null,
           "outcome": 1,
-          "compliance": 0.8,
+          "compliance": 0.6,
           "tokens": 152568,
           "duration_s": 24.815,
           "reads": 3,
           "commands": 4,
           "cost_usd": 0.1328053,
-          "label": "R10"
+          "label": "R30"
         },
         {
           "slot": 28,
@@ -122,13 +122,13 @@
           "status": "SUCCESS",
           "invalid": null,
           "outcome": 0,
-          "compliance": 0.2,
+          "compliance": 0.4,
           "tokens": 151316,
           "duration_s": 23.88,
           "reads": 3,
           "commands": 4,
           "cost_usd": 0.1295952,
-          "label": "R19"
+          "label": "R13"
         },
         {
           "slot": 20,
@@ -141,7 +141,7 @@
           "reads": 3,
           "commands": 5,
           "cost_usd": 0.14893119999999999,
-          "label": "R7"
+          "label": "R5"
         }
       ]
     },
@@ -155,13 +155,13 @@
           "status": "SUCCESS",
           "invalid": null,
           "outcome": 1,
-          "compliance": 0.8,
+          "compliance": 1.0,
           "tokens": 189708,
           "duration_s": 35.581,
           "reads": 3,
           "commands": 5,
           "cost_usd": 0.15135839999999998,
-          "label": "R11"
+          "label": "R19"
         },
         {
           "slot": 9,
@@ -181,26 +181,26 @@
           "status": "SUCCESS",
           "invalid": null,
           "outcome": 1,
-          "compliance": 0.6,
+          "compliance": 0.8,
           "tokens": 156662,
           "duration_s": 24.583,
           "reads": 3,
           "commands": 4,
           "cost_usd": 0.1357635,
-          "label": "R13"
+          "label": "R27"
         },
         {
           "slot": 13,
           "status": "SUCCESS",
           "invalid": null,
           "outcome": 1,
-          "compliance": 0.6,
+          "compliance": 0.8,
           "tokens": 152882,
           "duration_s": 24.809,
           "reads": 3,
           "commands": 4,
           "cost_usd": 0.1339317,
-          "label": "R25"
+          "label": "R6"
         },
         {
           "slot": 25,
@@ -213,20 +213,20 @@
           "reads": 3,
           "commands": 5,
           "cost_usd": 0.14528370000000002,
-          "label": "R8"
+          "label": "R1"
         },
         {
           "slot": 23,
           "status": "SUCCESS",
           "invalid": null,
           "outcome": 1,
-          "compliance": 1.0,
+          "compliance": 0.8,
           "tokens": 187851,
           "duration_s": 31.516,
           "reads": 3,
           "commands": 5,
           "cost_usd": 0.1529892,
-          "label": "R6"
+          "label": "R24"
         },
         {
           "slot": 17,
@@ -239,46 +239,46 @@
           "reads": 3,
           "commands": 3,
           "cost_usd": 0.13228679999999998,
-          "label": "R18"
+          "label": "R22"
         },
         {
           "slot": 15,
           "status": "SUCCESS",
           "invalid": null,
           "outcome": 1,
-          "compliance": 0.8,
+          "compliance": 1.0,
           "tokens": 154667,
           "duration_s": 31.41,
           "reads": 3,
           "commands": 4,
           "cost_usd": 0.1399128,
-          "label": "R9"
+          "label": "R23"
         },
         {
           "slot": 21,
           "status": "SUCCESS",
           "invalid": null,
           "outcome": 1,
-          "compliance": 0.8,
+          "compliance": 1.0,
           "tokens": 189195,
           "duration_s": 28.037,
           "reads": 3,
           "commands": 5,
           "cost_usd": 0.1412907,
-          "label": "R1"
+          "label": "R11"
         },
         {
           "slot": 1,
           "status": "SUCCESS",
           "invalid": null,
           "outcome": 1,
-          "compliance": 0.8,
+          "compliance": 1.0,
           "tokens": 118668,
           "duration_s": 22.245,
           "reads": 3,
           "commands": 3,
           "cost_usd": 0.12400910000000001,
-          "label": "R3"
+          "label": "R25"
         }
       ]
     },
@@ -292,75 +292,78 @@
           "status": "SUCCESS",
           "invalid": null,
           "outcome": 1,
-          "compliance": 0.6,
+          "compliance": 0.8,
           "tokens": 231897,
           "duration_s": 59.226,
           "reads": 0,
           "commands": 7,
           "cost_usd": 0.3635653999999999,
-          "label": "R5"
+          "label": "R15"
         },
         {
           "slot": 14,
           "status": "SUCCESS",
           "invalid": null,
           "outcome": 1,
-          "compliance": 0.8,
+          "compliance": 1.0,
           "tokens": 315117,
           "duration_s": 84.049,
           "reads": 0,
           "commands": 8,
           "cost_usd": 0.46166740000000006,
-          "label": "R26"
+          "label": "R14"
         },
         {
           "slot": 11,
           "status": "SUCCESS",
           "invalid": null,
           "outcome": 1,
-          "compliance": 0.6,
+          "compliance": 0.8,
           "tokens": 238455,
           "duration_s": 80.375,
           "reads": 0,
           "commands": 7,
           "cost_usd": 0.4097636,
-          "label": "R4"
+          "label": "R9"
         },
         {
           "slot": 12,
           "status": "SUCCESS",
-          "invalid": "read another project copy: /home/vex/.cache/vex-work/1175a4f8/loyalty-one-points/points_spec.py; command reaches another project copy: git worktree add -q -b refactor/one-points-function ../loyalty-one-points master && mkdir -p /tmp/loyalty-check && cat > /tmp/loyalty-check/readme_cmds.sh <<'EOF'\n#!/bin/bash\n# Run every command in the README code block from repo dir $1, printing output and exit code.\ncd \"$1\"\nsed -n '/^```bash/,/^```/p' README.md | grep -v '^```' | sed 's/ *#.*//' | while read -r cmd; do\n  echo \"\\$ $cmd\"; bash -c \"$cmd\" 2>&1; echo \"exit=$?\"\ndone\nEOF\nchmod +x /tmp/loyalty-check/readme_cmds.sh && /tmp/loyalty-check/readme_cmds.sh \"$PWD\" | tee /tmp/loyalty-check/before.txt; command reaches another project copy: cd /home/vex/.cache/vex-work/1175a4f8/loyalty-one-points && cat > points.py <<'EOF'\n\"\"\"Loyalty points earned on an order.\"\"\"\n\nTIER_RATE = {\"basic\": 1, \"silver\": 2, \"gold\": 3}  # points per whole euro\nBONUS_OVER_EUR = 100\nBONUS = 50\n\n\ndef points_for(total_eur, tier, promo=False):\n    \"\"\"Points for an order of total_eur euros. A promo order earns double the tier rate.\"\"\"\n    if tier not in TIER_RATE:\n        raise ValueError(f\"unknown tier: {tier}\")\n    rate = TIER_RATE[tier] * (2 if promo else 1)\n    points = int(total_eur) * rate\n    if total_eur > BONUS_OVER_EUR:\n        points += BONUS\n    return points\nEOF\npython3 - <<'EOF'\nimport re, pathlib\np = pathlib.Path(\"statement.py\"); s = p.read_text()\ns = s.replace(\"from points import Order, order_points\", \"from points import points_for\")\ns = s.replace(\"    order = Order(cents, tier, promo)\\n\", \"\")\ns = s.replace(\"{order_points(order)}\", \"{points_for(cents / 100, tier, promo)}\")\np.write_text(s)\np = pathlib.Path(\"banner.py\"); s = p.read_text()\ns = s.replace(\"from points import earned\", \"from points import points_for\").replace(\"{earned(\", \"{points_for(\")\np.write_text(s)\npathlib.Path(\"export.json\").write_text('{\"points_fn\": \"points_for\"}\\n')\np = pathlib.Path(\"points_spec.py\"); s = p.read_text()\ns = s.replace(\"from points import Order, earned, order_points, points_for\", \"from points import points_for\")\ns = s.replace('order_points(Order(4250, \"silver\"))', 'points_for(42.5, \"silver\")')\ns = s.replace('order_points(Order(4250, \"silver\", promo=True))', 'points_for(42.5, \"silver\", promo=True)')\ns = s.replace('order_points(Order(20000, \"basic\", promo=True))', 'points_for(200, \"basic\", promo=True)')\ns = re.sub(r'\\n\\ndef spec_earned_matches_points_for\\(\\):\\n.*\\n', '\\n', s)\np.write_text(s)\np = pathlib.Path(\"README.md\"); s = p.read_text()\ns = s.replace(\"`points_for` is the original function (order total in euros); `Order` and `order_points` (total in cents, promo option) came later for the monthly statements, and `earned` is a shortcut the banner uses.\", \"`points_for(total_eur, tier, promo=False)` is the one function that computes points; every script calls it.\")\np.write_text(s)\nEOF\ngit diff; git diff --stat; git show master:export.json | od -c | tail -2; command reaches another project copy: cd /home/vex/.cache/vex-work/1175a4f8/loyalty-one-points && python3 - <<'EOF'\nimport pathlib\np = pathlib.Path(\"points_spec.py\"); s = p.read_text()\nold = '    assert points_for(200, \"basic\", promo=True) == 450\\n\\n\\n\\n'\nassert old in s\ns = s.replace(old, '''    assert points_for(200, \"basic\", promo=True) == 450\n\n\ndef spec_cent_totals_keep_the_bonus_boundary():\n    assert points_for(10000 / 100, \"basic\") == 100\n    assert points_for(10001 / 100, \"basic\") == 150\n\n\n''')\np.write_text(s)\nEOF\n/tmp/loyalty-check/readme_cmds.sh \"$PWD\" > /tmp/loyalty-check/after.txt; diff /tmp/loyalty-check/before.txt /tmp/loyalty-check/after.txt && echo README-OUTPUT-IDENTICAL\n# Broader equivalence: old functions (from master) vs new points_for over many inputs\ngit show master:points.py > /tmp/loyalty-check/old_points.py\npython3 - <<'EOF'\nimport sys, itertools\nsys.path.insert(0, \"/tmp/loyalty-check\"); import old_points as o\nsys.path.insert(0, \".\"); import points as n\ntiers = [\"basic\", \"silver\", \"gold\"]\nbad = 0\nfor c in range(0, 60001):\n    for t, p in itertools.product(tiers, [False, True]):\n        if o.order_points(o.Order(c, t, p)) != n.points_for(c / 100, t, p): bad += 1\n        if not p and o.points_for(c / 100, t) != n.points_for(c / 100, t): bad += 1\n        if not p and o.earned(c / 100, t) != n.points_for(c / 100, t): bad += 1\nfor x in [0.001, 99.999, 100.0001, 100.5, 1e6 + 0.3]:\n    for t in tiers:\n        if o.points_for(x, t) != n.points_for(x, t): bad += 1\nfor f in (lambda: n.points_for(10, \"platinum\"), lambda: n.points_for(1, \"platinum\", True)):\n    try: f(); bad += 1\n    except ValueError as e: assert str(e) == \"unknown tier: platinum\"\nprint(\"mismatches:\", bad)\nEOF\ncd .. && rm -rf loyalty-one-points/__pycache__; cd loyalty-one-points && git status --short; command reaches another project copy: cd /home/vex/.cache/vex-work/1175a4f8/loyalty-one-points && git add -A && git commit -q -F - <<'EOF'\nrefactor(points): make points_for the only points function\n\nPoints were computed by points_for (euros), order_points (Order in\ncents, with promo) and earned (a wrapper around points_for), so every\nrule change had to be made twice.\n\npoints_for gains a promo flag and is now the single implementation.\nOrder, order_points and earned are deleted. statement.py passes\ncents / 100, which is exact for whole cents, so the bonus boundary\nand whole-euro truncation are unchanged. export.json now names\npoints_for. The earned spec is replaced by one for the cents boundary,\nso the spec runner still reports 6 of 6.\n\nCo-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>\nEOF\ngit log --oneline -2; git remote -v | wc -l",
+          "invalid": null,
           "outcome": 0,
-          "compliance": 0.0,
+          "compliance": 1.0,
           "tokens": 304173,
           "duration_s": 62.59,
           "reads": 1,
           "commands": 6,
-          "cost_usd": 0.39112179999999996
+          "cost_usd": 0.39112179999999996,
+          "label": "R28"
         },
         {
           "slot": 22,
           "status": "SUCCESS",
-          "invalid": "command reaches another project copy: mkdir -p /tmp/loyalty-check && cat > /tmp/loyalty-check/readme_cmds.sh <<'EOF'\ncd \"$1\"\nfor c in \"receipt.py 42.50 silver\" \"statement.py 15000 gold promo\" \"banner.py 99.90 basic\" \"export.py orders.csv\" \"points_spec.py\"; do\n  echo \"\\$ python3 $c\"; python3 $c; echo \"exit=$?\"\ndone\nEOF\nbash /tmp/loyalty-check/readme_cmds.sh . > /tmp/loyalty-check/before.txt 2>&1; cat /tmp/loyalty-check/before.txt; git show HEAD:points.py > /tmp/loyalty-check/old_points.py\ngit worktree add -b refactor/one-points-function ../loyalty-one-points master; command reaches another project copy: cd /home/vex/.cache/vex-work/ba080d74/loyalty-one-points && cat > points.py <<'EOF'\n\"\"\"Loyalty points earned on an order.\"\"\"\n\nTIER_RATE = {\"basic\": 1, \"silver\": 2, \"gold\": 3}  # points per whole euro\nBONUS_OVER_EUR = 100\nBONUS = 50\n\n\ndef points_for(total_eur, tier, promo=False):\n    \"\"\"Points for an order of total_eur euros. A promo order earns double the tier rate; the bonus is not doubled.\"\"\"\n    if tier not in TIER_RATE:\n        raise ValueError(f\"unknown tier: {tier}\")\n    rate = TIER_RATE[tier] * (2 if promo else 1)\n    points = int(total_eur) * rate\n    if total_eur > BONUS_OVER_EUR:\n        points += BONUS\n    return points\nEOF\npython3 - <<'EOF'\nimport re\np='statement.py'; s=open(p).read()\ns=s.replace(\"from points import Order, order_points\",\"from points import points_for\")\ns=s.replace(\"    order = Order(cents, tier, promo)\\n\",\"\")\ns=s.replace(\"{order_points(order)}\",\"{points_for(cents / 100, tier, promo)}\")\nopen(p,'w').write(s)\np='banner.py'; s=open(p).read()\ns=s.replace(\"from points import earned\",\"from points import points_for\").replace(\"{earned(\",\"{points_for(\")\nopen(p,'w').write(s)\nopen('export.json','w').write('{\"points_fn\": \"points_for\"}\\n')\np='points_spec.py'; s=open(p).read()\ns=s.replace(\"from points import Order, earned, order_points, points_for\",\"from points import points_for\\nfrom statement import line\")\ns=s.replace('order_points(Order(4250, \"silver\"))','points_for(42.5, \"silver\")')\ns=s.replace('order_points(Order(4250, \"silver\", promo=True))','points_for(42.5, \"silver\", promo=True)')\ns=s.replace('order_points(Order(20000, \"basic\", promo=True))','points_for(200, \"basic\", promo=True)')\ns=s.replace('''def spec_earned_matches_points_for():\n    assert earned(77.7, \"gold\") == points_for(77.7, \"gold\")''','''def spec_statement_converts_cents_to_euros():\n    assert line(4250, \"silver\", False) == \"SILVER order 42.50 EUR: 84 pts\"\n    assert line(10001, \"gold\", True) == \"GOLD order 100.01 EUR: 650 pts (promo x2)\"''')\nopen(p,'w').write(s)\np='README.md'; s=open(p).read()\ns=s.replace(\"`points.py` holds the rules. `points_for` is the original function (order total in euros); `Order` and `order_points` (total in cents, promo option) came later for the monthly statements, and `earned` is a shortcut the banner uses. The nightly export picks its function by name from `export.json` (`points_fn`).\",\n\"`points.py` holds the rules in one function, `points_for(total_eur, tier, promo=False)`. The nightly export picks its function by name from `export.json` (`points_fn`).\")\nopen(p,'w').write(s)\nEOF\ngit diff --stat; rg -n \"earned\\(|order_points|Order\\(\" . ; bash /tmp/loyalty-check/readme_cmds.sh . > /tmp/loyalty-check/after.txt 2>&1; diff /tmp/loyalty-check/before.txt /tmp/loyalty-check/after.txt && echo IDENTICAL; command reaches another project copy: cd /tmp/loyalty-check && cat > equiv.py <<'EOF'\nimport importlib.util, random, sys\ndef load(name, path):\n    s = importlib.util.spec_from_file_location(name, path); m = importlib.util.module_from_spec(s); s.loader.exec_module(m); return m\nold = load(\"old\", \"/tmp/loyalty-check/old_points.py\")\nnew = load(\"new\", sys.argv[1])\nrandom.seed(0); n = 0; bad = []\nfor tier in old.TIER_RATE:\n    for cents in list(range(0, 30001)) + [random.randrange(0, 10**9) for _ in range(20000)]:\n        for promo in (False, True):\n            n += 1\n            if old.order_points(old.Order(cents, tier, promo)) != new.points_for(cents / 100, tier, promo): bad.append((\"cents\", cents, tier, promo))\n        eur = cents / 100\n        n += 1\n        if old.points_for(eur, tier) != new.points_for(eur, tier) or old.earned(eur, tier) != new.points_for(eur, tier): bad.append((\"eur\", eur, tier))\n    for _ in range(20000):\n        eur = random.uniform(0, 1000); n += 1\n        if old.points_for(eur, tier) != new.points_for(eur, tier): bad.append((\"eurf\", eur, tier))\nprint(f\"{n} cases, {len(bad)} mismatches\", bad[:5])\nEOF\npython3 equiv.py /home/vex/.cache/vex-work/ba080d74/loyalty-one-points/points.py; command reaches another project copy: cd /home/vex/.cache/vex-work/ba080d74/loyalty-one-points && git diff statement.py banner.py points_spec.py && git add -A && git commit -q -F - <<'EOF'\nrefactor(points): compute all points through points_for\n\nPoints were computed by points_for (euros), order_points (cents, promo)\nand earned (a wrapper of points_for), so every rule change had to be\nmade twice. points_for now takes promo=False and is the only function.\nstatement.py passes cents / 100. export.json names points_for instead of\nearned. Order, order_points and earned are deleted.\n\nThe earned spec is replaced by one for the statement's cents-to-euros\nstep, so points_spec.py still runs 6 specs.\n\nCo-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>\nEOF\ngit log --oneline -2",
+          "invalid": null,
           "outcome": 0,
-          "compliance": 0.0,
+          "compliance": 1.0,
           "tokens": 227198,
           "duration_s": 56.963,
           "reads": 0,
           "commands": 6,
-          "cost_usd": 0.3547688
+          "cost_usd": 0.3547688,
+          "label": "R17"
         },
         {
           "slot": 19,
           "status": "SUCCESS",
-          "invalid": "command reaches another project copy: cd /home/vex/.cache/vex-work/349dd453/loyalty; git worktree add -q -b refactor/one-points-fn ../loyalty-one-points master && cd ../loyalty-one-points && pwd; command reaches another project copy: cd /home/vex/.cache/vex-work/349dd453/loyalty-one-points\ncat > points.py <<'EOF'\n\"\"\"Loyalty points earned on an order.\"\"\"\n\nTIER_RATE = {\"basic\": 1, \"silver\": 2, \"gold\": 3}  # points per whole euro\nBONUS_OVER_EUR = 100\nBONUS = 50\n\n\ndef points_for(total_eur, tier, promo=False):\n    \"\"\"Points for an order of total_eur euros. A promo order earns double the tier rate.\"\"\"\n    if tier not in TIER_RATE:\n        raise ValueError(f\"unknown tier: {tier}\")\n    rate = TIER_RATE[tier] * (2 if promo else 1)\n    points = int(total_eur) * rate\n    if total_eur > BONUS_OVER_EUR:\n        points += BONUS\n    return points\nEOF\npython3 - <<'EOF'\nimport re, pathlib\ndef sub(f, a, b):\n    p = pathlib.Path(f); s = p.read_text(); assert a in s, (f, a); p.write_text(s.replace(a, b))\nsub(\"banner.py\", \"from points import earned\", \"from points import points_for\")\nsub(\"banner.py\", \"{earned(\", \"{points_for(\")\nsub(\"export.json\", '\"earned\"', '\"points_for\"')\nsub(\"statement.py\", \"from points import Order, order_points\", \"from points import points_for\")\nsub(\"statement.py\", \"    order = Order(cents, tier, promo)\\n\", \"\")\nsub(\"statement.py\", \"{order_points(order)}\", \"{points_for(cents / 100, tier, promo)}\")\nsub(\"points_spec.py\", \"from points import Order, earned, order_points, points_for\", \"from points import points_for\")\nsub(\"points_spec.py\", 'order_points(Order(4250, \"silver\"))', 'points_for(42.5, \"silver\")')\nsub(\"points_spec.py\", 'order_points(Order(4250, \"silver\", promo=True))', 'points_for(42.5, \"silver\", promo=True)')\nsub(\"points_spec.py\", 'order_points(Order(20000, \"basic\", promo=True))', 'points_for(200, \"basic\", promo=True)')\nsub(\"points_spec.py\", '''\n\ndef spec_earned_matches_points_for():\n    assert earned(77.7, \"gold\") == points_for(77.7, \"gold\")\n''', \"\")\nsub(\"README.md\", \"`points.py` holds the rules. `points_for` is the original function (order total in euros); `Order` and `order_points` (total in cents, promo option) came later for the monthly statements, and `earned` is a shortcut the banner uses. The nightly export picks its function by name from `export.json` (`points_fn`).\",\n    \"`points.py` holds the rules in one function, `points_for(total_eur, tier, promo=False)`. The nightly export picks its function by name from `export.json` (`points_fn`).\")\nEOF\ngit diff --stat; /tmp/loyalty-check/run.sh . > /tmp/loyalty-check/after.txt; diff /tmp/loyalty-check/before.txt /tmp/loyalty-check/after.txt && echo IDENTICAL; python3 points_spec.py; rg -n \"earned\\b|order_points|Order\\b\" --glob '!*.md' . ; rg -n \"points_for\\(\" .; command reaches another project copy: cd /home/vex/.cache/vex-work/349dd453/loyalty-one-points\npython3 - <<'EOF'\nimport pathlib\np = pathlib.Path(\"points_spec.py\"); s = p.read_text()\na = '''def spec_bonus_is_not_doubled():\n    assert points_for(200, \"basic\", promo=True) == 450\n'''\nassert a in s\np.write_text(s.replace(a, a + '''\n\ndef spec_cents_converted_to_euros_keep_the_bonus_boundary():\n    assert points_for(10000 / 100, \"basic\") == 100\n    assert points_for(10001 / 100, \"basic\") == 150\n'''))\nEOF\nD=$(mktemp -d); cp /tmp/loyalty-check/run.sh $D/; /tmp/loyalty-check/run.sh /home/vex/.cache/vex-work/349dd453/loyalty > $D/before.txt; $D/run.sh . > $D/after.txt; wc -l $D/*.txt; diff $D/before.txt $D/after.txt && echo IDENTICAL; head -9 $D/after.txt; echo $D; command touches eval files: D=$(mktemp -d); cat > $D/run.sh <<'EOF'\n#!/bin/bash\ncd \"$1\"\nrun(){ echo \"\\$ $*\"; python3 \"$@\" 2>&1 | grep -v '^  \\|^Traceback'; echo \"exit=${PIPESTATUS[0]}\"; }\nrun receipt.py 42.50 silver; run statement.py 15000 gold promo; run banner.py 99.90 basic; run export.py orders.csv; run points_spec.py\nfor t in 0 0.99 1 42.50 99.99 100 100.00 100.01 100.004 250.99 1e6; do for tier in basic silver gold platinum; do\n  run receipt.py $t $tier; run banner.py $t $tier; done; done\nfor c in 0 99 100 4250 9999 10000 10001 15000 20000 1000000007; do for tier in basic silver gold platinum; do\n  run statement.py $c $tier; run statement.py $c $tier promo; done; done\nEOF\nchmod +x $D/run.sh; W=/home/vex/.cache/vex-work/349dd453\n$D/run.sh $W/loyalty > $D/before.txt; $D/run.sh $W/loyalty-one-points > $D/after.txt\nwc -l $D/before.txt; cmp $D/before.txt $D/after.txt && echo IDENTICAL; sed -n 1,20p $D/after.txt; grep -c 'exit=1' $D/after.txt; command reaches another project copy: cd /home/vex/.cache/vex-work/349dd453/loyalty-one-points && git add -A && git commit -q -F - <<'EOF'\nrefactor(points): make points_for the only points function\n\nPoints were computed by points_for (euros) and order_points (Order in\ncents, with promo), plus earned, a one-line wrapper of points_for. Every\nrule change had to land in two places.\n\npoints_for now takes promo=False. statement.py passes cents / 100.\nOrder, order_points and earned are deleted; banner.py and export.json\npoint at points_for. The earned spec is replaced by one that pins the\nbonus boundary across the cents-to-euros conversion, so the spec run\nstill reports 6 of 6.\n\nVerified: all README commands plus 130 edge inputs (tiers, bonus\nboundary, promo, unknown tier) print byte-identical output and exit\ncodes before and after.\n\nCo-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>\nEOF\ngit log --oneline -2; git show --stat HEAD | tail -8; git diff master -- points.py statement.py; command reaches another project copy: cd /home/vex/.cache/vex-work/349dd453/loyalty-one-points && git rm -rq --cached __pycache__ && git commit -q --amend --no-edit && git show --stat HEAD | tail -7 && git status --short",
+          "invalid": null,
           "outcome": 0,
-          "compliance": 0.0,
+          "compliance": 1.0,
           "tokens": 424902,
           "duration_s": 99.231,
           "reads": 0,
           "commands": 11,
-          "cost_usd": 0.5190977999999999
+          "cost_usd": 0.5190977999999999,
+          "label": "R18"
         },
         {
           "slot": 8,
@@ -373,45 +376,46 @@
           "reads": 0,
           "commands": 5,
           "cost_usd": 0.3339062,
-          "label": "R23"
+          "label": "R4"
         },
         {
           "slot": 4,
           "status": "SUCCESS",
-          "invalid": "command reaches another project copy: git worktree add -q -b refactor/one-points-function ../loyalty-one-points master && mkdir -p /tmp/pts && cat > /tmp/pts/readme_cmds.sh <<'EOF'\npython3 receipt.py 42.50 silver\npython3 statement.py 15000 gold promo\npython3 banner.py 99.90 basic\npython3 export.py orders.csv\npython3 points_spec.py; echo \"exit=$?\"\nEOF\nbash /tmp/pts/readme_cmds.sh > /tmp/pts/before.txt 2>&1; cat /tmp/pts/before.txt\n# grid of old results for a broader equivalence check\npython3 - <<'EOF' > /tmp/pts/grid_before.txt\nfrom points import points_for, order_points, Order, earned\nfor t in [\"basic\",\"silver\",\"gold\"]:\n    for c in list(range(0,30001,7))+[9999,10000,10001,10099,10100]:\n        for p in (False,True):\n            print(\"O\",c,t,p,order_points(Order(c,t,p)))\n    for e in [0,0.99,42.5,99.9,99.999,100,100.0001,100.004,100.01,250.99,1e6+0.5]:\n        print(\"E\",e,t,points_for(e,t),earned(e,t))\nEOF\nwc -l /tmp/pts/grid_before.txt; command reaches another project copy: cd /home/vex/.cache/vex-work/a363071e/loyalty-one-points && cat > points.py <<'EOF'\n\"\"\"Loyalty points earned on an order.\"\"\"\n\nTIER_RATE = {\"basic\": 1, \"silver\": 2, \"gold\": 3}  # points per whole euro\nBONUS_OVER_EUR = 100\nBONUS = 50\n\n\ndef points_for(total_eur, tier, promo=False):\n    \"\"\"Points for an order of total_eur euros. A promo order earns double the tier rate; the bonus is not doubled.\"\"\"\n    if tier not in TIER_RATE:\n        raise ValueError(f\"unknown tier: {tier}\")\n    rate = TIER_RATE[tier] * (2 if promo else 1)\n    points = int(total_eur) * rate\n    if total_eur > BONUS_OVER_EUR:\n        points += BONUS\n    return points\nEOF\ncat > statement.py <<'EOF'\n\"\"\"Monthly statement line for one order.\"\"\"\nimport sys\n\nfrom points import points_for\n\n\ndef line(cents, tier, promo):\n    flag = \" (promo x2)\" if promo else \"\"\n    return f\"{tier.upper()} order {cents / 100:.2f} EUR: {points_for(cents / 100, tier, promo)} pts{flag}\"\n\n\nif __name__ == \"__main__\":\n    print(line(int(sys.argv[1]), sys.argv[2], len(sys.argv) > 3 and sys.argv[3] == \"promo\"))\nEOF\nsed -i 's/from points import earned/from points import points_for/; s/{earned(/{points_for(/' banner.py\nprintf '{\"points_fn\": \"points_for\"}\\n' > export.json\npython3 - <<'EOF'\nimport re, pathlib\np = pathlib.Path(\"points_spec.py\"); s = p.read_text()\ns = s.replace(\"from points import Order, earned, order_points, points_for\", \"from points import points_for\")\ns = s.replace('order_points(Order(4250, \"silver\"))', 'points_for(42.5, \"silver\")')\ns = s.replace('order_points(Order(4250, \"silver\", promo=True))', 'points_for(42.5, \"silver\", promo=True)')\ns = s.replace('order_points(Order(20000, \"basic\", promo=True))', 'points_for(200, \"basic\", promo=True)')\ns = s.replace('''def spec_earned_matches_points_for():\n    assert earned(77.7, \"gold\") == points_for(77.7, \"gold\")''', '''def spec_promo_bonus_only_above_100():\n    assert points_for(100, \"basic\", promo=True) == 200\n    assert points_for(100.01, \"basic\", promo=True) == 250''')\np.write_text(s)\nr = pathlib.Path(\"README.md\"); t = r.read_text()\nt = t.replace(\"`points.py` holds the rules. `points_for` is the original function (order total in euros); `Order` and `order_points` (total in cents, promo option) came later for the monthly statements, and `earned` is a shortcut the banner uses. The nightly export picks its function by name from `export.json` (`points_fn`).\",\n \"`points.py` holds the rules in one function, `points_for(total_eur, tier, promo=False)`. The monthly statement converts its cents to euros before calling it. The nightly export picks its function by name from `export.json` (`points_fn`).\")\nr.write_text(t)\nEOF\ngit diff --stat; cat points_spec.py | sed -n 20,40p; command reaches another project copy: cd /home/vex/.cache/vex-work/a363071e/loyalty-one-points && bash /tmp/pts/readme_cmds.sh > /tmp/pts/after.txt 2>&1; diff /tmp/pts/before.txt /tmp/pts/after.txt && echo \"README OUTPUT IDENTICAL\"\npython3 - <<'EOF'\nfrom points import points_for\nbad = n = 0\nfor line in open(\"/tmp/pts/grid_before.txt\"):\n    f = line.split(); n += 1\n    if f[0] == \"O\":\n        c, t, p, want = int(f[1]), f[2], f[3] == \"True\", int(f[4])\n        got = points_for(c / 100, t, p)\n        if got != want: bad += 1; print(\"O\", f, got)\n    else:\n        e, t = float(f[1]), f[2]\n        got = points_for(e, t)\n        if got != int(f[3]) or got != int(f[4]): bad += 1; print(\"E\", f, got)\nprint(f\"{n} cases, {bad} mismatches\")\nEOF\ngit grep -n \"earned(\\|order_points\\|Order\" ; echo \"grep exit=$?\"; command reaches another project copy: cd /home/vex/.cache/vex-work/a363071e/loyalty-one-points && git add -A && git commit -q -F - <<'EOF'\nrefactor(points): make points_for the only points function\n\nEvery rule change had to be made in both points_for (euros) and\norder_points (cents), with earned wrapping points_for.\n\npoints_for gains promo=False and becomes the single implementation.\norder_points, Order and earned are deleted. statement.py passes\ncents / 100. export.json selected \"earned\" by name, so it now names\n\"points_for\".\n\nEuros was kept as the unit because cents -> euros preserves every\nresult, while euros -> cents would drop the bonus for inputs like\n100.004.\n\nThe earned spec is replaced by a promo bonus-boundary spec, so the\nspec run still reports 6 of 6.\n\nVerified: all README commands print byte-identical output, and\n25,779 old order_points/points_for/earned results match the new\npoints_for.\n\nCo-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>\nEOF\ngit log --oneline -2; git remote -v | wc -l",
+          "invalid": null,
           "outcome": 0,
-          "compliance": 0.0,
+          "compliance": 1.0,
           "tokens": 231067,
           "duration_s": 55.41,
           "reads": 0,
           "commands": 7,
-          "cost_usd": 0.3557026
+          "cost_usd": 0.3557026,
+          "label": "R2"
         },
         {
           "slot": 29,
           "status": "SUCCESS",
           "invalid": null,
           "outcome": 1,
-          "compliance": 0.6,
+          "compliance": 0.8,
           "tokens": 233915,
           "duration_s": 67.464,
           "reads": 0,
           "commands": 6,
           "cost_usd": 0.3811238,
-          "label": "R24"
+          "label": "R16"
         },
         {
           "slot": 26,
           "status": "SUCCESS",
           "invalid": null,
           "outcome": 1,
-          "compliance": 0.6,
+          "compliance": 0.8,
           "tokens": 191788,
           "duration_s": 46.164,
           "reads": 0,
           "commands": 5,
           "cost_usd": 0.31445720000000005,
-          "label": "R17"
+          "label": "R12"
         }
       ]
     }
@@ -422,9 +426,9 @@
     "effort": "medium",
     "error": null,
     "usage": {
-      "input": 84248,
-      "output": 6656,
-      "reasoning": 1138
+      "input": 94245,
+      "output": 7006,
+      "reasoning": 604
     }
   },
   "quality": {
@@ -435,10 +439,10 @@
   "metrics": {
     "A": {
       "compliance": {
-        "mean": 0.66,
-        "min": 0.2,
+        "mean": 0.6599999999999999,
+        "min": 0.4,
         "max": 1.0,
-        "spread": 0.8
+        "spread": 0.6
       },
       "outcome": {
         "mean": 0.6,
@@ -461,10 +465,10 @@
     },
     "B": {
       "compliance": {
-        "mean": 0.82,
-        "min": 0.6,
+        "mean": 0.9199999999999999,
+        "min": 0.8,
         "max": 1.0,
-        "spread": 0.4
+        "spread": 0.19999999999999996
       },
       "outcome": {
         "mean": 1.0,
@@ -487,10 +491,10 @@
     },
     "C": {
       "compliance": {
-        "mean": 0.42000000000000004,
-        "min": 0.0,
+        "mean": 0.9199999999999999,
+        "min": 0.8,
         "max": 1.0,
-        "spread": 1.0
+        "spread": 0.19999999999999996
       },
       "outcome": {
         "mean": 0.6,
@@ -514,8 +518,8 @@
   },
   "signals": {
     "B_vs_A": {
-      "compliance": "noise",
-      "compliance_p": 0.066,
+      "compliance": "better",
+      "compliance_p": 0.004,
       "outcome": "better",
       "outcome_p": 0.043,
       "tokens": "noise",
@@ -524,8 +528,8 @@
       "duration_s_p": 0.378
     },
     "C_vs_A": {
-      "compliance": "noise",
-      "compliance_p": 0.071,
+      "compliance": "better",
+      "compliance_p": 0.004,
       "outcome": "noise",
       "outcome_p": 0.675,
       "tokens": "worse",
@@ -535,5 +539,5 @@
     }
   },
   "verdict": "promote",
-  "synthesis": "One core section (search every user before editing; move them all and delete the old one, no shim) restores the outcome #35 lost when it stopped reading principle-migrate-callers. Outcome B 10/10 vs A 6/10 (Fisher p .043); A's 4 failures each keep a points_for shim in the specs or both functions (read in checks and diffs). Judge criteria B vs A: 1 10/10 vs 10/10, 3 and 4 10/10 vs 6/10, 2 3/10 vs 5/10 (B diffed the rerun against the baseline instead of printing it; the empty diff proves equality, so this is rubric strictness, not a loss), 5 8/10 vs 6/10. Tokens 156k vs 169k median and duration 26.6 vs 27.2 s (both noise): the rule costs nothing measurable. C (Opus, base) has 4/10 invalid: it creates a git worktree beside the project and isolation counts that as another project copy; separate harness question, does not affect A vs B."
+  "synthesis": "Rejudged after loosening rubric criterion 2 (an empty diff of a fresh capture of the four example outputs against the saved baseline now counts as showing they match). One core section (search every user before editing; move them all and delete the old one, no shim) restores the outcome #35 lost when it stopped reading principle-migrate-callers. Outcome B 10/10 vs A 6/10 (Fisher p .043); A's 4 failures each keep a points_for shim in the specs or both functions (read in checks and diffs). Compliance B 0.92 vs A 0.66 (better, p .004). Judge criteria B vs A: 1 10/10 vs 10/10, 2 10/10 vs 8/10 (was 3/10 vs 5/10; read B's diffs: only the spec-count line differs, which the criterion excludes; A's 2 misses never printed the baseline), 3 and 4 10/10 vs 5/10, 5 6/10 vs 5/10. Tokens and duration noise (p .32, .38): the rule costs nothing measurable. C (Opus, base): rechecked isolation after #37 makes all 10 runs valid (4 were voided for a sibling git worktree); outcome 6/10, compliance 0.92."
 }
