@@ -1,0 +1,294 @@
+{
+  "kind": "calibration",
+  "skill": "vex-mode",
+  "tree_sha256": "c0d39af911cea80408106fc20f443bb7e947382c142310e0b5a72741832a33e5",
+  "date": "2026-11-20",
+  "case": "tax-rounding",
+  "harness": "claude-code",
+  "run_dir": "/home/vex/.cache/vex-mode/runs/20261120-010101-733328",
+  "arms": {
+    "A": {
+      "model": "claude-sonnet-5-5",
+      "plugin_ref": "42a4668c1292a7a4f30c7d16c5b950cdc24f42de",
+      "tree_sha256": "c0d39af911cea80408106fc20f443bb7e947382c142310e0b5a72741832a33e5",
+      "runs": [
+        {
+          "slot": 10,
+          "status": "SUCCESS",
+          "invalid": null,
+          "outcome": 0,
+          "compliance": 0.75,
+          "tokens": 248312,
+          "duration_s": 22.963,
+          "reads": 3,
+          "commands": 6,
+          "cost_usd": 0.1345079,
+          "label": "R10"
+        },
+        {
+          "slot": 7,
+          "status": "SUCCESS",
+          "invalid": null,
+          "outcome": 0,
+          "compliance": 0.75,
+          "tokens": 259584,
+          "duration_s": 24.118,
+          "reads": 6,
+          "commands": 6,
+          "cost_usd": 0.14478359999999998,
+          "label": "R4"
+        },
+        {
+          "slot": 6,
+          "status": "SUCCESS",
+          "invalid": null,
+          "outcome": 0,
+          "compliance": 0.75,
+          "tokens": 225121,
+          "duration_s": 22.522,
+          "reads": 6,
+          "commands": 5,
+          "cost_usd": 0.13754360000000002,
+          "label": "R9"
+        },
+        {
+          "slot": 11,
+          "status": "SUCCESS",
+          "invalid": null,
+          "outcome": 0,
+          "compliance": 0.75,
+          "tokens": 259820,
+          "duration_s": 24.759,
+          "reads": 6,
+          "commands": 6,
+          "cost_usd": 0.14554040000000001,
+          "label": "R3"
+        },
+        {
+          "slot": 8,
+          "status": "SUCCESS",
+          "invalid": null,
+          "outcome": 0,
+          "compliance": 1.0,
+          "tokens": 218526,
+          "duration_s": 19.272,
+          "reads": 0,
+          "commands": 5,
+          "cost_usd": 0.1285046,
+          "label": "R7"
+        },
+        {
+          "slot": 2,
+          "status": "SUCCESS",
+          "invalid": null,
+          "outcome": 0,
+          "compliance": 0.75,
+          "tokens": 257934,
+          "duration_s": 23.65,
+          "reads": 5,
+          "commands": 6,
+          "cost_usd": 0.1416969,
+          "label": "R2"
+        }
+      ]
+    },
+    "N": {
+      "model": "claude-sonnet-5-5",
+      "plugin_ref": null,
+      "tree_sha256": null,
+      "runs": [
+        {
+          "slot": 12,
+          "status": "SUCCESS",
+          "invalid": null,
+          "outcome": 0,
+          "compliance": 0.25,
+          "tokens": 87933,
+          "duration_s": 9.238,
+          "reads": 0,
+          "commands": 3,
+          "cost_usd": 0.062249000000000006,
+          "label": "R5"
+        },
+        {
+          "slot": 5,
+          "status": "SUCCESS",
+          "invalid": null,
+          "outcome": 0,
+          "compliance": 0.25,
+          "tokens": 88739,
+          "duration_s": 10.668,
+          "reads": 0,
+          "commands": 3,
+          "cost_usd": 0.0649213,
+          "label": "R11"
+        },
+        {
+          "slot": 4,
+          "status": "SUCCESS",
+          "invalid": null,
+          "outcome": 0,
+          "compliance": 0.25,
+          "tokens": 89048,
+          "duration_s": 11.42,
+          "reads": 1,
+          "commands": 2,
+          "cost_usd": 0.0661213,
+          "label": "R6"
+        },
+        {
+          "slot": 3,
+          "status": "SUCCESS",
+          "invalid": null,
+          "outcome": 0,
+          "compliance": 0.25,
+          "tokens": 90056,
+          "duration_s": 11.491,
+          "reads": 2,
+          "commands": 2,
+          "cost_usd": 0.0701143,
+          "label": "R8"
+        },
+        {
+          "slot": 1,
+          "status": "SUCCESS",
+          "invalid": null,
+          "outcome": 0,
+          "compliance": 0.25,
+          "tokens": 88104,
+          "duration_s": 9.93,
+          "reads": 0,
+          "commands": 3,
+          "cost_usd": 0.0636749,
+          "label": "R12"
+        },
+        {
+          "slot": 9,
+          "status": "SUCCESS",
+          "invalid": null,
+          "outcome": 0,
+          "compliance": 0.25,
+          "tokens": 88723,
+          "duration_s": 11.031,
+          "reads": 1,
+          "commands": 2,
+          "cost_usd": 0.0650484,
+          "label": "R1"
+        }
+      ]
+    }
+  },
+  "judge": {
+    "provider": "openai",
+    "model": "gpt-6.2-sol",
+    "effort": "medium",
+    "error": null,
+    "usage": {
+      "input": 13648,
+      "output": 2801,
+      "reasoning": 149
+    }
+  },
+  "quality": {
+    "enabled": true,
+    "errors": [],
+    "judge_usage": {}
+  },
+  "metrics": {
+    "A": {
+      "compliance": {
+        "mean": 0.7916666666666666,
+        "min": 0.75,
+        "max": 1.0,
+        "spread": 0.25
+      },
+      "outcome": {
+        "mean": 0.0,
+        "min": 0.0,
+        "max": 0.0,
+        "spread": 0.0
+      },
+      "tokens": {
+        "mean": 244882.83333333334,
+        "min": 218526.0,
+        "max": 259820.0,
+        "spread": 41294.0
+      },
+      "duration_s": {
+        "mean": 22.880666666666666,
+        "min": 19.272,
+        "max": 24.759,
+        "spread": 5.487000000000002
+      },
+      "prod_lines": null,
+      "removable_lines": null,
+      "complexity_delta": null,
+      "verbosity": null,
+      "comments_added": null,
+      "security_findings": null,
+      "judge_reuse": null,
+      "judge_simplicity": null,
+      "judge_contract": null,
+      "test_lines": null,
+      "docstrings_added": null
+    },
+    "N": {
+      "compliance": {
+        "mean": 0.25,
+        "min": 0.25,
+        "max": 0.25,
+        "spread": 0.0
+      },
+      "outcome": {
+        "mean": 0.0,
+        "min": 0.0,
+        "max": 0.0,
+        "spread": 0.0
+      },
+      "tokens": {
+        "mean": 88767.16666666667,
+        "min": 87933.0,
+        "max": 90056.0,
+        "spread": 2123.0
+      },
+      "duration_s": {
+        "mean": 10.629666666666667,
+        "min": 9.238,
+        "max": 11.491,
+        "spread": 2.253
+      },
+      "prod_lines": null,
+      "removable_lines": null,
+      "complexity_delta": null,
+      "verbosity": null,
+      "comments_added": null,
+      "security_findings": null,
+      "judge_reuse": null,
+      "judge_simplicity": null,
+      "judge_contract": null,
+      "test_lines": null,
+      "docstrings_added": null
+    }
+  },
+  "signals": {
+    "A_vs_N": {
+      "compliance": "better",
+      "outcome": "noise",
+      "tokens": "worse",
+      "duration_s": "worse",
+      "prod_lines": "few",
+      "removable_lines": "few",
+      "complexity_delta": "few",
+      "verbosity": "few",
+      "comments_added": "few",
+      "security_findings": "few",
+      "judge_reuse": "few",
+      "judge_simplicity": "few",
+      "judge_contract": "few",
+      "test_lines": "few",
+      "docstrings_added": "few"
+    }
+  },
+  "verdict": null,
+  "synthesis": null
+}

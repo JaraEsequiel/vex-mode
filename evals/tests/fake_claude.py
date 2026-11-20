@@ -22,11 +22,11 @@ def tool(call_id: str, name: str, params: dict, parent: str | None = None) -> No
 def main(argv: list[str]) -> int:
     with open(HOME / "claude-args.log", "a") as log:
         log.write(json.dumps(argv) + "\n")
-    tree = Path(argv[argv.index("--plugin-dir") + 1])
+    tree = Path(argv[argv.index("--plugin-dir") + 1]) if "--plugin-dir" in argv else None
     model = argv[argv.index("--model") + 1]
     emit({"type": "system", "subtype": "init", "session_id": "s1", "model": model, "cwd": os.getcwd()})
-    skill = next((tree / "skills").glob("*/SKILL.md"))
-    tool("t1", "Read", {"file_path": str(skill)})
+    if tree is not None:
+        tool("t1", "Read", {"file_path": str(next((tree / "skills").glob("*/SKILL.md")))})
     if MODE == "peek":
         tool("t2", "Agent", {"subagent_type": "vex-mode:vex-agent", "prompt": "x"})
         tool("t3", "Grep", {"pattern": "x", "path": os.environ["FAKE_PEEK"]}, parent="t2")

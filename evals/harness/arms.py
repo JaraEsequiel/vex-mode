@@ -11,7 +11,7 @@ from _util import model_family  # noqa: E402
 @dataclass(frozen=True)
 class Arm:
     label: str
-    plugin_ref: str
+    plugin_ref: str | None  # None: no plugin at all (calibration)
     model: str
 
 
@@ -25,3 +25,11 @@ def build_arms(case: dict, base_ref: str, variant_ref: str, judge: str) -> list[
         Arm("B", variant_ref, candidate),
         Arm("C", base_ref, upgrade),
     ]
+
+
+def calibration_arms(case: dict, base_ref: str, judge: str) -> list[Arm]:
+    """The base plugin against no plugin on the same model: does the case measure the plugin at all?"""
+    candidate = case["candidate_model"]
+    if model_family(judge) == model_family(candidate):
+        raise ValueError(f"judge {judge} shares a model family with the candidate ({candidate})")
+    return [Arm("A", base_ref, candidate), Arm("N", None, candidate)]
