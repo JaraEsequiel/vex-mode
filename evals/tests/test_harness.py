@@ -92,6 +92,12 @@ class TranscriptTest(unittest.TestCase):
         self.assertEqual(t.response, "Evidence: 10.83")
         self.assertEqual(transcript.parse_claude("\n".join([say("Done."), end])).gate_reply, "")
 
+    def test_claude_hook_denial_with_a_text_message(self):
+        denial = json.dumps({"type": "system", "subtype": "permission_denied",
+                             "message": "vex-mode: irreversible action (rm -rf on an absolute path)."})
+        end = json.dumps({"type": "result", "subtype": "success", "is_error": False, "result": "done"})
+        self.assertEqual(transcript.parse_claude(denial + "\n" + end).status, "SUCCESS")
+
     def test_claude_unfinished_run_keeps_message_tokens(self):
         msg = {"type": "assistant", "message": {"id": "m1", "usage": {"input_tokens": 3, "output_tokens": 4}, "content": []}}
         self.assertEqual(transcript.parse_claude(json.dumps(msg) + "\n" + json.dumps(msg)).step_tokens, 7)
