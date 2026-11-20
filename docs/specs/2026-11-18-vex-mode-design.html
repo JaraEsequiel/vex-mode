@@ -429,7 +429,7 @@ flowchart LR
 <ul>
 <li><b>Configurable:</b> <code>evals/judge.json</code> (versionado) fija <code>provider</code> (<code>openai</code>, <code>anthropic</code> o <code>agy</code>), <code>model</code> y <code>effort</code>. <code>VEX_JUDGE_PROVIDER</code> y <code>VEX_JUDGE_MODEL</code> lo pisan para una corrida puntual. Por defecto: <code>openai</code>, <code>gpt-6.2-sol</code>, effort <code>medium</code> <a class="s vex" href="#VEX">VEX</a>.
 </li>
-<li><b>API key:</b> nunca en el repo. Se lee de la variable del proveedor (<code>OPENAI_API_KEY</code>, <code>ANTHROPIC_API_KEY</code>) o, si no está, de <code>~/.config/vex-mode/secrets.env</code> (permisos 600), que también usa el timer semanal <a class="s vex" href="#VEX">VEX</a> <a class="s mia" href="#MIA">MÍA</a>.
+<li><b>API key:</b> nunca en el repo. Se lee de la variable del proveedor (<code>OPENAI_API_KEY</code>, <code>ANTHROPIC_API_KEY</code>) o, si no está, de <code>~/.config/vex-mode/secrets.env</code> (permisos 600), que también usa el timer semanal <a class="s vex" href="#VEX">VEX</a> <a class="s mia" href="#MIA">MÍA</a>. La raíz de la API (<code>VEX_OPENAI_BASE_URL</code>, <code>VEX_ANTHROPIC_BASE_URL</code>, para un servidor compatible) sale del mismo lugar y en el mismo orden; un <code>secrets.env</code> ilegible hace fallar el eval antes de lanzar candidatos <a class="s mia" href="#MIA">MÍA</a>.
 </li>
 <li><b>Por qué salió de agy:</b> en M4 el juez por agy falló tres veces por el harness, no por el modelo: un prompt de 213 KB como argumento (<code>E2BIG</code>), la lectura denegada fuera de su workspace y la cuota de Claude agotada <a class="s a" href="#A-probe-m4">A-probe-m4</a> (<code>docs/decisions/2026-11-19-m4-eval.md</code>).
 </li>

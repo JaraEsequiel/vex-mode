@@ -49,6 +49,7 @@ Un juez de otra familia de modelos califica las respuestas sin saber de qué bra
 
 - **Configuración:** `evals/judge.json` (`provider`: `openai`, `anthropic` o `agy`; `model`; `effort`). Por defecto `openai` / `gpt-6.2-sol` / `medium`. Para una corrida puntual: `VEX_JUDGE_PROVIDER`, `VEX_JUDGE_MODEL`, `VEX_JUDGE_EFFORT`.
 - **API key:** `OPENAI_API_KEY` o `ANTHROPIC_API_KEY` en el entorno o en `~/.config/vex-mode/secrets.env` (`chmod 600`; si otros pueden leerlo, el eval se niega). Nunca va al repo. Si falta, el eval falla antes de lanzar candidatos.
+- **Servidor compatible con OpenAI:** `VEX_OPENAI_BASE_URL` (o `VEX_ANTHROPIC_BASE_URL`) en el entorno o en el mismo `secrets.env`; el entorno manda. El servidor debe implementar `POST /responses` con salida JSON estricta.
 - **Recalificar sin repetir ejecuciones:** `python3 evals/run.py rejudge <resultado.json>` usa el juez configurado ahora.
 
 ```bash
