@@ -1,0 +1,163 @@
+# Cómo se usa vex-mode en el día a día
+
+vex-mode tiene dos niveles. El núcleo corre siempre, en cada sesión. El modo completo lo activas tú con un comando cuando la tarea lo merece. Esta página explica cuándo usar cada uno y qué pasa en cada caso de uso.
+
+Los comandos están escritos para agy. En Claude Code agrega el prefijo `vex-mode:`, por ejemplo `/vex-mode:vex-mode` o `/vex-mode:why`.
+
+## Lo que está siempre activo
+
+Sin escribir ningún comando, cada sesión tiene estas reglas:
+
+- **Primer mensaje.** El agente repite tu objetivo y el cambio más chico que lo cumple. Después avanza sin esperar tu permiso.
+- **Autonomía.** El trabajo reversible avanza sin preguntar. Eso incluye editar archivos, crear ramas, correr tests y lanzar evals.
+- **Pausa ante lo irreversible.** Un hook frena estos comandos y te pide confirmación: `git push --force` y sus variantes, un push a `main` o `master`, `gh pr merge`, `rm -rf` sobre rutas absolutas o del home, `terraform apply` y `destroy`, `kubectl delete` y SQL con `DROP` o `TRUNCATE`.
+- **Respuestas cortas con evidencia.** Cada afirmación trae su prueba o una etiqueta: medido, inferido o suposición.
+- **Probar sobre lo real.** El agente verifica corriendo la feature o leyendo el valor real. "Compila" no cuenta como prueba.
+- **Puede decir que no.** Si le preguntas si algo vale la pena, te da su juicio real, aunque sea "no".
+
+Para tareas chicas, como una pregunta, un cambio de una línea o un comando suelto, el núcleo alcanza. No hace falta el modo completo.
+
+## Cuándo activar el modo completo
+
+Escribe `/vex-mode <tarea>` cuando la tarea tenga alguna de estas formas:
+
+- Un bug que hay que reproducir y explicar.
+- Una feature que toca más de un archivo o más de una función.
+- Un refactor que debe mantener el comportamiento.
+- Trabajo que termina en un PR.
+
+Al activarlo pasan tres cosas:
+
+1. El hook `activate.py` marca la conversación como activa y le da al agente la lista de lectura: `worker.md`, cuatro playbooks (bug fix, feature, refactoring y abrir un PR) y trece skills de principios.
+2. El agente elige el playbook que corresponde a la tarea y copia sus pasos a la lista de tareas.
+3. Antes de terminar, el hook `stop_gate.py` le pide una vez por mensaje la evidencia de verificación. Si no la mostró, vuelve a trabajar.
+
+El modo dura toda la conversación. No hace falta repetir el comando en cada mensaje.
+
+## Un día común
+
+Este ejemplo muestra un día con tres tareas en un mismo repo.
+
+### Al empezar, prepara el repo una sola vez
+
+Si el repo nunca tuvo agentes trabajando en él, ejecuta `/agent-ready` dentro del repo. Esto se hace una vez por repo, no cada día.
+
+El agente deja:
+
+- `AGENTS.md` con una tabla que une cada regla con lo que la hace cumplir.
+- `scripts/check`, un solo comando que corre igual en local, en el hook y en CI.
+- Un hook de Stop que corre `scripts/check` cuando el agente quiere terminar con cambios. Si falla, el agente recibe el error y lo arregla, hasta tres intentos por conversación.
+- `verify-<app>`, una skill que maneja tu app como lo haría un usuario.
+- `.github/workflows/check.yml` si el repo tiene remoto en GitHub.
+
+Antes de entregar, el agente rompe algo a propósito y te muestra que el check lo detecta.
+
+### Mañana: arreglar un bug
+
+```
+/vex-mode el endpoint /orders devuelve 500 cuando el carrito está vacío
+```
+
+1. El agente repite el objetivo y el cambio mínimo.
+2. Reproduce el 500 él mismo. Solo te pide ayuda si no puede llegar al sistema, y te dice por qué.
+3. Arma hipótesis y las descarta con evidencia hasta que queda una.
+4. Planea el fix sin cambiar el contrato público.
+5. Verifica con la misma reproducción del paso 2.
+6. Ordena los commits con el test que falla antes del fix.
+7. Abre un PR listo para revisión.
+
+Tú revisas el PR y lo mergeas. El agente no puede mergear: el hook lo frena.
+
+### Mediodía: una feature nueva
+
+```
+/vex-mode agrega exportar pedidos a CSV desde el panel de admin
+```
+
+1. El agente estudia el subsistema que toca.
+2. Ejecuta `architect`, que propone dos formas de tipos y módulos y elige una.
+3. Escribe el plan de paralelismo en cuatro puntos: qué bloquea, qué es independiente, qué estado se comparte y la división más chica que es segura.
+4. Delega el código a subagentes `vex-agent` con alcance concreto.
+5. Verifica la feature en la app real.
+6. Ordena los commits en unidades chicas y abre el PR.
+
+Si quieres opinar sobre el diseño antes del código, ejecuta `/architect` primero y pasa a `/vex-mode` cuando el diseño te convenza.
+
+### Tarde: limpiar código sin cambiar lo que hace
+
+```
+/vex-mode simplifica el módulo de descuentos, tiene tres caminos que hacen lo mismo
+```
+
+1. El agente fija el comportamiento actual con un test de caracterización antes de mover nada.
+2. Nombra la estructura que falta y la forma final.
+3. Borra código muerto primero y construye sobre la base más simple.
+4. Mueve en pasos chicos que mantienen el test verde.
+5. Prueba que el comportamiento no cambió.
+6. Revierte el cambio si no reduce lo que hay que leer para entender el código.
+
+Si en el camino aparece un bug real o una feature que falta, el agente la separa en otro PR.
+
+### Al terminar el día: guardar lo aprendido
+
+```
+/reflect
+```
+
+El agente lee la conversación y busca correcciones que le diste, cosas que tuvo que descubrir y checks que se saltó. Te presenta tres listas: Aceptado, Rechazado y Backlog. No edita ninguna skill hasta que apruebes.
+
+## Otros casos de uso
+
+### Entender por qué algo es así
+
+```
+/why por qué el timeout del worker es 45 segundos
+```
+
+El agente responde desde el historial: commits, PRs y discusiones. Cita lo que escribieron los autores, marca sus inferencias como inferencias y dice qué no responde el registro.
+
+### Un error que el agente repite
+
+Cuando corriges al agente por el mismo error por segunda vez, ejecuta `/correct`. El agente agrupa los errores en clases y arregla cada clase al nivel más alto que funcione, en este orden:
+
+1. Arquitectura, para que el error sea imposible.
+2. Tipos o un lint cuyo mensaje nombra el arreglo.
+3. Un test del comportamiento.
+4. Documentación, solo para decisiones de criterio.
+
+Cada check nuevo se prueba contra un error real del pasado.
+
+### Trabajo largo o desatendido
+
+Si vas a dejar al agente trabajando solo, dilo en el mensaje: "no pares", "me voy a dormir" o "sigue hasta terminar". El agente sigue sin pausar en lo reversible. Lo irreversible sigue pausado.
+
+Agrega `/show-me-your-work` para que deje un log TSV con una fila por decisión: qué hizo, por qué, la evidencia y el resultado. Cuando vuelves, lees el log en vez de la conversación entera.
+
+### Escribir tests primero
+
+```
+/tdd el redondeo de impuestos falla con montos negativos
+```
+
+Úsalo cuando el bug tiene un test local barato. El agente escribe el test, lo ve fallar por la razón correcta, aplica el fix y lo ve pasar. Si el test sería caro o frágil, usa otra verificación y te dice cuál.
+
+### Revisar un texto
+
+`/unslop` quita los patrones de texto generado por IA de cualquier texto. `/technical-writing` aplica el estándar de documentación a docs, READMEs, PRs y commits. En modo completo el agente usa los dos solo, sin que los pidas.
+
+### Mantener la skill de verificación
+
+`/maintain-verification-skill` revisa que `verify-<app>` siga coincidiendo con la app. Lee el código de cada feature, maneja la app en una sesión y abre como máximo un PR con correcciones probadas. Córrelo cada tanto o después de cambios grandes en la app.
+
+## Qué decides tú y qué decide el agente
+
+| Decide el agente sin preguntar | Pausa y te pregunta |
+| --- | --- |
+| Editar, crear y borrar archivos del repo | Force-push a ramas compartidas |
+| Crear ramas y worktrees | Push a `main` o `master` |
+| Correr tests, builds y evals | Mergear un PR |
+| Abrir PRs listos para revisión | Deploys y `terraform apply` |
+| Lanzar subagentes | Borrar datos o tablas |
+| Elegir entre opciones reversibles | Mensajes a clientes o a personas fuera del trabajo |
+
+Si el agente eligió algo reversible que no te gusta, corrígelo en el siguiente mensaje. Está diseñado para avanzar y dejar que tú corrijas, en vez de esperar tu respuesta.

@@ -1,23 +1,42 @@
 # vex-mode
 
-Mi modo de trabajo para agentes en [Antigravity](https://antigravity.google): playbooks rigurosos, trabajo verificado y reglas que se hacen cumplir por estructura (hooks y checks), no solo por texto.
+Mi modo de trabajo para agentes en [Antigravity](https://antigravity.google) (agy) y en [Claude Code](https://claude.com/claude-code): playbooks rigurosos, trabajo verificado y reglas que se hacen cumplir por estructura (hooks y checks), no solo por texto.
 
 Está construido sobre [pstack](https://github.com/cursor/plugins/tree/main/pstack), de Lauren Tan (poteto). Las skills de pstack se copian tal cual y se adaptan lo mínimo. La procedencia de cada archivo está en `vendor.lock` y la licencia MIT original en `LICENSES/pstack-MIT.txt`.
 
+La guía de uso está en [`docs/guide/`](docs/guide/README.md): [instalar](docs/guide/instalar.md), [flujo de trabajo de un día común](docs/guide/flujo-de-trabajo.md) y [qué hace el agente en cada paso](docs/guide/pasos-en-detalle.md).
+
 ## Instalar
 
+### En agy
+
 ```bash
-cd ~/Projects/VexOs/Code/Repos/vex-mode
-python3 scripts/build_plugin.py --install ~/.cache/vex-mode/build
+git clone git@github.com:JaraEsequiel/vex-mode.git ~/Projects/vex-mode
+cd ~/Projects/vex-mode
+python3 scripts/build_plugin.py --ref main --install ~/.cache/vex-mode/build
 agy plugin list
 ```
 
-Se instala desde una copia limpia: `agy plugin install` copia la carpeta entera, y el repo tiene archivos (docs, evals, `.git`) que no deben llegar a tus sesiones.
+Se instala desde una copia limpia: `agy plugin install` copia la carpeta entera, y el repo tiene archivos (docs, evals, `.git`) que no deben llegar a tus sesiones. Sin `--ref`, el build copia tu árbol de trabajo con los cambios sin commitear.
+
+### En Claude Code
+
+```bash
+claude plugin marketplace add JaraEsequiel/vex-mode
+claude plugin install vex-mode@vex
+```
+
+El plugin que instala Claude Code es `harness/claude-code/`, generado por `python3 scripts/build_plugin.py --harness claude-code`.
+
+Actualizar, desinstalar y comprobar que funciona: [`docs/guide/instalar.md`](docs/guide/instalar.md).
 
 ## Usar
 
 - Siempre activo: un núcleo mínimo (`rules/AGENTS.md`) y la pausa ante acciones irreversibles.
-- Modo completo: escribe `/vex-mode <tarea>`.
+- Modo completo: escribe `/vex-mode <tarea>` en agy o `/vex-mode:vex-mode <tarea>` en Claude Code.
+- Las demás skills se llaman igual: `/architect`, `/why`, `/agent-ready`, `/correct`, `/reflect`. En Claude Code llevan el prefijo `vex-mode:`.
+
+Cuándo usar cada una y qué hace el agente en cada caso: [`docs/guide/flujo-de-trabajo.md`](docs/guide/flujo-de-trabajo.md).
 
 ## Evals
 
@@ -84,6 +103,7 @@ Un archivo copiado tal cual se vuelve a copiar con `scripts/vendor.py`. Uno adap
 
 ## Documentación
 
+- Guía de uso: `docs/guide/README.md`
 - Diseño: `docs/specs/2026-11-18-vex-mode-design.md`
 - Planes: `docs/plans/`
 - Decisiones: `docs/decisions/`
