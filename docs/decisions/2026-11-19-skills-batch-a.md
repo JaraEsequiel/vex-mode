@@ -33,3 +33,16 @@ Se trajeron de pstack@e58dd04 las cinco skills que nuestros playbooks ya nombrab
   - Ninguna medida que bloquea empeora.
 - **Lo que vio el juez de contrato y el check no:** `judge_contract` da 0 en los tres brazos. Incluso los parches que pasan convierten solo el precio a `Decimal`, así que una cantidad fraccionaria (`invoice_total([(10.0, 1.5)])`) ahora lanza `TypeError`. Además, varios cambian el tipo de retorno de `line_total` o `read_lines`. El `check.py` oculto solo prueba cantidades enteras y acepta retornos `Decimal`, por eso no lo detecta.
 - **Pendiente:** reforzar `check.py` para que pruebe cantidades `float` y tipos de retorno. Con eso el resultado mediría el contrato completo, no solo el caso del redondeo.
+
+## Comprobación estricta del contrato
+
+- **Decisión del usuario:** la comprobación oculta de `tax-rounding` exige el contrato público completo.
+  - Acepta `float` en precios, cantidades y `tax_rate`.
+  - `invoice_total` devuelve `float`.
+  - `line_total` y `read_lines` siguen mezclándose con `float`.
+  - El comando imprime lo mismo.
+- **Replay:** sobre los 8 parches de la corrida `20261119-182057-379714`, la comprobación nueva reprobó los 8. Incluye los que pasaban la comprobación vieja.
+- **Eval `c8e9083ef54b`** (bug-fix pasa a nombrar también los tipos de retorno): B 1/3, A 1/3, C 2/3. Veredicto: **inconclusive**.
+  - Las dos fallas de B rompen cantidades fraccionarias: convierten solo el precio a `Decimal`. Como el CSV tiene cantidades enteras, el agente no considera que `1.5` sea una llamada válida.
+  - La línea queda porque no empeora y va en la dirección de los criterios del usuario, pero su efecto no está medido.
+  - Seguir ajustándola contra este único caso sería sobreajustar (§9.6). Lo que sigue es un segundo caso distinto, sacado de un ticket real.
