@@ -332,7 +332,10 @@
         "playbooks/babysit.md"
       ],
       "adapted": true,
-      "upstream_commit": "35a90942a7f02e1ebbc2443643179815f2147954"
+      "upstream_commit": "35a90942a7f02e1ebbc2443643179815f2147954",
+      "local_additions": [
+        "Comment on the tracked issue or ticket with the PR link, root cause, and what changed when the task references one (user correction on issue #25)."
+      ]
     },
     {
       "path": "skills/vex-mode/playbooks/refactoring.md",

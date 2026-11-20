@@ -1,0 +1,7 @@
+{
+  "kind": "waiver",
+  "skill": "vex-mode",
+  "tree_sha256": "f80baedbf6855f07a0e0282ee4a16b7103e11e01ba08c3b2634a67e64a1aae0f",
+  "date": "2026-11-20",
+  "reason": "Only one sentence was added to playbooks/opening-a-pr.md instructing the agent to comment on a referenced issue or ticket with the PR link, root cause, and what changed. Candidate runs in evals/vex-mode/cases/ work in local project directories without a GitHub remote or issue tracker and never execute gh issue comment or open a remote PR, so no eval case can measure this step; the previous tree c0d39af911ce has three full eval results from 2026-11-20."
+}
