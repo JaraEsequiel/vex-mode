@@ -94,6 +94,7 @@ TERMS = [
     (".agents/hooks.json", re.compile(r"\.agents/hooks\.json|\.agents/`")),
     ("`evals/run.py`", re.compile(r"`agy -p`")),
     ("agy hook template", re.compile(r"\bagy (Stop )?hook")),
+    ("`Claude Code:` line", re.compile(r"^\s*- (agy|Claude Code):|agy or Claude Code")),
 ]
 # A line naming agy that no term covers means the adapter is missing a row.
 AGY = re.compile(r"\bagy\b|Antigravity|\.gemini|\.agents/")

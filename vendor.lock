@@ -20,7 +20,8 @@
         "vex-agent row: no model in its file, runs on the session model (probe in docs/decisions/2026-11-19-claude-code-probes.md; avoids pstack#1270)",
         "Cross-model reviewer row: keep `agy --model` when agy is installed, else skip (show-me-your-work needs another vendor's model)",
         "Transcript slug: every character other than an ASCII letter or digit becomes '-' (pstack#1155; code.claude.com/docs/en/sessions)",
-        "Workspace hooks row and Antigravity-only features section (agent-ready Stop hook template is agy format; evals/run.py runs agy)"
+        "Workspace hooks row and Antigravity-only features section: agy hook templates are skipped only when the skill has no Claude Code template beside them (agent-ready ships one; docs/decisions/2026-11-19-claude-code-probes.md)",
+        "Row: a step with its own `agy:` and `Claude Code:` lines -> follow the Claude Code line (agent-ready step 3 and 7)"
       ]
     },
     {
@@ -330,6 +331,7 @@
     "skills/agent-ready/SKILL.md",
     "skills/agent-ready/templates/check.yml",
     "skills/agent-ready/templates/check_on_stop.py",
+    "skills/agent-ready/templates/claude-settings.json",
     "skills/agent-ready/templates/hooks.json"
   ]
 }

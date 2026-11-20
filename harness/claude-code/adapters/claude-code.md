@@ -11,6 +11,7 @@ vex-mode skills use Antigravity (agy) names. In Claude Code, read this file once
 | Run another vex-mode skill (`/name` or "the **name** skill") | `Read` `<vex-mode>/skills/<name>/SKILL.md` and follow it. The `Skill` tool refuses most vex-mode skills. When you tell the user to type it, write `/vex-mode:<name>`. |
 | `/vex-mode` | `/vex-mode:vex-mode`. |
 | `Grep`, `Glob` | `Bash` with `rg` when the session has no `Grep` or `Glob`. |
+| A step with its own `agy:` and `Claude Code:` lines | Follow the `Claude Code:` line. |
 
 ## Subagent fields
 
@@ -35,7 +36,7 @@ vex-mode skills use Antigravity (agy) names. In Claude Code, read this file once
 | `.agents/skills/`, `~/.gemini/config/skills/` | `.claude/skills/`, `~/.claude/skills/` |
 | `~/.gemini/config/plugins/`, the vex-mode `plugin.json` | `~/.claude/plugins/`, `<vex-mode>/.claude-plugin/plugin.json` |
 | This conversation's transcript, `.system_generated/logs/transcript.jsonl`, or `~/.gemini/antigravity-cli/brain/` | `~/.claude/projects/<slug>/<session>.jsonl`. The slug is the workspace path with each character other than an ASCII letter or digit changed to `-`, so `/Users/you/proj` is `-Users-you-proj`. The newest `.jsonl` directly in that folder is the current session. Its `<session>/subagents/` folder holds subagent transcripts. Read only this workspace's folder. |
-| Workspace hooks in `.agents/hooks.json` | The `hooks` key of `.claude/settings.json`. Its format differs, so an agy hook template does not work there. |
+| Workspace hooks in `.agents/hooks.json` | The `hooks` key of `.claude/settings.json`. Its format differs, so an agy hook template does not work there; use the skill's Claude Code template when it has one. |
 
 ## Antigravity-only features
 
@@ -43,5 +44,5 @@ Claude Code has no agy brain artifacts, agy plugin commands, or agy hook format.
 
 | agy | Claude Code |
 | --- | --- |
-| A step that installs an agy hook template, such as `agent-ready`'s Stop hook | Skip with the line. |
+| A step that installs an agy hook template with no Claude Code template beside it | Skip with the line. |
 | A script that runs `agy` itself, such as `evals/run.py` | Run it as written. It calls agy whatever harness you are in. That is not a skip, so write no line. |

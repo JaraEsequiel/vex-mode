@@ -122,6 +122,12 @@ class ClaudeTreeTest(unittest.TestCase):
         with self.assertRaisesRegex(build_plugin.TreeError, "names agy"):
             self.render(**{"skills/plain/SKILL.md": "# Plain\n\nRun agy doctor.\n"})
 
+    def test_per_harness_lines_need_their_row(self):
+        skill = "# Plain\n\n- agy: do a.\n- Claude Code: do b.\n"
+        with self.assertRaisesRegex(build_plugin.TreeError, "no row for `Claude Code:` line"):
+            self.render(**{"skills/plain/SKILL.md": skill})
+        self.render(**{"skills/plain/SKILL.md": skill, "adapters/claude-code.md": ADAPTER + "| `Claude Code:` line | x |\n"})
+
     def test_check_finds_a_stale_tree(self):
         repo = make_repo(SOURCE)
         tree = Path(tempfile.mkdtemp(prefix="cctree-")) / "claude-code"

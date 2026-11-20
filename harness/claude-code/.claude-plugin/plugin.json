@@ -1,6 +1,6 @@
 {
   "name": "vex-mode",
-  "version": "0.1.0+5c92be440b4f",
+  "version": "0.1.0+199473cf40ce",
   "description": "Vex's agent working mode for Antigravity and Claude Code: rigorous playbooks, verified work, rules enforced by structure. Built on pstack.",
   "author": {
     "name": "Vex"
