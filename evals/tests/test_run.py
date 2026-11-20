@@ -572,3 +572,40 @@ class ClaudeCodeRunTest(RunTest):
 for _name in [n for n in dir(RunTest) if n.startswith("test_")]:
     if _name not in vars(ClaudeCodeRunTest):
         setattr(ClaudeCodeRunTest, _name, None)
+
+
+class CalibrateTest(ClaudeCodeRunTest):
+    """`calibrate`: the base plugin against no plugin, same model, so a case shows whether it measures the plugin."""
+
+    def calibrate(self):
+        return run.run_eval(self.repo, "x", "c1", base="main", calibrate=True)
+
+    def test_compares_the_plugin_with_no_plugin(self):
+        path = self.calibrate()
+        self.assertEqual(path.parent, self.repo / "evals/x/calibration")
+        result = json.loads(path.read_text())
+        self.assertEqual(result["kind"], "calibration")
+        self.assertEqual(sorted(result["arms"]), ["A", "N"])
+        self.assertEqual(result["arms"]["A"]["model"], result["arms"]["N"]["model"])
+        self.assertIsNone(result["arms"]["N"]["tree_sha256"])
+        self.assertIn("A_vs_N", result["signals"])
+        self.assertEqual(self.results(), [])
+
+    def test_no_plugin_arm_runs_bare_with_the_command_stripped(self):
+        self.calibrate()
+        bare = [a for a in self.calls() if "--plugin-dir" not in a]
+        self.assertEqual(len(bare), 2)
+        for argv in bare:
+            self.assertEqual(argv[-1], "the total is wrong")
+            self.assertEqual(argv[argv.index("--setting-sources") + 1], "project")
+
+    def test_agy_cannot_calibrate(self):
+        write(self.repo, {"evals/x/cases/c1/case.json": json.dumps(CASE)})
+        git(self.repo, "commit", "-qam", "agy case")
+        with self.assertRaisesRegex(run.EvalError, "calibrate runs on Claude Code"):
+            run.run_eval(self.repo, "x", "c1", base="main", calibrate=True, harness="agy")
+
+
+for _name in [n for n in dir(ClaudeCodeRunTest) if n.startswith("test_")]:
+    if _name not in vars(CalibrateTest):
+        setattr(CalibrateTest, _name, None)

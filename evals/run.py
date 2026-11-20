@@ -1,6 +1,7 @@
 """Run one eval case on the three fixed arms, judge it blind, and write a result (design §8.2).
 
     python3 evals/run.py <skill> <case> [--base REF] [--variant REF] [--runs N] [--harness agy|claude-code]
+    python3 evals/run.py calibrate <skill> <case> [--base REF] [--runs N]   (Claude Code: plugin vs no plugin)
     python3 evals/run.py rejudge <result.json>
     python3 evals/run.py restore    (after an eval that was killed before it could restore the plugin)
     python3 evals/run.py verdict <result.json> <promote|reject|inconclusive> "<synthesis>"
@@ -44,6 +45,8 @@ HARNESSES = ("agy", "claude-code")
 # Tools a Claude Code candidate may use without a person; edits are allowed by acceptEdits.
 CLAUDE_TOOLS = "Bash,Agent,TodoWrite"
 # A candidate that hit its quota makes every later run void too (2026-11-19: agy "Individual quota reached").
+# The no-plugin arm gets the prompt a user without the plugin would type.
+COMMAND = re.compile(r"^/vex-mode(:vex-mode)?\s+")
 QUOTA = re.compile(r"quota|usage limit|rate.?limit|\b429\b", re.I)
 VERDICTS = ("promote", "reject", "inconclusive")
 DIFF_LIMIT = 20000
@@ -117,9 +120,11 @@ def _run_candidate(arm, prompt: str, timeout_s: int, work: Path, log: Path) -> t
     return transcript.parse(log.read_text()), time.monotonic() - start
 
 
-def _run_claude(arm, prompt: str, timeout_s: int, work: Path, log: Path, tree: Path) -> tuple[transcript.Transcript, float]:
-    cmd = [*build_plugin.claude_command(), "--model", arm.model, "--plugin-dir", str(tree), "--add-dir", str(tree),
-           "--setting-sources", "project", "--permission-mode", "acceptEdits", "--allowedTools", CLAUDE_TOOLS,
+def _run_claude(arm, prompt: str, timeout_s: int, work: Path, log: Path, tree: Path | None) -> tuple[transcript.Transcript, float]:
+    plugin = ["--plugin-dir", str(tree), "--add-dir", str(tree)] if tree is not None else []
+    if tree is None:
+        prompt = COMMAND.sub("", prompt)
+    cmd = [*build_plugin.claude_command(), "--model", arm.model, *plugin, "--setting-sources", "project", "--permission-mode", "acceptEdits", "--allowedTools", CLAUDE_TOOLS,
            "--output-format", "stream-json", "--verbose", "-p", prompt]
     start = time.monotonic()
     try:
@@ -227,7 +232,11 @@ def _quality_metric(rec: dict, name: str) -> tuple[list[float], bool]:
     return values, any(name in r.get("quality_errors", {}) for r in runs)
 
 
-def _score(records: dict, with_quality: bool = False) -> tuple[dict, dict]:
+PAIRS = {"B_vs_A": ("A", "B"), "C_vs_A": ("A", "C")}
+CALIBRATION_PAIRS = {"A_vs_N": ("N", "A")}
+
+
+def _score(records: dict, with_quality: bool = False, pairs: dict = PAIRS) -> tuple[dict, dict]:
     metrics = {}
     for label, rec in records.items():
         m = {}
@@ -239,7 +248,7 @@ def _score(records: dict, with_quality: bool = False) -> tuple[dict, dict]:
             m[name] = stats.summarize(values) if values else None
         metrics[label] = m
     signals = {}
-    for pair, (a, b) in {"B_vs_A": ("A", "B"), "C_vs_A": ("A", "C")}.items():
+    for pair, (a, b) in pairs.items():
         s = {}
         for name in METRICS:
             x, y = metrics[a][name], metrics[b][name]
@@ -348,7 +357,8 @@ def restore() -> None:
 
 
 def run_eval(repo: Path, skill: str, case: str, base: str | None = None,
-             variant: str = "HEAD", runs: int | None = None, harness: str | None = None) -> Path:
+             variant: str = "HEAD", runs: int | None = None, harness: str | None = None,
+             calibrate: bool = False) -> Path:
     repo = repo.resolve()
     case_dir = repo / "evals" / skill / "cases" / case
     cfg = json.loads((case_dir / "case.json").read_text())
@@ -357,6 +367,8 @@ def run_eval(repo: Path, skill: str, case: str, base: str | None = None,
     if harness not in HARNESSES:
         raise EvalError(f"harness must be one of {', '.join(HARNESSES)}")
     claude = harness == "claude-code"
+    if calibrate and not claude:
+        raise EvalError("calibrate runs on Claude Code only: agy cannot run without its global plugin")
     if claude:
         cfg = {**cfg, **cfg.get("claude_code", {})}
         if model_family(cfg["candidate_model"]) != "claude" or model_family(cfg["upgrade_model"]) != "claude":
@@ -365,12 +377,17 @@ def run_eval(repo: Path, skill: str, case: str, base: str | None = None,
         raise EvalError(f"a previous eval did not restore the plugin; run `python3 evals/run.py restore` first")
     if _git(repo, "status", "--porcelain", "--", "skills/"):
         raise EvalError("skills/ has uncommitted changes; the variant must be a commit")
+    if base is None and calibrate:
+        base = "origin/main"
     if base is None:
         base = _git(repo, "merge-base", "origin/main", "HEAD", check=False)
         if not base:
             raise EvalError("no merge base with origin/main; pass --base")
     judge_cfg = _judge_config(repo)
-    arm_list = arms_mod.build_arms(cfg, _commit(repo, base), _commit(repo, variant), judge_cfg["model"])
+    if calibrate:
+        arm_list = arms_mod.calibration_arms(cfg, _commit(repo, base), judge_cfg["model"])
+    else:
+        arm_list = arms_mod.build_arms(cfg, _commit(repo, base), _commit(repo, variant), judge_cfg["model"])
     prompt = (case_dir / "prompt.md").read_text().strip()
     rubric = (case_dir / "rubric.md").read_text()
 
@@ -378,13 +395,16 @@ def run_eval(repo: Path, skill: str, case: str, base: str | None = None,
     run_dir = _cache() / "vex-mode" / "runs" / stamp
     for sub in ("transcripts", "diffs", "checks"):
         (run_dir / sub).mkdir(parents=True)
-    builds = {arm.label: build_plugin.build(repo, run_dir / "build" / arm.label, ref=arm.plugin_ref) for arm in arm_list}
-    trees = {label: skill_tree_sha256(b / "skills" / skill) for label, b in builds.items()}
+    builds = {arm.label: build_plugin.build(repo, run_dir / "build" / arm.label, ref=arm.plugin_ref)
+              for arm in arm_list if arm.plugin_ref}
+    trees = {arm.label: skill_tree_sha256(builds[arm.label] / "skills" / skill) if arm.plugin_ref else None
+             for arm in arm_list}
     # Outside the eval cache (a forbidden root) so an arm may read its own plugin files.
     cc_trees = {arm.label: build_plugin.build_claude(repo, _cache() / "vex-cc" / stamp / arm.label, arm.plugin_ref)
-                for arm in arm_list} if claude else {}
+                for arm in arm_list if arm.plugin_ref} if claude else {}
     name = f"{case}-claude-code" if claude else case
-    path = repo / "evals" / skill / "results" / f"{dt.date.today().isoformat()}-{name}-{trees['B'][:12]}.json"
+    folder, tree = ("calibration", trees["A"]) if calibrate else ("results", trees["B"])
+    path = repo / "evals" / skill / folder / f"{dt.date.today().isoformat()}-{name}-{tree[:12]}.json"
     if path.exists():
         raise EvalError(f"{path} already exists; delete it to run this eval again")
 
@@ -404,7 +424,7 @@ def run_eval(repo: Path, skill: str, case: str, base: str | None = None,
         saved = {sig: signal.signal(sig, _raise_interrupt) for sig in (signal.SIGTERM, signal.SIGHUP)}
         try:
             for arm in arm_list:
-                plugin_root = cc_trees[arm.label] if claude else installed
+                plugin_root = (cc_trees.get(arm.label) if claude else installed) or run_dir / "no-plugin"
                 if not claude:
                     build_plugin.install(builds[arm.label])
                     if skill_tree_sha256(installed / "skills" / skill) != trees[arm.label]:
@@ -418,7 +438,7 @@ def run_eval(repo: Path, skill: str, case: str, base: str | None = None,
                     try:
                         log = run_dir / "transcripts" / f"{slot}.ndjson"
                         if claude:
-                            t, wall = _run_claude(arm, prompt, cfg["timeout_s"], work, log, plugin_root)
+                            t, wall = _run_claude(arm, prompt, cfg["timeout_s"], work, log, cc_trees.get(arm.label))
                         else:
                             t, wall = _run_candidate(arm, prompt, cfg["timeout_s"], work, log)
                         if QUOTA.search(t.error):
@@ -457,9 +477,10 @@ def run_eval(repo: Path, skill: str, case: str, base: str | None = None,
                             f"run dir: {run_dir}")
         judge_error, judge_usage = _judge(records, materials, rubric, judge_cfg, run_dir, rng)
         quality_record = _quality(records, case_dir, cfg, prompt, judge_cfg, run_dir, rng)
-    metrics, signals = _score(records, quality_record["enabled"])
+    metrics, signals = _score(records, quality_record["enabled"], CALIBRATION_PAIRS if calibrate else PAIRS)
     result = {
-        "kind": "eval", "skill": skill, "tree_sha256": trees["B"], "date": dt.date.today().isoformat(),
+        "kind": "calibration" if calibrate else "eval", "skill": skill, "tree_sha256": tree,
+        "date": dt.date.today().isoformat(),
         "case": case, "harness": harness, "run_dir": str(run_dir), "arms": records,
         "judge": _judge_record(judge_cfg, judge_error, judge_usage), "quality": quality_record,
         "metrics": metrics, "signals": signals, "verdict": None, "synthesis": None,
@@ -492,6 +513,15 @@ def main(argv: list[str]) -> int:
             if len(argv) != 2:
                 raise EvalError("usage: rejudge <result.json>")
             rejudge(Path(argv[1]))
+            return 0
+        if argv[:1] == ["calibrate"]:
+            parser = argparse.ArgumentParser(description="Plugin against no plugin on Claude Code, same model.")
+            parser.add_argument("skill")
+            parser.add_argument("case")
+            parser.add_argument("--base")
+            parser.add_argument("--runs", type=int)
+            args = parser.parse_args(argv[1:])
+            run_eval(HERE.parent, args.skill, args.case, args.base, runs=args.runs, harness="claude-code", calibrate=True)
             return 0
         if argv[:1] == ["verdict"]:
             if len(argv) != 4:
