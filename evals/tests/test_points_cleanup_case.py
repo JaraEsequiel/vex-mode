@@ -25,29 +25,21 @@ def points_for(total_eur, tier, promo=False):
         points += BONUS
     return points
 '''
-KEEP_POINTS_FOR_TESTS = '''import unittest
-
-from points import points_for
+RUNNER = (CASE / "project/points_spec.py").read_text().split('\n\nif __name__ == "__main__":')[1]
 
 
-class PointsForTest(unittest.TestCase):
-    def test_whole_euros_times_tier_rate(self):
-        self.assertEqual(points_for(42.5, "basic"), 42)
+def spec_module(header: str, asserts: list[str]) -> str:
+    """A points_spec.py with the project's own runner: one spec_ function per assert."""
+    specs = "".join(f"\n\ndef spec_{i}():\n    {a}\n" for i, a in enumerate(asserts))
+    return f"import sys\n\n{header}\n{specs}\n\nif __name__ == \"__main__\":{RUNNER}"
 
-    def test_bonus_only_above_100(self):
-        self.assertEqual(points_for(100, "silver"), 200)
-        self.assertEqual(points_for(100.01, "silver"), 250)
 
-    def test_unknown_tier(self):
-        with self.assertRaises(ValueError):
-            points_for(10, "platinum")
-
-    def test_promo_doubles_the_rate(self):
-        self.assertEqual(points_for(42.5, "silver", promo=True), 168)
-
-    def test_bonus_is_not_doubled(self):
-        self.assertEqual(points_for(200, "basic", promo=True), 450)
-'''
+KEEP_POINTS_FOR_SPECS = spec_module("from points import points_for", [
+    'assert points_for(42.5, "basic") == 42',
+    'assert points_for(100, "silver") == 200 and points_for(100.01, "silver") == 250',
+    'assert points_for(42.5, "silver", promo=True) == 168',
+    'assert points_for(200, "basic", promo=True) == 450',
+])
 # Keeps the cents API; the euro callers convert to cents.
 KEEP_ORDER_POINTS = '''"""Loyalty points earned on an order."""
 
@@ -86,10 +78,10 @@ class PointsCleanupCheckTest(unittest.TestCase):
         self.assertIn(old, text, name)
         path.write_text(text.replace(old, new))
 
-    def keep_points_for(self, rates: str = KEEP_POINTS_FOR, tests: str = KEEP_POINTS_FOR_TESTS) -> Path:
+    def keep_points_for(self, rates: str = KEEP_POINTS_FOR, specs: str = KEEP_POINTS_FOR_SPECS) -> Path:
         work = self.work()
         (work / "points.py").write_text(rates)
-        (work / "test_points.py").write_text(tests)
+        (work / "points_spec.py").write_text(specs)
         self.edit(work, "statement.py", "from points import Order, order_points", "from points import points_for")
         self.edit(work, "statement.py", "order_points(order)", "points_for(cents / 100, tier, promo)")
         self.edit(work, "statement.py", "    order = Order(cents, tier, promo)\n", "")
@@ -101,10 +93,8 @@ class PointsCleanupCheckTest(unittest.TestCase):
     def keep_order_points(self, euros_to_cents: str) -> Path:
         work = self.work()
         (work / "points.py").write_text(KEEP_ORDER_POINTS)
-        (work / "test_points.py").write_text(
-            "import unittest\n\nfrom points import Order, order_points\n\n\nclass T(unittest.TestCase):\n"
-            + "".join(f"    def test_{i}(self):\n        self.assertEqual(order_points(Order({c}, 'basic')), {p})\n"
-                      for i, (c, p) in enumerate([(4250, 42), (10000, 100), (10001, 150), (99, 0)])))
+        (work / "points_spec.py").write_text(spec_module("from points import Order, order_points", [
+            f"assert order_points(Order({c}, 'basic')) == {p}" for c, p in [(4250, 42), (10000, 100), (10001, 150), (99, 0)]]))
         wrapper = f"\n\ndef _points(total_eur, tier):\n    return order_points(Order({euros_to_cents}, tier))\n"
         for name, old in (("receipt.py", "points_for"), ("banner.py", "earned")):
             self.edit(work, name, f"from points import {old}", "from points import Order, order_points")
@@ -144,10 +134,10 @@ class PointsCleanupCheckTest(unittest.TestCase):
         self.assertNotEqual(code, 0, out)
         self.assertIn("export", out)
 
-    def test_dropped_tests_fail(self):
-        code, out = self.check(self.keep_points_for(tests="import unittest\n"))
+    def test_dropped_specs_fail(self):
+        code, out = self.check(self.keep_points_for(specs=spec_module("", [])))
         self.assertNotEqual(code, 0, out)
-        self.assertIn("tests were dropped", out)
+        self.assertIn("specs were dropped", out)
 
     def test_a_local_variable_named_earned_passes(self):
         # 2026-11-20 points-cleanup slot 6: `earned = ...` inside the function is not the wrapper.
@@ -157,18 +147,16 @@ class PointsCleanupCheckTest(unittest.TestCase):
         code, out = self.check(self.keep_points_for(rates))
         self.assertEqual(code, 0, out)
 
-    def test_a_shim_in_the_tests_fails(self):
+    def test_a_shim_in_the_specs_fails(self):
         # 2026-11-20 points-cleanup calibration: production kept order_points, the tests kept a local points_for.
         work = self.keep_order_points("round(total_eur * 100)")
-        (work / "test_points.py").write_text(
-            "import unittest\n\nfrom points import Order, order_points\n\n\n"
-            "def points_for(total_eur, tier):\n    return order_points(Order(round(total_eur * 100), tier))\n\n\n"
-            "class T(unittest.TestCase):\n"
-            + "".join(f"    def test_{i}(self):\n        self.assertEqual(points_for({e}, 'basic'), {p})\n"
-                      for i, (e, p) in enumerate([(42.5, 42), (100, 100), (100.01, 150), (0.99, 0)])))
+        shim = ("from points import Order, order_points\n\n\n"
+                "def points_for(total_eur, tier):\n    return order_points(Order(round(total_eur * 100), tier))")
+        (work / "points_spec.py").write_text(spec_module(shim, [
+            f"assert points_for({e}, 'basic') == {p}" for e, p in [(42.5, 42), (100, 100), (100.01, 150), (0.99, 0)]]))
         code, out = self.check(work)
         self.assertNotEqual(code, 0, out)
-        self.assertIn("tests keep", out)
+        self.assertIn("specs keep", out)
 
     def test_behavior_change_fails(self):
         code, out = self.check(self.keep_points_for(KEEP_POINTS_FOR.replace("BONUS = 50", "BONUS = 60")))

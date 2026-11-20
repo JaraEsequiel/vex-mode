@@ -7,5 +7,5 @@ python3 receipt.py 42.50 silver           # till receipt
 python3 statement.py 15000 gold promo     # monthly statement line
 python3 banner.py 99.90 basic             # product page banner
 python3 export.py orders.csv              # nightly CRM export
-python3 -m unittest                       # tests
+python3 points_spec.py                    # specs
 ```
