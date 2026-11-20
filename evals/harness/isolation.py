@@ -71,8 +71,8 @@ def _segments(cmd: str) -> list[list[str]]:
         lexer = shlex.shlex(cmd, posix=True, punctuation_chars=True)
         lexer.whitespace_split = True
         tokens = list(lexer)
-    except ValueError:
-        tokens = cmd.split()
+    except ValueError:  # unbalanced quotes (a heredoc with an apostrophe): still cut at the separators
+        tokens = re.findall(r"[^\s;&|()]+|[;&|()]+", cmd)
     segments, current = [], []
     for tok in tokens:
         if tok and all(c in "&|;()" for c in tok):
