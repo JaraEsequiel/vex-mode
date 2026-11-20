@@ -98,6 +98,19 @@ class RunTest(unittest.TestCase):
         self.assertEqual(signals["A_vs_N"]["outcome"], "better")
         self.assertEqual(signals["A_vs_N"]["outcome_p"], 0.005)
 
+    def test_other_measures_use_the_rank_test_and_keep_their_p(self):
+        def arm(compliance, tokens):
+            return {"runs": [{"outcome": 1, "compliance": c, "tokens": t, "duration_s": 1.0}
+                             for c, t in zip(compliance, tokens)]}
+
+        records = {"N": arm([0.5] * 8 + [0.0, 1.0], [100] * 10), "A": arm([0.9] * 8 + [0.5, 1.0], [220] * 10)}
+        _, signals = run._score(records, pairs=run.CALIBRATION_PAIRS)
+        s = signals["A_vs_N"]
+        self.assertEqual((s["compliance"], s["tokens"], s["duration_s"]), ("better", "worse", "noise"))
+        self.assertLess(s["compliance_p"], 0.01)
+        self.assertLess(s["tokens_p"], 0.01)
+        self.assertEqual(s["duration_s_p"], 1.0)
+
     def test_refuses_when_base_and_variant_are_the_same_skill(self):
         # 2026-11-20 points-cleanup: no --base, the merge base already had the change, A and B were one plugin.
         with self.assertRaisesRegex(run.EvalError, "same skill tree"):

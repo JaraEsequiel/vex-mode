@@ -462,7 +462,7 @@ flowchart LR
 <li>A↔B cambia solo la skill; A↔C cambia solo el modelo. El arnés construye los brazos; el caso no puede definir otros.
 </li></ul>
 </li>
-<li><b>Lectura del número</b> <a class="s p" href="#P-explain">P-explain</a>: por defecto 3 ejecuciones por brazo. El resultado guarda la media y la dispersión de cada medida, y marca una diferencia como ruido cuando la dispersión es mayor que el efecto. El resultado (pasa o no pasa) es la excepción <a class="s mia" href="#MIA">MÍA</a>: una sola ejecución que pasa y otra que no llevan su dispersión a 1, así que la regla nunca vería un efecto. Se compara con la prueba exacta de Fisher de una cola (α = 0,05) y el resultado guarda su p en <code>outcome_p</code>. Con 3 ejecuciones ni 3 de 3 contra 0 de 3 baja de 0,05; un caso que debe mostrar una diferencia de pasar necesita unas 10 por brazo (con 100 % contra 40 %, la detecta 95 de cada 100 veces).
+<li><b>Lectura del número</b> <a class="s p" href="#P-explain">P-explain</a>: por defecto 3 ejecuciones por brazo. El resultado guarda la media y la dispersión de cada medida, y la señal sale de una prueba de una cola (α = 0,05) cuya p se guarda junto a ella (<code>&lt;medida&gt;_p</code>) <a class="s mia" href="#MIA">MÍA</a>. La regla anterior (ruido si la dispersión supera la diferencia) se descartó: una sola ejecución en cada extremo estiraba la dispersión, y cumplimiento 0,90 contra 0,50 en 10 ejecuciones se leía como ruido. Las medidas continuas (cumplimiento, tokens, tiempo y calidad) usan Mann-Whitney exacto, con rangos medios en los empates; con 3 ejecuciones por brazo la mejor p posible es justo 0,05. El resultado (pasa o no pasa) usa la prueba exacta de Fisher y guarda su p en <code>outcome_p</code>. Con 3 ejecuciones ni 3 de 3 contra 0 de 3 baja de 0,05; un caso que debe mostrar una diferencia de pasar necesita unas 10 por brazo (con 100 % contra 40 %, la detecta 95 de cada 100 veces).
 </li>
 <li><b>Aislamiento del candidato</b> <a class="s i" href="#I-877">I-877</a> <a class="s a" href="#A-cli">A-cli</a>:
 <ul>
@@ -627,7 +627,7 @@ flowchart LR
 <ul>
 <li>Cada medida guarda media y dispersión por brazo, y su señal B↔A y C↔A con la regla de §8.2 <a class="s p" href="#P-explain">P-explain</a>.
 </li>
-<li>Una señal de calidad necesita al menos 2 ejecuciones con valor (que pasaron, y en el juez, que no quedaron en <code>null</code>) en cada brazo. Si no las hay, vale <code>&quot;few&quot;</code> y no bloquea <a class="s mia" href="#MIA">MÍA</a>. Con una sola ejecución la dispersión es 0, y cualquier diferencia contaría como efecto.
+<li>Una señal de calidad necesita al menos 2 ejecuciones con valor (que pasaron, y en el juez, que no quedaron en <code>null</code>) en cada brazo. Si no las hay, vale <code>&quot;few&quot;</code> y no bloquea <a class="s mia" href="#MIA">MÍA</a>. Con una sola ejecución no hay comparación que leer.
 </li>
 <li>Si una medida no se pudo calcular (el check se colgó, una llamada del juez falló o devolvió etiquetas de más o de menos), su señal vale <code>&quot;error&quot;</code> y el motivo queda en <code>quality.errors</code> del resultado <a class="s mia" href="#MIA">MÍA</a>. Un error de calidad no invalida el resultado, porque 1 llamada fallida de 9 no justifica tirar 9 ejecuciones. Bloquea <code>promote</code> hasta que <code>rejudge</code> lo resuelva. Así, una API inestable no saca la calidad de la decisión en silencio.
 </li></ul>
