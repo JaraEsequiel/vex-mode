@@ -1,0 +1,542 @@
+{
+  "kind": "eval",
+  "skill": "vex-mode",
+  "tree_sha256": "f926683221b27474d856266528baec01b491706d43c1be6c5b44a46a96066d40",
+  "date": "2026-11-20",
+  "case": "points-cleanup",
+  "harness": "claude-code",
+  "jobs": 4,
+  "run_dir": "/home/vex/.cache/vex-mode/runs/20261120-134239-819820",
+  "arms": {
+    "A": {
+      "model": "claude-sonnet-5-5",
+      "plugin_ref": "caa17ee038099b559fc6dd72631e362fef33470f",
+      "tree_sha256": "0eada9275e319230b57c57d76cd32105b1b8af0861aa135deb388907807497b6",
+      "runs": [
+        {
+          "slot": 20,
+          "status": "SUCCESS",
+          "invalid": null,
+          "outcome": 1,
+          "compliance": 0.8,
+          "tokens": 321640,
+          "duration_s": 45.33,
+          "reads": 5,
+          "commands": 7,
+          "cost_usd": 0.19316850000000002,
+          "label": "R11"
+        },
+        {
+          "slot": 21,
+          "status": "SUCCESS",
+          "invalid": null,
+          "outcome": 1,
+          "compliance": 0.8,
+          "tokens": 290512,
+          "duration_s": 35.749,
+          "reads": 5,
+          "commands": 6,
+          "cost_usd": 0.18334210000000004,
+          "label": "R8"
+        },
+        {
+          "slot": 19,
+          "status": "SUCCESS",
+          "invalid": null,
+          "outcome": 1,
+          "compliance": 0.6,
+          "tokens": 329236,
+          "duration_s": 48.217,
+          "reads": 5,
+          "commands": 7,
+          "cost_usd": 0.1992738,
+          "label": "R5"
+        },
+        {
+          "slot": 4,
+          "status": "SUCCESS",
+          "invalid": null,
+          "outcome": 1,
+          "compliance": 0.8,
+          "tokens": 287173,
+          "duration_s": 39.766,
+          "reads": 6,
+          "commands": 6,
+          "cost_usd": 0.1863991,
+          "label": "R23"
+        },
+        {
+          "slot": 30,
+          "status": "SUCCESS",
+          "invalid": null,
+          "outcome": 1,
+          "compliance": 0.8,
+          "tokens": 292831,
+          "duration_s": 46.739,
+          "reads": 6,
+          "commands": 6,
+          "cost_usd": 0.1996291,
+          "label": "R25"
+        },
+        {
+          "slot": 26,
+          "status": "SUCCESS",
+          "invalid": null,
+          "outcome": 1,
+          "compliance": 0.8,
+          "tokens": 241543,
+          "duration_s": 38.548,
+          "reads": 5,
+          "commands": 5,
+          "cost_usd": 0.1739696,
+          "label": "R6"
+        },
+        {
+          "slot": 10,
+          "status": "SUCCESS",
+          "invalid": null,
+          "outcome": 1,
+          "compliance": 0.8,
+          "tokens": 420432,
+          "duration_s": 57.494,
+          "reads": 6,
+          "commands": 9,
+          "cost_usd": 0.23443790000000003,
+          "label": "R20"
+        },
+        {
+          "slot": 28,
+          "status": "SUCCESS",
+          "invalid": null,
+          "outcome": 1,
+          "compliance": 0.6,
+          "tokens": 284763,
+          "duration_s": 42.253,
+          "reads": 5,
+          "commands": 6,
+          "cost_usd": 0.18902370000000002,
+          "label": "R28"
+        },
+        {
+          "slot": 12,
+          "status": "SUCCESS",
+          "invalid": null,
+          "outcome": 1,
+          "compliance": 0.8,
+          "tokens": 405119,
+          "duration_s": 51.94,
+          "reads": 3,
+          "commands": 9,
+          "cost_usd": 0.2193443,
+          "label": "R27"
+        },
+        {
+          "slot": 17,
+          "status": "SUCCESS",
+          "invalid": null,
+          "outcome": 1,
+          "compliance": 1.0,
+          "tokens": 323868,
+          "duration_s": 41.0,
+          "reads": 3,
+          "commands": 7,
+          "cost_usd": 0.1914968,
+          "label": "R2"
+        }
+      ]
+    },
+    "B": {
+      "model": "claude-sonnet-5-5",
+      "plugin_ref": "635bbe1584a717018e1edb2ec63b20b62ed62002",
+      "tree_sha256": "f926683221b27474d856266528baec01b491706d43c1be6c5b44a46a96066d40",
+      "runs": [
+        {
+          "slot": 8,
+          "status": "SUCCESS",
+          "invalid": null,
+          "outcome": 1,
+          "compliance": 0.8,
+          "tokens": 204810,
+          "duration_s": 31.961,
+          "reads": 6,
+          "commands": 5,
+          "cost_usd": 0.1633166,
+          "label": "R19"
+        },
+        {
+          "slot": 29,
+          "status": "SUCCESS",
+          "invalid": null,
+          "outcome": 1,
+          "compliance": 0.8,
+          "tokens": 164477,
+          "duration_s": 31.042,
+          "reads": 5,
+          "commands": 4,
+          "cost_usd": 0.15077749999999998,
+          "label": "R16"
+        },
+        {
+          "slot": 16,
+          "status": "SUCCESS",
+          "invalid": null,
+          "outcome": 1,
+          "compliance": 0.8,
+          "tokens": 172266,
+          "duration_s": 30.27,
+          "reads": 6,
+          "commands": 4,
+          "cost_usd": 0.1639329,
+          "label": "R21"
+        },
+        {
+          "slot": 25,
+          "status": "SUCCESS",
+          "invalid": null,
+          "outcome": 1,
+          "compliance": 1.0,
+          "tokens": 217533,
+          "duration_s": 34.913,
+          "reads": 6,
+          "commands": 5,
+          "cost_usd": 0.18497300000000005,
+          "label": "R1"
+        },
+        {
+          "slot": 14,
+          "status": "SUCCESS",
+          "invalid": null,
+          "outcome": 1,
+          "compliance": 0.6,
+          "tokens": 324315,
+          "duration_s": 43.156,
+          "reads": 6,
+          "commands": 8,
+          "cost_usd": 0.18754970000000004,
+          "label": "R29"
+        },
+        {
+          "slot": 11,
+          "status": "SUCCESS",
+          "invalid": null,
+          "outcome": 1,
+          "compliance": 0.6,
+          "tokens": 304604,
+          "duration_s": 65.215,
+          "reads": 5,
+          "commands": 7,
+          "cost_usd": 0.21443390000000004,
+          "label": "R9"
+        },
+        {
+          "slot": 6,
+          "status": "SUCCESS",
+          "invalid": null,
+          "outcome": 1,
+          "compliance": 0.8,
+          "tokens": 284386,
+          "duration_s": 42.659,
+          "reads": 6,
+          "commands": 7,
+          "cost_usd": 0.18675460000000002,
+          "label": "R24"
+        },
+        {
+          "slot": 15,
+          "status": "SUCCESS",
+          "invalid": null,
+          "outcome": 1,
+          "compliance": 0.6,
+          "tokens": 206015,
+          "duration_s": 33.946,
+          "reads": 6,
+          "commands": 5,
+          "cost_usd": 0.1641421,
+          "label": "R18"
+        },
+        {
+          "slot": 24,
+          "status": "SUCCESS",
+          "invalid": null,
+          "outcome": 1,
+          "compliance": 0.8,
+          "tokens": 204928,
+          "duration_s": 37.247,
+          "reads": 5,
+          "commands": 5,
+          "cost_usd": 0.1648344,
+          "label": "R13"
+        },
+        {
+          "slot": 2,
+          "status": "SUCCESS",
+          "invalid": null,
+          "outcome": 1,
+          "compliance": 1.0,
+          "tokens": 173643,
+          "duration_s": 36.743,
+          "reads": 5,
+          "commands": 4,
+          "cost_usd": 0.1739448,
+          "label": "R17"
+        }
+      ]
+    },
+    "C": {
+      "model": "claude-opus-5-5",
+      "plugin_ref": "caa17ee038099b559fc6dd72631e362fef33470f",
+      "tree_sha256": "0eada9275e319230b57c57d76cd32105b1b8af0861aa135deb388907807497b6",
+      "runs": [
+        {
+          "slot": 13,
+          "status": "SUCCESS",
+          "invalid": null,
+          "outcome": 1,
+          "compliance": 0.8,
+          "tokens": 373871,
+          "duration_s": 84.144,
+          "reads": 0,
+          "commands": 8,
+          "cost_usd": 0.4395636,
+          "label": "R12"
+        },
+        {
+          "slot": 22,
+          "status": "SUCCESS",
+          "invalid": null,
+          "outcome": 1,
+          "compliance": 0.8,
+          "tokens": 519008,
+          "duration_s": 98.626,
+          "reads": 0,
+          "commands": 11,
+          "cost_usd": 0.5501546,
+          "label": "R4"
+        },
+        {
+          "slot": 7,
+          "status": "SUCCESS",
+          "invalid": null,
+          "outcome": 1,
+          "compliance": 1.0,
+          "tokens": 450749,
+          "duration_s": 104.044,
+          "reads": 0,
+          "commands": 9,
+          "cost_usd": 0.5269714,
+          "label": "R15"
+        },
+        {
+          "slot": 3,
+          "status": "SUCCESS",
+          "invalid": null,
+          "outcome": 1,
+          "compliance": 1.0,
+          "tokens": 460484,
+          "duration_s": 98.235,
+          "reads": 0,
+          "commands": 10,
+          "cost_usd": 0.5148585999999999,
+          "label": "R10"
+        },
+        {
+          "slot": 23,
+          "status": "SUCCESS",
+          "invalid": "command touches eval files: P=$(mktemp -d) && echo \"pin dir $P\" && git show 584ccda:points.py > $P/old_points.py &&\ngit worktree add -q $P/base 584ccda &&\ncat > $P/readme_cmds.sh <<'EOF'\ncd \"$1\"\nfor c in \"receipt.py 42.50 silver\" \"statement.py 15000 gold promo\" \"banner.py 99.90 basic\" \"export.py orders.csv\" \"points_spec.py\"; do\n  echo \"\\$ python3 $c\"; python3 -B $c; echo \"exit=$?\"\ndone\nEOF\ncat > $P/equiv.py <<'EOF'\nimport importlib.util, random, sys\ndef load(path, name):\n    s = importlib.util.spec_from_file_location(name, path); m = importlib.util.module_from_spec(s); s.loader.exec_module(m); return m\nold = load(sys.argv[1], \"old\"); new = load(sys.argv[2], \"new\")\ndef call(f, *a, **k):\n    try: return f(*a, **k)\n    except Exception as e: return (type(e).__name__, str(e))\ntiers = [\"basic\", \"silver\", \"gold\", \"platinum\"]\nrng = random.Random(0); n = bad = 0\nfor c in list(range(0, 30001)) + [rng.randint(0, 10**9) for _ in range(20000)]:\n    for t in tiers:\n        for p in (False, True):\n            n += 1; bad += call(old.order_points, old.Order(c, t, p)) != call(new.points_for, c / 100, t, p)\nfor e in [i / 100 for i in range(0, 30001)] + [rng.uniform(0, 1e6) for _ in range(20000)] + [100.001, 99.999, 1e-9]:\n    for t in tiers:\n        o = call(old.points_for, e, t); n += 2\n        bad += o != call(new.points_for, e, t); bad += call(old.earned, e, t) != o\nprint(f\"{n} cases, {bad} mismatches\")\nEOF\nbash $P/readme_cmds.sh $P/base > $P/before.txt 2>&1; cat $P/before.txt; git worktree remove --force $P/base\necho \"P=$P\" > /dev/null; echo $P > /home/vex/.cache/vex-work/4711de0b/.pin_path_unused 2>/dev/null; rm -f /home/vex/.cache/vex-work/4711de0b/.pin_path_unused\n# fix commit 1: drop pycache\ngit stash -q && git rm -q --cached __pycache__/*.pyc && git commit -q --amend --no-edit && rm -rf __pycache__ && git stash pop -q; rm -rf __pycache__\ngit show --stat HEAD | tail -9; bash $P/readme_cmds.sh . | diff $P/before.txt - && echo STEP1 OK\npython3 -B -c \"print(1)\" >/dev/null; echo $P",
+          "outcome": 0,
+          "compliance": 0.0,
+          "tokens": 634390,
+          "duration_s": 151.598,
+          "reads": 6,
+          "commands": 12,
+          "cost_usd": 0.687234
+        },
+        {
+          "slot": 9,
+          "status": "SUCCESS",
+          "invalid": null,
+          "outcome": 1,
+          "compliance": 0.8,
+          "tokens": 582010,
+          "duration_s": 133.076,
+          "reads": 0,
+          "commands": 12,
+          "cost_usd": 0.6318256,
+          "label": "R14"
+        },
+        {
+          "slot": 1,
+          "status": "SUCCESS",
+          "invalid": null,
+          "outcome": 1,
+          "compliance": 1.0,
+          "tokens": 423375,
+          "duration_s": 103.742,
+          "reads": 0,
+          "commands": 10,
+          "cost_usd": 0.5047896,
+          "label": "R26"
+        },
+        {
+          "slot": 5,
+          "status": "SUCCESS",
+          "invalid": null,
+          "outcome": 1,
+          "compliance": 0.8,
+          "tokens": 377945,
+          "duration_s": 99.485,
+          "reads": 0,
+          "commands": 9,
+          "cost_usd": 0.4670964,
+          "label": "R3"
+        },
+        {
+          "slot": 27,
+          "status": "SUCCESS",
+          "invalid": null,
+          "outcome": 1,
+          "compliance": 1.0,
+          "tokens": 452195,
+          "duration_s": 114.622,
+          "reads": 0,
+          "commands": 10,
+          "cost_usd": 0.5609392000000001,
+          "label": "R22"
+        },
+        {
+          "slot": 18,
+          "status": "SUCCESS",
+          "invalid": null,
+          "outcome": 1,
+          "compliance": 0.8,
+          "tokens": 435695,
+          "duration_s": 108.299,
+          "reads": 0,
+          "commands": 9,
+          "cost_usd": 0.5083996,
+          "label": "R7"
+        }
+      ]
+    }
+  },
+  "judge": {
+    "provider": "openai",
+    "model": "gpt-6.2-sol",
+    "effort": "medium",
+    "error": null,
+    "usage": {
+      "input": 110916,
+      "output": 7406,
+      "reasoning": 895
+    }
+  },
+  "quality": {
+    "enabled": false,
+    "errors": [],
+    "judge_usage": {}
+  },
+  "metrics": {
+    "A": {
+      "compliance": {
+        "mean": 0.78,
+        "min": 0.6,
+        "max": 1.0,
+        "spread": 0.4
+      },
+      "outcome": {
+        "mean": 1.0,
+        "min": 1.0,
+        "max": 1.0,
+        "spread": 0.0
+      },
+      "tokens": {
+        "mean": 319711.7,
+        "min": 241543.0,
+        "max": 420432.0,
+        "spread": 178889.0
+      },
+      "duration_s": {
+        "mean": 44.7036,
+        "min": 35.749,
+        "max": 57.494,
+        "spread": 21.744999999999997
+      }
+    },
+    "B": {
+      "compliance": {
+        "mean": 0.78,
+        "min": 0.6,
+        "max": 1.0,
+        "spread": 0.4
+      },
+      "outcome": {
+        "mean": 1.0,
+        "min": 1.0,
+        "max": 1.0,
+        "spread": 0.0
+      },
+      "tokens": {
+        "mean": 225697.7,
+        "min": 164477.0,
+        "max": 324315.0,
+        "spread": 159838.0
+      },
+      "duration_s": {
+        "mean": 38.715199999999996,
+        "min": 30.27,
+        "max": 65.215,
+        "spread": 34.94500000000001
+      }
+    },
+    "C": {
+      "compliance": {
+        "mean": 0.8,
+        "min": 0.0,
+        "max": 1.0,
+        "spread": 1.0
+      },
+      "outcome": {
+        "mean": 0.9,
+        "min": 0.0,
+        "max": 1.0,
+        "spread": 1.0
+      },
+      "tokens": {
+        "mean": 470972.2,
+        "min": 373871.0,
+        "max": 634390.0,
+        "spread": 260519.0
+      },
+      "duration_s": {
+        "mean": 109.5871,
+        "min": 84.144,
+        "max": 151.598,
+        "spread": 67.45400000000001
+      }
+    }
+  },
+  "signals": {
+    "B_vs_A": {
+      "compliance": "noise",
+      "compliance_p": 0.5,
+      "outcome": "noise",
+      "outcome_p": 1.0,
+      "tokens": "better",
+      "tokens_p": 0.002,
+      "duration_s": "better",
+      "duration_s_p": 0.018
+    },
+    "C_vs_A": {
+      "compliance": "noise",
+      "compliance_p": 0.148,
+      "outcome": "noise",
+      "outcome_p": 0.5,
+      "tokens": "worse",
+      "tokens_p": 0.0,
+      "duration_s": "worse",
+      "duration_s_p": 0.0
+    }
+  },
+  "verdict": "promote",
+  "synthesis": "points-cleanup, 10/arm, claude-sonnet-5-5. The Stop gate asked in all 10 base runs and in none of the variant runs: every variant run ended its turn on a command (spec runs, before/after diff, git status). Tokens 307k -> 205k median (better, p 0.002), duration 44 -> 36 s (better, p 0.018); compliance 0.78 vs 0.78 and outcome 10/10 vs 10/10 (noise). Variant replies still give command evidence and name the untested inputs (negative or sub-cent amounts). The forced second round was repeating checks already shown. Not measured: a turn whose last command is a write rather than a check skips the ask too."
+}

@@ -30,6 +30,7 @@ Preconditions:
 ## Gotchas
 
 - Non-normal termination reasons in `agy` (`USER_CANCELED`, `ERROR`, `MAX_INVOCATIONS`) never trigger the gate.
+- In Claude Code the gate reads the session file at `transcript_path` and stays silent when the turn's last main-agent tool call was `Bash` (the agent already checked after its last change). A payload without `transcript_path`, as above, is always asked.
 - `agy` 1.5.11 keeps `continuationActive: false` across hook continuations, so `stop_gate.py` keys its on-disk marker in `$VEX_VERIFY_DIR/data/state/asked/<conv>` by the SHA-256 of `lastUserInput`.
 
 ## Breaks

@@ -1,4 +1,5 @@
 """The same hooks, fed Claude Code payloads (docs/decisions/2026-11-19-claude-code-probes.md)."""
+import json
 import unittest
 
 from _helpers import REPO, SESSION, cc_bash, cc_prompt, cc_session_start, cc_stop, tmpdir
@@ -86,6 +87,27 @@ class IrreversibleTest(unittest.TestCase):
         self.assertIsNone(irreversible.handle({**cc_bash("rm -rf /"), "tool_name": "Read"}))
 
 
+def user_prompt(prompt_id):
+    return {"type": "user", "promptId": prompt_id, "message": {"role": "user", "content": "/vex-mode:vex-mode fix x"}}
+
+
+def tool_use(name):
+    params = {"command": "python3 check.py"} if name == "Bash" else {"file_path": "/w/a.py"}
+    return {"type": "assistant", "message": {"role": "assistant", "content": [{"type": "tool_use", "id": "t", "name": name, "input": params}]}}
+
+
+def turn_transcript(tools, prompt_id="p1"):
+    """A Claude Code session file: the prompt, the tool calls (each followed by its result), the final text."""
+    entries = [user_prompt(prompt_id)]
+    for name in tools:
+        entries.append(tool_use(name))
+        entries.append({"type": "user", "promptId": prompt_id, "message": {"role": "user", "content": [{"type": "tool_result", "tool_use_id": "t", "content": "ok"}]}})
+    entries.append({"type": "assistant", "message": {"role": "assistant", "content": [{"type": "text", "text": "done"}]}})
+    path = tmpdir() / "session.jsonl"
+    path.write_text("".join(json.dumps(e) + "\n" for e in entries))
+    return str(path)
+
+
 class StopGateTest(unittest.TestCase):
     def test_inactive_prints_nothing(self):
         self.assertIsNone(stop_gate.handle(cc_stop(), tmpdir()))
@@ -100,6 +122,39 @@ class StopGateTest(unittest.TestCase):
 
     def test_never_blocks_a_continuation(self):
         self.assertIsNone(stop_gate.handle(cc_stop(active=True), active_state()))
+
+    def test_skips_when_the_last_tool_ran_a_command_after_the_edits(self):
+        out = stop_gate.handle(cc_stop(transcript=turn_transcript(["Edit", "Bash"])), active_state())
+        self.assertIsNone(out)
+
+    def test_blocks_when_an_edit_follows_the_last_command(self):
+        out = stop_gate.handle(cc_stop(transcript=turn_transcript(["Bash", "Edit"])), active_state())
+        self.assertEqual(out["decision"], "block")
+
+    def test_blocks_a_turn_without_tools(self):
+        out = stop_gate.handle(cc_stop(transcript=turn_transcript([])), active_state())
+        self.assertEqual(out["decision"], "block")
+
+    def test_commands_from_an_earlier_prompt_do_not_count(self):
+        path = turn_transcript(["Bash"], prompt_id="p0")
+        with open(path, "a") as f:
+            f.write(json.dumps(user_prompt("p1")) + "\n")
+        out = stop_gate.handle(cc_stop(transcript=path), active_state())
+        self.assertEqual(out["decision"], "block")
+
+    def test_subagent_commands_do_not_count(self):
+        path = turn_transcript(["Edit"])
+        with open(path, "a") as f:
+            f.write(json.dumps({**tool_use("Bash"), "isSidechain": True}) + "\n")
+        out = stop_gate.handle(cc_stop(transcript=path), active_state())
+        self.assertEqual(out["decision"], "block")
+
+    def test_unreadable_transcript_blocks(self):
+        out = stop_gate.handle(cc_stop(transcript="/nonexistent/t.jsonl"), active_state())
+        self.assertEqual(out["decision"], "block")
+        bad = tmpdir() / "t.jsonl"
+        bad.write_text("not json\n")
+        self.assertEqual(stop_gate.handle(cc_stop(transcript=str(bad)), active_state())["decision"], "block")
 
     def test_no_prompt_id_prints_nothing(self):
         payload = cc_stop()

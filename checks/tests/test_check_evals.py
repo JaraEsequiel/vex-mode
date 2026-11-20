@@ -7,7 +7,7 @@ from pathlib import Path
 from _helpers import make_repo
 
 import check_evals
-from _util import QUALITY_ALL, banned_hits, model_family, skill_tree_sha256
+from _util import QUALITY_ALL, banned_hits, model_family, plugin_tree_sha256, skill_tree_sha256
 
 CASE_JSON = {
     "runs": 3,
@@ -77,6 +77,23 @@ class UtilTest(unittest.TestCase):
         self.assertEqual(skill_tree_sha256(root / "skills/x"), before)
         (root / "skills/x/playbooks/p.md").write_text("p2")
         self.assertNotEqual(skill_tree_sha256(root / "skills/x"), before)
+
+    def test_vex_mode_tree_covers_plugin_wide_files_but_not_tests(self):
+        root = make_repo({"skills/vex-mode/SKILL.md": "r", "skills/x/SKILL.md": "x", "hooks/stop_gate.py": "g",
+                          "hooks/tests/test_g.py": "t", "hooks.json": "{}", "rules/AGENTS.md": "c",
+                          "agents/a.md": "a", "plugin.json": "{}", "LICENSES/l.txt": "l"})
+        before, x = plugin_tree_sha256(root, "vex-mode"), plugin_tree_sha256(root, "x")
+        self.assertEqual(x, skill_tree_sha256(root / "skills/x"))
+        for rel in ("hooks/tests/test_g.py", "LICENSES/l.txt", "hooks/__pycache__/g.pyc"):
+            (root / rel).parent.mkdir(parents=True, exist_ok=True)
+            (root / rel).write_text("changed")
+        self.assertEqual(plugin_tree_sha256(root, "vex-mode"), before)
+        for rel in ("hooks/stop_gate.py", "hooks.json", "rules/AGENTS.md", "agents/a.md", "plugin.json"):
+            old = (root / rel).read_text()
+            (root / rel).write_text("changed")
+            self.assertNotEqual(plugin_tree_sha256(root, "vex-mode"), before, rel)
+            self.assertEqual(plugin_tree_sha256(root, "x"), x, rel)
+            (root / rel).write_text(old)
 
     def test_banned_hits_catch_inflections_and_camel(self):
         for text in ("tests/", "evaluation", "myJudge", "foo_test"):
@@ -289,6 +306,20 @@ class PolicyTest(unittest.TestCase):
             (root / rel).write_text("changed")
             self.assertEqual(check_evals.changed_skills(root, "main"), {"vex-mode"}, rel)
             git(root, "checkout", "-q", "--", rel)
+
+    def test_old_vex_mode_result_does_not_cover_a_hook_change(self):
+        root = git_repo({"skills/vex-mode/SKILL.md": "r", "hooks/stop_gate.py": "g"})
+        res = root / "evals/vex-mode/results/r.json"
+        res.parent.mkdir(parents=True)
+        res.write_text(json.dumps(eval_result(skill="vex-mode", sha=plugin_tree_sha256(root, "vex-mode"))))
+        git(root, "add", "-A")
+        git(root, "commit", "-qm", "evidence")
+        git(root, "checkout", "-qb", "feature")
+        (root / "hooks/stop_gate.py").write_text("g2")
+        self.assertTrue(any("vex-mode" in e for e in check_evals.policy_errors(root, "main")))
+        res2 = root / "evals/vex-mode/results/r2.json"
+        res2.write_text(json.dumps(eval_result(skill="vex-mode", sha=plugin_tree_sha256(root, "vex-mode"))))
+        self.assertEqual(check_evals.policy_errors(root, "main"), [])
 
     def test_unresolvable_base_is_an_error(self):
         root = git_repo({"skills/x/SKILL.md": "v1"})

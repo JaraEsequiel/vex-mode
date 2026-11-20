@@ -8,7 +8,7 @@ import re
 import subprocess
 from pathlib import Path
 
-from _util import QUALITY_ALL, banned_hits, model_family, promote_blockers, skill_tree_sha256
+from _util import PLUGIN_WIDE, QUALITY_ALL, banned_hits, model_family, plugin_tree_sha256, promote_blockers
 
 NOT_SKILLS = {"harness", "tests", "__pycache__"}
 CASE_FILES = ("prompt.md", "rubric.md", "check.py", "case.json")
@@ -186,7 +186,6 @@ def _git(root: Path, *args: str) -> subprocess.CompletedProcess:
     return subprocess.run(["git", "-C", str(root), *args], capture_output=True, text=True)
 
 
-PLUGIN_WIDE = ("hooks/", "hooks.json", "rules/", "agents/", "plugin.json")
 
 
 def changed_skills(root: Path, base: str) -> set[str]:
@@ -203,7 +202,7 @@ def changed_skills(root: Path, base: str) -> set[str]:
     for p in diff.stdout.split() + untracked:
         if p.startswith("skills/") and p.count("/") >= 2:
             names.add(p.split("/")[1])
-        elif p.startswith(PLUGIN_WIDE) and "/tests/" not in p:
+        elif p.split("/")[0] in PLUGIN_WIDE and "/tests/" not in p:
             names.add("vex-mode")
     return {n for n in names if (root / "skills" / n).is_dir()}
 
@@ -217,7 +216,7 @@ def policy_errors(root: Path, base: str) -> list[str]:
         return [str(e)]
     errors = []
     for skill in sorted(changed):
-        sha = skill_tree_sha256(root / "skills" / skill)
+        sha = plugin_tree_sha256(root, skill)
         ok = [
             p for p, r in _load_results(root / "evals" / skill)
             if r is not None and r.get("tree_sha256") == sha and not _result_errors(r, skill, "", root)

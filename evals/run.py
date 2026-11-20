@@ -38,7 +38,7 @@ sys.path.insert(0, str(HERE.parent / "scripts"))
 sys.path.insert(0, str(HERE.parent / "checks"))
 
 import build_plugin  # noqa: E402
-from _util import QUALITY_ALL, model_family, promote_blockers, skill_tree_sha256  # noqa: E402
+from _util import QUALITY_ALL, model_family, plugin_tree_sha256, promote_blockers  # noqa: E402
 from harness import arms as arms_mod  # noqa: E402
 from harness import isolation, judge, judges, quality, quality_judge, stats, transcript  # noqa: E402
 
@@ -486,7 +486,7 @@ def run_eval(repo: Path, skill: str, case: str, base: str | None = None,
     rubric = (case_dir / "rubric.md").read_text()
     builds = {arm.label: build_plugin.build(repo, run_dir / "build" / arm.label, ref=arm.plugin_ref)
               for arm in arm_list if arm.plugin_ref}
-    trees = {arm.label: skill_tree_sha256(builds[arm.label] / "skills" / skill) if arm.plugin_ref else None
+    trees = {arm.label: plugin_tree_sha256(builds[arm.label], skill) if arm.plugin_ref else None
              for arm in arm_list}
     if not calibrate and trees["A"] == trees["B"]:
         raise EvalError(f"base {base} and variant {variant} have the same skill tree for {skill}, so there is nothing "
@@ -557,7 +557,7 @@ def run_eval(repo: Path, skill: str, case: str, base: str | None = None,
                 done = {}
                 for arm in arm_list:
                     build_plugin.install(builds[arm.label])
-                    if skill_tree_sha256(installed / "skills" / skill) != trees[arm.label]:
+                    if plugin_tree_sha256(installed, skill) != trees[arm.label]:
                         raise EvalError(f"arm {arm.label}: installed skill does not match the build")
                     done.update({(arm, slot): one(arm, slot) for slot in plan[arm.label]})
             for arm in arm_list:
