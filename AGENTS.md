@@ -83,7 +83,7 @@ If an eval was killed before it restored the user's plugin, the next eval refuse
 | A PR that changes a skill carries an eval result or waiver for that skill's tree hash | `checks/check_evals.py` `checks/tests/test_check_evals.py` |
 | Nothing a candidate sees contains a banned word | `checks/check_evals.py` `checks/tests/test_check_evals.py` |
 | The judge is set once in `evals/judge.json` and is from another model family than every candidate | `checks/check_evals.py` `evals/harness/arms.py` |
-| The judge's API key and API root (`VEX_OPENAI_BASE_URL`, `VEX_ANTHROPIC_BASE_URL`) come from the environment, else the secrets file; a secrets file the judge cannot read fails before any run | `evals/harness/judges.py` `evals/run.py` `evals/tests/test_judges.py` `evals/tests/test_run.py` |
+| The judge's API key and API root (`VEX_OPENAI_BASE_URL`, `VEX_ANTHROPIC_BASE_URL`) come from the environment, else the secrets file; a secrets file the judge cannot read fails before any run; API calls send an explicit `User-Agent` and fall back to `certifi` when the SSL default context has an empty CA store | `evals/harness/judges.py` `evals/run.py` `evals/tests/test_judges.py` `evals/tests/test_run.py` |
 | The judge's API key never reaches the repo, a result or the run dir | `evals/harness/judges.py` `evals/tests/test_run.py` |
 | Every eval measures compliance, outcome and cost on three fixed arms | `evals/harness/arms.py` `evals/tests/test_run.py` |
 | A calibration runs the base plugin against no plugin on the same model, gives the no-plugin arm the prompt without the command, and never counts as evidence for a skill | `evals/run.py` `evals/harness/arms.py` `evals/tests/test_run.py` |

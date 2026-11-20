@@ -13,6 +13,7 @@ import os
 import re
 import shlex
 import socket
+import ssl
 import subprocess
 import time
 import urllib.error
@@ -26,6 +27,7 @@ TIMEOUT_S = 600
 MAX_OUTPUT_TOKENS = 64000
 INLINE_MAX = 100_000  # agy only: one argv string is capped at 128 KiB on Linux
 ANTHROPIC_VERSION = "2026-10-21"
+USER_AGENT = "vex-mode-judge/1.0"
 
 
 class JudgeConfigError(Exception):
@@ -115,15 +117,26 @@ def _retry_wait(value: str | None) -> float:
     return max(0.0, min(wait, MAX_RETRY_WAIT_S))
 
 
+def _ssl_context() -> ssl.SSLContext:
+    ctx = ssl.create_default_context()
+    if not ctx.cert_store_stats().get("x509_ca"):
+        try:
+            import certifi
+            ctx.load_verify_locations(cafile=certifi.where())
+        except ImportError:
+            pass
+    return ctx
+
+
 def _post(url: str, headers: dict, body: dict) -> tuple[int, dict | str]:
     """One request, sent again only when the provider certainly did no work (429/500/503/529, or the
     connection was refused). A read timeout or an unreadable 2xx body is never retried: it may be billed."""
     data = json.dumps(body).encode()
     for attempt in (1, 2):
         req = urllib.request.Request(url, data=data, method="POST",
-                                     headers={"Content-Type": "application/json", **headers})
+                                     headers={"Content-Type": "application/json", "User-Agent": USER_AGENT, **headers})
         try:
-            with urllib.request.urlopen(req, timeout=TIMEOUT_S) as resp:
+            with urllib.request.urlopen(req, timeout=TIMEOUT_S, context=_ssl_context()) as resp:
                 raw = resp.read()
             try:
                 return resp.status, json.loads(raw or b"{}")

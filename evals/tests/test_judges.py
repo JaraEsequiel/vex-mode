@@ -1,11 +1,14 @@
 import json
 import os
+import ssl
 import sys
 import tempfile
 import threading
+import types
 import unittest
 from http.server import BaseHTTPRequestHandler, HTTPServer
 from pathlib import Path
+from unittest import mock
 
 HERE = Path(__file__).resolve().parent
 sys.path.insert(0, str(HERE.parent))
@@ -90,6 +93,7 @@ class JudgesTest(unittest.TestCase):
         req = self.api.requests[0]
         self.assertEqual(req["path"], "/v1/responses")
         self.assertEqual(req["headers"]["Authorization"], "Bearer sk-test-openai")
+        self.assertEqual(req["headers"]["User-Agent"], "vex-mode-judge/1.0")
         body = req["body"]
         self.assertEqual(body["model"], "gpt-6.2-sol")
         self.assertEqual(body["reasoning"], {"effort": "medium"})
@@ -114,6 +118,7 @@ class JudgesTest(unittest.TestCase):
         req = self.api.requests[0]
         self.assertEqual(req["path"], "/v1/messages")
         self.assertEqual(req["headers"]["X-Api-Key"], "sk-ant-test")
+        self.assertEqual(req["headers"]["User-Agent"], "vex-mode-judge/1.0")
         self.assertIn("Anthropic-Version", req["headers"])
         self.assertEqual(req["body"]["output_config"]["format"]["type"], "json_schema")
         self.assertEqual(req["body"]["output_config"]["effort"], "medium")
@@ -245,6 +250,25 @@ class JudgesTest(unittest.TestCase):
             os.environ.pop("VEX_AGY")
         self.assertIsNone(error)
         self.assertEqual(verdict, VERDICT)
+
+    def test_ssl_context_falls_back_to_certifi_when_store_is_empty(self):
+        empty_ctx = ssl.SSLContext(ssl.PROTOCOL_TLS_CLIENT)
+        self.assertEqual(empty_ctx.cert_store_stats().get("x509_ca"), 0)
+        fake_certifi = types.SimpleNamespace(where=lambda: "/fake/cacert.pem")
+        with mock.patch("ssl.create_default_context", return_value=empty_ctx), \
+                mock.patch.object(empty_ctx, "load_verify_locations") as load_mock, \
+                mock.patch.dict(sys.modules, {"certifi": fake_certifi}):
+            ctx = judges._ssl_context()
+            self.assertIs(ctx, empty_ctx)
+            load_mock.assert_called_once_with(cafile="/fake/cacert.pem")
+
+        populated_ctx = mock.MagicMock(spec=ssl.SSLContext)
+        populated_ctx.cert_store_stats.return_value = {"x509_ca": 140}
+        with mock.patch("ssl.create_default_context", return_value=populated_ctx), \
+                mock.patch.dict(sys.modules, {"certifi": fake_certifi}):
+            ctx = judges._ssl_context()
+            self.assertIs(ctx, populated_ctx)
+            populated_ctx.load_verify_locations.assert_not_called()
 
 
 
