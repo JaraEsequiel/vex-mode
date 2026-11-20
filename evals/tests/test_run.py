@@ -605,6 +605,12 @@ class CalibrateTest(ClaudeCodeRunTest):
         time.sleep(1.1)
         self.assertNotEqual(self.calibrate(), first)
 
+    def test_rejudge_keeps_the_calibration_pair(self):
+        path = self.calibrate()
+        self.assertEqual(run.main(["rejudge", str(path)]), 0)
+        result = json.loads(path.read_text())
+        self.assertEqual(list(result["signals"]), ["A_vs_N"])
+
     def test_agy_cannot_calibrate(self):
         write(self.repo, {"evals/x/cases/c1/case.json": json.dumps(CASE)})
         git(self.repo, "commit", "-qam", "agy case")

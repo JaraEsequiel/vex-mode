@@ -305,7 +305,8 @@ def rejudge(path: Path) -> None:
         result["quality"] = _quality(result["arms"], case_dir, cfg, (case_dir / "prompt.md").read_text().strip(),
                                      judge_cfg, run_dir, rng)
     result["judge"] = _judge_record(judge_cfg, error, usage)
-    result["metrics"], result["signals"] = _score(result["arms"], result["quality"]["enabled"])
+    pairs = CALIBRATION_PAIRS if result.get("kind") == "calibration" else PAIRS
+    result["metrics"], result["signals"] = _score(result["arms"], result["quality"]["enabled"], pairs)
     result["verdict"], result["synthesis"] = None, None
     path.write_text(json.dumps(result, indent=2) + "\n")
     print(f"result: {path}")
