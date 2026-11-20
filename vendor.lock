@@ -109,11 +109,32 @@
       "upstream_commit": "35a90942a7f02e1ebbc2443643179815f2147954"
     },
     {
+      "path": "skills/principle-foundational-thinking/SKILL.md",
+      "upstream_path": "pstack/skills/principle-foundational-thinking/SKILL.md",
+      "upstream_sha256": "5c63eecf4b83ea5a99eda7a95a96cac0929d2dce7393d7089c83917bc12cf820",
+      "pending_refs": [],
+      "upstream_commit": "0b46ec399d55f2829e88822998f53b84944837d3"
+    },
+    {
       "path": "skills/principle-laziness-protocol/SKILL.md",
       "upstream_path": "pstack/skills/principle-laziness-protocol/SKILL.md",
       "upstream_sha256": "1be6e7a435f26a75a76eb848b9c3d611b9977d0f5822361753244da25ca3ca45",
       "pending_refs": [],
       "upstream_commit": "35a90942a7f02e1ebbc2443643179815f2147954"
+    },
+    {
+      "path": "skills/principle-migrate-callers-then-delete-legacy-apis/SKILL.md",
+      "upstream_path": "pstack/skills/principle-migrate-callers-then-delete-legacy-apis/SKILL.md",
+      "upstream_sha256": "580ad9bb1a0994ecb924321ba49efc38a2f85c64e22c76fb133f57a78272a2e6",
+      "pending_refs": [],
+      "upstream_commit": "0b46ec399d55f2829e88822998f53b84944837d3"
+    },
+    {
+      "path": "skills/principle-minimize-reader-load/SKILL.md",
+      "upstream_path": "pstack/skills/principle-minimize-reader-load/SKILL.md",
+      "upstream_sha256": "22d27deffb0a3726858d0d4b02d71acd4a3eb4d44e218bc89b66e49dc9823937",
+      "pending_refs": [],
+      "upstream_commit": "0b46ec399d55f2829e88822998f53b84944837d3"
     },
     {
       "path": "skills/principle-model-the-domain/SKILL.md",
@@ -135,6 +156,13 @@
       "upstream_sha256": "3d6c482e341974cfcb8d19ebf66fb1d4274d8673af35e36d3c231a6aa9e03f25",
       "pending_refs": [],
       "upstream_commit": "35a90942a7f02e1ebbc2443643179815f2147954"
+    },
+    {
+      "path": "skills/principle-redesign-from-first-principles/SKILL.md",
+      "upstream_path": "pstack/skills/principle-redesign-from-first-principles/SKILL.md",
+      "upstream_sha256": "170e0a658783e43fee8ec5a8c2422a4abb8f69cef621dd1819a95910b8207034",
+      "pending_refs": [],
+      "upstream_commit": "0b46ec399d55f2829e88822998f53b84944837d3"
     },
     {
       "path": "skills/principle-separate-before-serializing-shared-state/SKILL.md",
@@ -310,6 +338,13 @@
       ],
       "adapted": true,
       "upstream_commit": "35a90942a7f02e1ebbc2443643179815f2147954"
+    },
+    {
+      "path": "skills/vex-mode/playbooks/refactoring.md",
+      "upstream_path": "pstack/skills/poteto-mode/playbooks/refactoring.md",
+      "upstream_sha256": "f11ff3c3ff0ea09d3ce2db0a3c11be3a3c11c279c04b83324723d0e0f984755b",
+      "pending_refs": [],
+      "upstream_commit": "0b46ec399d55f2829e88822998f53b84944837d3"
     },
     {
       "path": "skills/vex-mode/worker.md",
