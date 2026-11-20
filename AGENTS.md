@@ -70,13 +70,11 @@ If an eval was killed before it restored the user's plugin, the next eval refuse
 | No dangling skill, playbook or link references | `checks/check_skills.py` |
 | Size budgets (SKILL ≤ 16 KB, rule ≤ 24 KB) | `checks/check_skills.py` |
 | Every rule has an enforcer | `checks/check_rules.py` |
-| Deliberate broken rule without enforcer | none |
 | The plugin is installed only from a clean build (no repo files in the installed copy) | `scripts/build_plugin.py` `scripts/tests/test_build_plugin.py` |
 | Plugin manifest, skills, agents and rules load in agy; the marketplace and the Claude Code tree pass `claude plugin validate --strict` | `scripts/validate_plugin.py` `scripts/tests/test_validate_plugin.py` `.github/workflows/ci.yml` |
 | The committed Claude Code tree matches a fresh build, and every agy name a skill uses has a row in the Claude Code adapter | `scripts/build_plugin.py` `scripts/tests/test_build_plugin.py` `.github/workflows/ci.yml` |
 | In Claude Code the always-on core loads at session start, and the hooks keep their agy behavior (ask, never allow; block once per prompt; no loop) | `hooks/session_start.py` `hooks/tests/test_claude_code.py` |
-| Every check and test runs on every push, PR, and before the agent stops with unpushed changes | `scripts/check` `.agents/check_on_stop.py` `.agents/hooks.json` `.github/workflows/check.yml` `.github/workflows/ci.yml` |
-| User-facing plugin behavior (build/validate, activation, irreversible guard, stop gate) is verified with a project-local verification skill | `.agents/skills/verify-vex-mode/SKILL.md` `.agents/skills/verify-vex-mode/bin/control-vex-mode` `.agents/skills/verify-vex-mode/features/README.md` |
+| Every check and test runs on every push and PR | `.github/workflows/ci.yml` |
 | Full mode activates only via /vex-mode (`/vex-mode:vex-mode` in Claude Code), reading list injected once | `hooks/activate.py` `hooks/tests/test_activate.py` `hooks/tests/test_claude_code.py` |
 | Any other `/<skill>` of the plugin gets that skill's text and folder injected (in `agy -p` a plugin slash command does not expand) | `hooks/activate.py` `hooks/tests/test_activate.py` |
 | Pause before irreversible actions (force_ask, never allow) | `hooks/irreversible.py` `hooks/tests/test_irreversible.py` |
