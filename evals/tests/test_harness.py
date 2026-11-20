@@ -67,6 +67,31 @@ class TranscriptTest(unittest.TestCase):
         self.assertEqual(cut.status, "UNFINISHED")
         self.assertEqual(cut.reads, ["/plug/skills/x/SKILL.md", "/w"])
 
+    def test_errors_are_kept(self):
+        agy = json.dumps({"event": "result", "result": {"status": "ERROR", "error": "Individual quota reached. Resets in 130h."}})
+        self.assertIn("quota", transcript.parse(agy).error)
+        cc = json.dumps({"type": "result", "subtype": "success", "is_error": True, "result": "Claude usage limit reached",
+                         "api_error_status": 429})
+        t = transcript.parse_claude(cc)
+        self.assertIn("usage limit", t.error)
+        self.assertIn("429", t.error)
+        self.assertNotEqual(t.status, "SUCCESS")
+
+    def test_claude_reply_before_the_stop_gate(self):
+        def say(text):
+            return json.dumps({"type": "assistant", "parent_tool_use_id": None,
+                               "message": {"content": [{"type": "text", "text": text}]}})
+        gate = json.dumps({"type": "user", "message": {"content": [
+            {"type": "text", "text": "Stop hook feedback:\nvex-mode: before finishing, show verification evidence"}]}})
+        sub = json.dumps({"type": "assistant", "parent_tool_use_id": "t9",
+                          "message": {"content": [{"type": "text", "text": "subagent words"}]}})
+        end = json.dumps({"type": "result", "subtype": "success", "is_error": False, "result": "Evidence: 10.83"})
+        t = transcript.parse_claude("\n".join([say("Looking."), say("Fixed: the total is 10.83."), sub, gate,
+                                                say("Evidence: 10.83"), end]))
+        self.assertEqual(t.gate_reply, "Fixed: the total is 10.83.")
+        self.assertEqual(t.response, "Evidence: 10.83")
+        self.assertEqual(transcript.parse_claude("\n".join([say("Done."), end])).gate_reply, "")
+
     def test_claude_unfinished_run_keeps_message_tokens(self):
         msg = {"type": "assistant", "message": {"id": "m1", "usage": {"input_tokens": 3, "output_tokens": 4}, "content": []}}
         self.assertEqual(transcript.parse_claude(json.dumps(msg) + "\n" + json.dumps(msg)).step_tokens, 7)

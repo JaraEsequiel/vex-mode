@@ -19,6 +19,8 @@ class Transcript:
     duration_s: float = 0.0
     response: str = ""
     cost_usd: float = 0.0
+    error: str = ""
+    gate_reply: str = ""  # Claude Code: the reply the Stop hook interrupted to ask for evidence
 
 
 def parse(text: str) -> Transcript:
@@ -58,6 +60,7 @@ def parse(text: str) -> Transcript:
             t.total_tokens = int((result.get("usage") or {}).get("total_tokens") or 0)
             t.duration_s = float(result.get("duration_seconds") or 0.0)
             t.response = result.get("response") or ""
+            t.error = str(result.get("error") or "")
             t.conversation_id = result.get("conversation_id", t.conversation_id)
     return t
 
@@ -83,6 +86,7 @@ def parse_claude(text: str) -> Transcript:
     calls: list[tuple[str, str, dict, bool]] = []
     errors: set[str] = set()
     counted: set[str] = set()
+    last_text, gated = "", False
     for line in text.splitlines():
         try:
             event = json.loads(line)
@@ -101,15 +105,20 @@ def parse_claude(text: str) -> Transcript:
                 counted.add(message.get("id"))
                 t.step_tokens += _claude_tokens(message["usage"])
             for c in content:
+                if isinstance(c, dict) and c.get("type") == "text" and not event.get("parent_tool_use_id") and not gated:
+                    last_text = c.get("text") or ""
                 if isinstance(c, dict) and c.get("type") == "tool_use":
                     params = c.get("input") if isinstance(c.get("input"), dict) else {}
                     calls.append((c.get("id") or "", c.get("name") or "?", params, bool(event.get("parent_tool_use_id"))))
         elif kind == "user" and isinstance(content, list):
+            if not gated and any(isinstance(c, dict) and c.get("type") == "text"
+                                 and str(c.get("text", "")).startswith("Stop hook feedback") for c in content):
+                gated, t.gate_reply = True, last_text
             errors |= {c.get("tool_use_id") for c in content
                        if isinstance(c, dict) and c.get("type") == "tool_result" and c.get("is_error")}
         elif kind == "result":
             t.status = "SUCCESS" if event.get("subtype") == "success" and not event.get("is_error") \
-                else str(event.get("subtype") or "error").upper()
+                else ("ERROR" if event.get("subtype") == "success" else str(event.get("subtype") or "error").upper())
             per_model = event.get("modelUsage") or {}
             if per_model:
                 t.total_tokens = sum(int(m.get(k) or 0) for m in per_model.values() for k in
@@ -119,6 +128,8 @@ def parse_claude(text: str) -> Transcript:
             t.duration_s = float(event.get("duration_ms") or 0) / 1000
             t.cost_usd = float(event.get("total_cost_usd") or 0.0)
             t.response = event.get("result") or ""
+            if event.get("is_error"):
+                t.error = f"{t.response} {event.get('api_error_status') or ''}".strip()
             t.conversation_id = event.get("session_id", t.conversation_id)
     for call_id, name, params, subagent in calls:
         t.steps.append(_claude_step(name, params, call_id in errors, subagent))
