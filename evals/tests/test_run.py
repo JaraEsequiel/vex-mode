@@ -458,3 +458,79 @@ class JudgeTest(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+CC_CASE = {**CASE, "harness": "claude-code", "candidate_model": "claude-sonnet-5-5", "upgrade_model": "claude-opus-5-5"}
+
+
+class ClaudeCodeRunTest(RunTest):
+    """The same harness with `"harness": "claude-code"`: per-arm --plugin-dir, nothing installed."""
+
+    def setUp(self):
+        super().setUp()
+        write(self.repo, {"evals/x/cases/c1/case.json": json.dumps(CC_CASE),
+                          "adapters/claude-code.md": "adapter\n"})
+        git(self.repo, "checkout", "-q", "main")
+        git(self.repo, "add", "-A")
+        git(self.repo, "commit", "-qm", "claude code case")
+        git(self.repo, "checkout", "-q", "feature")
+        git(self.repo, "rebase", "-q", "main")
+        os.environ["VEX_CLAUDE"] = f"{sys.executable} {HERE / 'fake_claude.py'}"
+        os.environ["VEX_JUDGE_MODEL"] = "gpt-6.2-sol"
+        self.old.setdefault("VEX_CLAUDE", None)
+        self.old.setdefault("FAKE_CLAUDE_MODE", None)
+
+    def calls(self) -> list[list[str]]:
+        return [json.loads(l) for l in (self.home / "claude-args.log").read_text().splitlines()]
+
+    def test_end_to_end_with_fake_claude(self):
+        result = json.loads(self.run_eval().read_text())
+        self.assertEqual(result["harness"], "claude-code")
+        self.assertEqual(result["arms"]["A"]["model"], "claude-sonnet-5-5")
+        self.assertEqual(result["arms"]["C"]["model"], "claude-opus-5-5")
+        for arm in "ABC":
+            self.assertEqual(result["metrics"][arm]["outcome"]["mean"], 1.0)
+            self.assertEqual(result["arms"][arm]["runs"][0]["cost_usd"], 0.05)
+        self.assertNotEqual(result["arms"]["A"]["tree_sha256"], result["arms"]["B"]["tree_sha256"])
+        self.assertEqual(self.installed(), "original install")
+        self.assertFalse((self.home / "installs").exists())
+
+    def test_each_arm_loads_its_own_build_in_isolation(self):
+        self.run_eval()
+        trees = set()
+        for argv in self.calls():
+            self.assertEqual(argv[argv.index("--setting-sources") + 1], "project")
+            self.assertEqual(argv[-2:][0], "-p")
+            tree = Path(argv[argv.index("--plugin-dir") + 1])
+            self.assertEqual(argv[argv.index("--add-dir") + 1], str(tree))
+            self.assertTrue((tree / ".claude-plugin/plugin.json").is_file())
+            trees.add(tree)
+        self.assertEqual(len(trees), 3)
+        texts = {(t / "skills/x/SKILL.md").read_text() for t in trees}
+        self.assertEqual(texts, {"v1", "v2"})
+
+    def test_subagent_search_of_the_rubric_invalidates_run(self):
+        os.environ["FAKE_CLAUDE_MODE"] = "peek"
+        os.environ["FAKE_PEEK"] = str(self.repo / "evals/x/cases/c1")
+        result = json.loads(self.run_eval().read_text())
+        for arm in "ABC":
+            for r in result["arms"][arm]["runs"]:
+                self.assertIsNotNone(r["invalid"])
+                self.assertEqual(r["outcome"], 0)
+
+    def test_crashed_run_is_invalid(self):
+        os.environ["FAKE_CLAUDE_MODE"] = "crash"
+        result = json.loads(self.run_eval().read_text())
+        self.assertIn("UNFINISHED", result["arms"]["A"]["runs"][0]["invalid"])
+
+    def test_pending_agy_restore_does_not_block(self):
+        run._marker().parent.mkdir(parents=True, exist_ok=True)
+        run._marker().write_text("-")
+        self.addCleanup(lambda: run._marker().unlink(missing_ok=True))
+        self.assertTrue(self.run_eval().exists())
+
+
+# The agy-only tests of RunTest do not apply to the Claude Code subclass.
+for _name in [n for n in dir(RunTest) if n.startswith("test_")]:
+    if _name not in vars(ClaudeCodeRunTest):
+        setattr(ClaudeCodeRunTest, _name, None)
