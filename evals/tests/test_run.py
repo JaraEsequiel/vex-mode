@@ -5,6 +5,7 @@ import subprocess
 import shutil
 import sys
 import tempfile
+import time
 import unittest
 from pathlib import Path
 
@@ -150,6 +151,11 @@ class RunTest(unittest.TestCase):
         with self.assertRaises(Exception):
             self.run_eval()
         self.assertEqual(self.installed(), "original install")
+
+    def test_agy_refuses_parallel_runs(self):
+        # agy has one global plugin install, so its arms cannot overlap.
+        with self.assertRaisesRegex(run.EvalError, "jobs"):
+            run.run_eval(self.repo, "x", "c1", base="main", variant="HEAD", harness="agy", jobs=2)
 
     def test_peek_invalidates_run(self):
         os.environ["FAKE_AGY_MODE"] = "peek"
@@ -619,8 +625,53 @@ class ClaudeCodeRunTest(RunTest):
     def test_quota_stops_the_eval_at_once(self):
         os.environ["FAKE_CLAUDE_MODE"] = "quota"
         with self.assertRaisesRegex(run.EvalError, "usage limit"):
-            self.run_eval()
+            run.run_eval(self.repo, "x", "c1", base="main", variant="HEAD", jobs=1)
         self.assertEqual(len(self.calls()), 1)
+        self.assertEqual(self.results(), [])
+
+    def test_quota_starts_no_new_run_in_parallel(self):
+        os.environ["FAKE_CLAUDE_MODE"] = "quota"
+        with self.assertRaisesRegex(run.EvalError, "usage limit"):
+            run.run_eval(self.repo, "x", "c1", base="main", variant="HEAD", jobs=2)
+        self.assertLessEqual(len(self.calls()), 2)
+        self.assertEqual(self.results(), [])
+
+    def spans(self) -> list[tuple[float, int]]:
+        events = [l.split() for l in (self.home / "spans.log").read_text().splitlines()]
+        return sorted((float(t), 1 if kind == "start" else -1) for kind, t in events)
+
+    def most_at_once(self) -> int:
+        live = most = 0
+        for _, step in self.spans():
+            live += step
+            most = max(most, live)
+        return most
+
+    def test_runs_candidates_in_parallel(self):
+        # 2026-11-20 backlog: an eval took ~35 min one run at a time; each arm loads its own --plugin-dir,
+        # so nothing is shared between runs.
+        os.environ["FAKE_CLAUDE_MODE"] = "slow"
+        result = json.loads(run.run_eval(self.repo, "x", "c1", base="main", variant="HEAD", jobs=3).read_text())
+        self.assertEqual(self.most_at_once(), 3)
+        self.assertEqual(result["jobs"], 3)
+        slots = [r["slot"] for a in "ABC" for r in result["arms"][a]["runs"]]
+        self.assertEqual(sorted(slots), list(range(1, 7)))
+        for a in "ABC":
+            self.assertEqual(len(result["arms"][a]["runs"]), 2)
+            self.assertEqual(result["metrics"][a]["outcome"]["mean"], 1.0)
+
+    def test_one_job_runs_one_at_a_time(self):
+        os.environ["FAKE_CLAUDE_MODE"] = "slow"
+        run.run_eval(self.repo, "x", "c1", base="main", variant="HEAD", jobs=1)
+        self.assertEqual(self.most_at_once(), 1)
+
+    def test_sigterm_kills_the_runs_in_flight(self):
+        os.environ["FAKE_CLAUDE_MODE"] = "hang"
+        start = time.monotonic()
+        with self.assertRaises(BaseException):
+            run.run_eval(self.repo, "x", "c1", base="main", variant="HEAD", jobs=3)
+        self.assertLess(time.monotonic() - start, 15)
+        self.assertNotIn("end", (self.home / "spans.log").read_text())
         self.assertEqual(self.results(), [])
 
     def test_judge_sees_the_reply_before_the_stop_gate(self):

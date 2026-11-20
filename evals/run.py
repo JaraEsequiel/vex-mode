@@ -27,7 +27,9 @@ import shutil
 import signal
 import subprocess
 import sys
+import threading
 import time
+from concurrent.futures import ThreadPoolExecutor, as_completed
 from pathlib import Path
 
 HERE = Path(__file__).resolve().parent
@@ -47,6 +49,7 @@ CLAUDE_TOOLS = "Bash,Agent,TodoWrite"
 # A candidate that hit its quota makes every later run void too (2026-11-19: agy "Individual quota reached").
 # The no-plugin arm gets the prompt a user without the plugin would type.
 COMMAND = re.compile(r"^/vex-mode(:vex-mode)?\s+")
+DEFAULT_JOBS = 4  # Claude Code candidates at once; agy runs one at a time (one global install)
 QUOTA = re.compile(r"quota|usage limit|rate.?limit|\b429\b", re.I)
 VERDICTS = ("promote", "reject", "inconclusive")
 DIFF_LIMIT = 20000
@@ -107,16 +110,71 @@ def _material(t: transcript.Transcript, diff: str) -> str:
             f"### Diff\n\n```diff\n{diff}\n```")
 
 
+_LIVE: set[subprocess.Popen] = set()
+_LIVE_LOCK = threading.Lock()
+_STOP = threading.Event()
+
+
+class _Stopped(Exception):
+    pass
+
+
+def _call(cmd: list[str], work: Path, out, timeout_s: float, stdin=None) -> None:
+    """Run a candidate in its own process group, killable from the main thread while other runs are live."""
+    with _LIVE_LOCK:
+        if _STOP.is_set():
+            raise _Stopped()
+        proc = subprocess.Popen(cmd, cwd=work, stdin=stdin, stdout=out, stderr=subprocess.DEVNULL,
+                                env=judges.agent_env(), start_new_session=True)
+        _LIVE.add(proc)
+    try:
+        proc.wait(timeout=timeout_s)
+    except subprocess.TimeoutExpired:
+        _kill(proc)
+    finally:
+        with _LIVE_LOCK:
+            _LIVE.discard(proc)
+
+
+def _kill(proc: subprocess.Popen) -> None:
+    with contextlib.suppress(ProcessLookupError):
+        os.killpg(proc.pid, signal.SIGKILL)
+    proc.wait()
+
+
+def _stop_all() -> None:
+    with _LIVE_LOCK:
+        _STOP.set()
+        live = list(_LIVE)
+    for proc in live:
+        _kill(proc)
+
+
+def _parallel(tasks: list, fn, jobs: int) -> dict:
+    """fn(*task) for every task, `jobs` at a time, keyed by task. The first error (a quota stop, a signal) kills
+    the runs in flight and starts no new one."""
+    _STOP.clear()
+    done = {}
+    pool = ThreadPoolExecutor(max_workers=jobs)
+    futures = {pool.submit(fn, *task): task for task in tasks}
+    try:
+        for future in as_completed(futures):
+            done[futures[future]] = future.result()
+    except BaseException:
+        _stop_all()
+        raise
+    finally:
+        pool.shutdown(wait=True, cancel_futures=True)
+        _STOP.clear()
+    return done
+
+
 def _run_candidate(arm, prompt: str, timeout_s: int, work: Path, log: Path) -> tuple[transcript.Transcript, float]:
     cmd = [*build_plugin.agy_command(), "-p", prompt, "--model", arm.model,
            "--output-format", "stream-json", "--print-timeout", f"{timeout_s}s"]
     start = time.monotonic()
-    try:
-        with open(log, "w") as out:
-            subprocess.run(cmd, cwd=work, stdout=out, stderr=subprocess.DEVNULL, timeout=timeout_s + 60,
-                           env=judges.agent_env())
-    except subprocess.TimeoutExpired:
-        pass
+    with open(log, "w") as out:
+        _call(cmd, work, out, timeout_s + 60)
     return transcript.parse(log.read_text()), time.monotonic() - start
 
 
@@ -127,12 +185,8 @@ def _run_claude(arm, prompt: str, timeout_s: int, work: Path, log: Path, tree: P
     cmd = [*build_plugin.claude_command(), "--model", arm.model, *plugin, "--setting-sources", "project", "--permission-mode", "acceptEdits", "--allowedTools", CLAUDE_TOOLS,
            "--output-format", "stream-json", "--verbose", "-p", prompt]
     start = time.monotonic()
-    try:
-        with open(log, "w") as out:
-            subprocess.run(cmd, cwd=work, stdin=subprocess.DEVNULL, stdout=out, stderr=subprocess.DEVNULL,
-                           timeout=timeout_s, env=judges.agent_env())
-    except subprocess.TimeoutExpired:
-        pass
+    with open(log, "w") as out:
+        _call(cmd, work, out, timeout_s, stdin=subprocess.DEVNULL)
     return transcript.parse_claude(log.read_text()), time.monotonic() - start
 
 
@@ -385,7 +439,7 @@ def restore() -> None:
 
 def run_eval(repo: Path, skill: str, case: str, base: str | None = None,
              variant: str = "HEAD", runs: int | None = None, harness: str | None = None,
-             calibrate: bool = False) -> Path:
+             calibrate: bool = False, jobs: int | None = None) -> Path:
     repo = repo.resolve()
     case_dir = repo / "evals" / skill / "cases" / case
     cfg = json.loads((case_dir / "case.json").read_text())
@@ -394,6 +448,11 @@ def run_eval(repo: Path, skill: str, case: str, base: str | None = None,
     if harness not in HARNESSES:
         raise EvalError(f"harness must be one of {', '.join(HARNESSES)}")
     claude = harness == "claude-code"
+    jobs = jobs or (DEFAULT_JOBS if claude else 1)
+    if jobs > 1 and not claude:
+        raise EvalError("agy runs one candidate at a time (one global plugin install); --jobs needs Claude Code")
+    if jobs < 1:
+        raise EvalError("--jobs must be at least 1")
     if calibrate and not claude:
         raise EvalError("calibrate runs on Claude Code only: agy cannot run without its global plugin")
     if claude:
@@ -450,6 +509,39 @@ def run_eval(repo: Path, skill: str, case: str, base: str | None = None,
     rng.shuffle(slots)
     records: dict[str, dict] = {}
     materials: dict[int, str] = {}
+    def one(arm, slot: int) -> tuple[dict, str | None]:
+        """One candidate run in a fresh private copy of the project; returns its record and the judge's material."""
+        private = work_root / secrets.token_hex(4)
+        work = private / cfg["workdir"]
+        _fresh_workdir(case_dir / "project", work)
+        material = None
+        try:
+            log = run_dir / "transcripts" / f"{slot}.ndjson"
+            if claude:
+                t, wall = _run_claude(arm, prompt, cfg["timeout_s"], work, log, cc_trees.get(arm.label))
+            else:
+                t, wall = _run_candidate(arm, prompt, cfg["timeout_s"], work, log)
+            if QUOTA.search(t.error):
+                raise EvalError(f"arm {arm.label}: the candidate model's quota ran out ({t.error[:200]}); "
+                                f"stopped, no result written; run dir: {run_dir}")
+            invalid = _invalid(t, _plugin_root(claude, run_dir, arm.label, bool(arm.plugin_ref)), repo, work)
+            diff = _diff(work)
+            (run_dir / "diffs" / f"{slot}.diff").write_text(diff)
+            outcome = _outcome(case_dir, work, run_dir / "checks" / f"{slot}.txt")
+            if invalid:
+                outcome = 0
+            else:
+                material = _material(t, diff)
+        finally:
+            shutil.rmtree(private, ignore_errors=True)
+        finished = t.status == "SUCCESS"
+        return {"slot": slot, "status": t.status, "invalid": invalid, "outcome": outcome,
+                "compliance": 0.0 if invalid else None,
+                "tokens": t.total_tokens if finished else t.step_tokens,
+                "duration_s": t.duration_s if finished else wall,
+                "reads": len(t.reads), "commands": len(t.commands),
+                **({"cost_usd": t.cost_usd} if claude else {})}, material
+
     with _locked():
         backup = run_dir / "installed-backup"
         if not claude:
@@ -458,44 +550,23 @@ def run_eval(repo: Path, skill: str, case: str, base: str | None = None,
             _marker().write_text(str(backup) if backup.is_dir() else "-")
         saved = {sig: signal.signal(sig, _raise_interrupt) for sig in (signal.SIGTERM, signal.SIGHUP)}
         try:
-            for arm in arm_list:
-                plugin_root = _plugin_root(claude, run_dir, arm.label, bool(arm.plugin_ref))
-                if not claude:
+            plan = {arm.label: [slots.pop() for _ in range(runs)] for arm in arm_list}
+            if claude:
+                done = _parallel([(arm, slot) for arm in arm_list for slot in plan[arm.label]], one, jobs)
+            else:
+                done = {}
+                for arm in arm_list:
                     build_plugin.install(builds[arm.label])
                     if skill_tree_sha256(installed / "skills" / skill) != trees[arm.label]:
                         raise EvalError(f"arm {arm.label}: installed skill does not match the build")
+                    done.update({(arm, slot): one(arm, slot) for slot in plan[arm.label]})
+            for arm in arm_list:
                 arm_runs = []
-                for _ in range(runs):
-                    slot = slots.pop()
-                    private = work_root / secrets.token_hex(4)
-                    work = private / cfg["workdir"]
-                    _fresh_workdir(case_dir / "project", work)
-                    try:
-                        log = run_dir / "transcripts" / f"{slot}.ndjson"
-                        if claude:
-                            t, wall = _run_claude(arm, prompt, cfg["timeout_s"], work, log, cc_trees.get(arm.label))
-                        else:
-                            t, wall = _run_candidate(arm, prompt, cfg["timeout_s"], work, log)
-                        if QUOTA.search(t.error):
-                            raise EvalError(f"arm {arm.label}: the candidate model's quota ran out ({t.error[:200]}); "
-                                            f"stopped, no result written; run dir: {run_dir}")
-                        invalid = _invalid(t, plugin_root, repo, work)
-                        diff = _diff(work)
-                        (run_dir / "diffs" / f"{slot}.diff").write_text(diff)
-                        outcome = _outcome(case_dir, work, run_dir / "checks" / f"{slot}.txt")
-                        if invalid:
-                            outcome = 0
-                        else:
-                            materials[slot] = _material(t, diff)
-                    finally:
-                        shutil.rmtree(private, ignore_errors=True)
-                    finished = t.status == "SUCCESS"
-                    arm_runs.append({"slot": slot, "status": t.status, "invalid": invalid, "outcome": outcome,
-                                     "compliance": 0.0 if invalid else None,
-                                     "tokens": t.total_tokens if finished else t.step_tokens,
-                                     "duration_s": t.duration_s if finished else wall,
-                                     "reads": len(t.reads), "commands": len(t.commands),
-                                     **({"cost_usd": t.cost_usd} if claude else {})})
+                for slot in plan[arm.label]:
+                    run_record, material = done[(arm, slot)]
+                    arm_runs.append(run_record)
+                    if material is not None:
+                        materials[slot] = material
                 records[arm.label] = {"model": arm.model, "plugin_ref": arm.plugin_ref,
                                       "tree_sha256": trees[arm.label], "runs": arm_runs}
         finally:
@@ -514,7 +585,7 @@ def run_eval(repo: Path, skill: str, case: str, base: str | None = None,
     result = {
         "kind": "calibration" if calibrate else "eval", "skill": skill, "tree_sha256": tree,
         "date": dt.date.today().isoformat(),
-        "case": case, "harness": harness, "run_dir": str(run_dir), "arms": records,
+        "case": case, "harness": harness, "jobs": jobs, "run_dir": str(run_dir), "arms": records,
         "judge": _judge_record(judge_cfg, judge_error, judge_usage), "quality": quality_record,
         "metrics": metrics, "signals": signals, "verdict": None, "synthesis": None,
     }
@@ -553,8 +624,10 @@ def main(argv: list[str]) -> int:
             parser.add_argument("case")
             parser.add_argument("--base")
             parser.add_argument("--runs", type=int)
+            parser.add_argument("--jobs", type=int, help=f"candidates at once (default {DEFAULT_JOBS})")
             args = parser.parse_args(argv[1:])
-            run_eval(HERE.parent, args.skill, args.case, args.base, runs=args.runs, harness="claude-code", calibrate=True)
+            run_eval(HERE.parent, args.skill, args.case, args.base, runs=args.runs, harness="claude-code", calibrate=True,
+                     jobs=args.jobs)
             return 0
         if argv[:1] == ["verdict"]:
             if len(argv) != 4:
@@ -568,8 +641,9 @@ def main(argv: list[str]) -> int:
         parser.add_argument("--variant", default="HEAD")
         parser.add_argument("--runs", type=int)
         parser.add_argument("--harness", choices=HARNESSES)
+        parser.add_argument("--jobs", type=int, help=f"candidates at once on Claude Code (default {DEFAULT_JOBS}; agy: 1)")
         args = parser.parse_args(argv)
-        run_eval(HERE.parent, args.skill, args.case, args.base, args.variant, args.runs, args.harness)
+        run_eval(HERE.parent, args.skill, args.case, args.base, args.variant, args.runs, args.harness, jobs=args.jobs)
         return 0
     except (EvalError, ValueError) as e:
         print(f"error: {e}", file=sys.stderr)
