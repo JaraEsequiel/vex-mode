@@ -1,0 +1,7 @@
+{
+  "kind": "waiver",
+  "skill": "vex-mode",
+  "tree_sha256": "8805826e2dfa19b7ae9be5b6aa52f2e568e067bfe9bb192d6fe973cac79ee611",
+  "date": "2026-11-20",
+  "reason": "Playbook text only. The harness has no model-by-effort lever, so no case can measure this change. Evidence is the run it came from: an AXP-3321 Terraform ticket compared by hand on four model/effort candidates, each in its own worktree; the outcome check was calibrated on a reference solution (pass) and on the base (fail); the judge, gpt-6.2-sol over the API, ran twice in opposite order and its winner flipped with the order, which is why the text says a flip is a tie. The first judge attempt used `agy -p` and hit a quota error, which is why the text names judges.py. Harness code and behavior are unchanged."
+}
