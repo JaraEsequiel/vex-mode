@@ -6,6 +6,7 @@ anything under a forbidden root (the eval cache, the repo), another run's projec
 (separate conversations; see docs/decisions/2026-11-18-m2-first-eval.md).
 """
 import os
+import re
 import shlex
 from pathlib import Path, PurePosixPath
 
@@ -82,17 +83,33 @@ def _segments(cmd: str) -> list[list[str]]:
     return [*segments, current]
 
 
+ASSIGN = re.compile(r"^([A-Za-z_][A-Za-z0-9_]*)=(.*)$")
+
+
+def _expand(token: str, env: dict[str, str]) -> str:
+    return re.sub(r"\$\{?([A-Za-z_][A-Za-z0-9_]*)\}?", lambda m: env.get(m.group(1), m.group(0)), token)
+
+
 def _command_problem(cmd: str, workdir: Path | None, home: Path | None, ctx: dict) -> str | None:
-    """Resolve path-like tokens against the directory a simple `cd X &&` chain leaves the shell in."""
-    cwd = workdir
+    """Resolve path-like tokens against the directory a simple `cd X &&` chain leaves the shell in.
+    Plain `NAME=value` assignments are expanded; after a `cd` to a place that cannot be resolved, relative
+    paths are not judged (absolute ones still are)."""
+    cwd, env = workdir, {}
     for seg in _segments(cmd):
-        for token in seg:
+        if len(seg) == 1 and (m := ASSIGN.match(seg[0])) and "$" not in m.group(2) and "`" not in m.group(2):
+            env[m.group(1)] = m.group(2)
+        for raw in seg:
+            token = _expand(raw, env)
             if "$" in token or "`" in token:  # a shell expansion is not a path we can resolve
                 continue
             if "/" not in token and token not in ("..", "~"):
                 continue
+            if cwd is None and not token.startswith(("/", "~")):
+                continue
             if problem := _path_problem(_norm(token, cwd, home), **ctx):
                 return problem
-        if len(seg) == 2 and seg[0] == "cd" and "$" not in seg[1]:
-            cwd = Path(str(_norm(seg[1], cwd, home)))
+        if len(seg) == 2 and seg[0] == "cd":
+            target = _expand(seg[1], env)
+            cwd = None if "$" in target or "`" in target or (cwd is None and not target.startswith(("/", "~"))) \
+                else Path(str(_norm(target, cwd, home)))
     return None

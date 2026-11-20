@@ -188,6 +188,20 @@ class IsolationFalsePositiveTest(unittest.TestCase):
     def test_shell_expansions_are_not_resolved_as_paths(self):
         self.assertEqual(self.check("printf '%s' \"$(pwd)/..\""), [])
 
+    def test_variable_cd_into_the_arm_then_relative_reads(self):
+        # 2026-11-20 shipping-cleanup slot 6: a legitimate read of the arm's own files through a shell variable.
+        cmd = ("B=/plug/vex-mode; cd $B; for f in adapters/claude-code.md skills/vex-mode/worker.md "
+               "skills/vex-mode/playbooks/refactoring.md; do echo \"=== $f\"; cat $f; done")
+        self.assertEqual(self.check(cmd), [])
+
+    def test_variables_do_not_hide_a_forbidden_path(self):
+        self.assertTrue(self.check("X=/repo/evals/x/cases/c; cat $X/rubric.md"))
+        self.assertTrue(self.check("D=/cache/vex-work/cd34; cat ${D}/habit-tracker/habits.py"))
+
+    def test_unresolvable_cd_still_checks_absolute_paths(self):
+        self.assertEqual(self.check("cd \"$(git rev-parse --show-toplevel)\" && cat skills/x/SKILL.md"), [])
+        self.assertTrue(self.check("cd \"$(pwd)\" && cat /cache/vex-work/cd34/habit-tracker/habits.py"))
+
     def test_other_workdir_and_markers_still_flagged(self):
         for cmd in ("cat /cache/vex-work/cd34/habit-tracker/habits.py", "ls ../../", "cat ~/.cache/vex-mode/runs/x"):
             self.assertTrue(self.check(cmd), cmd)
