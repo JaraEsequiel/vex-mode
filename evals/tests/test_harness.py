@@ -250,6 +250,35 @@ class IsolationFalsePositiveTest(unittest.TestCase):
         for cmd in ("cat /cache/vex-work/cd34/habit-tracker/habits.py", "ls ../../", "cat ~/.cache/vex-mode/runs/x"):
             self.assertTrue(self.check(cmd), cmd)
 
+    def test_shell_wrappers_eval_and_assignments_cannot_bypass_isolation(self):
+        # Repeated bypass class (413ec9c, cd850ee, 244b4fc, M3 dry run): shell wrappers, eval, export,
+        # inline assignments, and assignment RHS paths must not hide a forbidden path.
+        bypasses = [
+            'bash -c "cat /repo/README.md"',
+            "sh -lc 'cat /elsewhere/skills/vex-mode/SKILL.md'",
+            'env FOO=1 bash -c "cat /repo/AGENTS.md"',
+            'sudo -u deploy sh -c "cat /repo/README.md"',
+            'command bash -c "cat /repo/README.md"',
+            'eval "cat /repo/README.md"',
+            'X=/repo/README.md cat "$X"',
+            "export X=/repo/README.md; cat $X",
+            "X=/repo/README.md python3 -c \"import os; print(open(os.environ['X']).read())\"",
+            'X=/repo bash -c \'cat "$X/README.md"\'',
+            'bash -c \'bash -c "bash -c \\"bash -c \\\\\\"bash -c \\\\\\\\\\\\\\"bash -c ls\\\\\\\\\\\\\\"\\\\\\"\\""\'',
+        ]
+        for cmd in bypasses:
+            with self.subTest(cmd=cmd):
+                self.assertTrue(self.check(cmd), cmd)
+        allowed = [
+            'bash -c "python3 habits.py"',
+            "env FOO=1 python3 habits.py",
+            "export B=/plug/vex-mode; cd $B && cat skills/vex-mode/worker.md",
+            "C=/plug/vex-mode bash -c 'cat \"$C/skills/vex-mode/worker.md\"'",
+        ]
+        for cmd in allowed:
+            with self.subTest(allowed=cmd):
+                self.assertEqual(self.check(cmd), [], cmd)
+
 
 class StatsTest(unittest.TestCase):
     def test_summarize(self):
