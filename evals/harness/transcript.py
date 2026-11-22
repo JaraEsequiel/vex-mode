@@ -24,6 +24,10 @@ class Transcript:
     gate_reply: str = ""  # Claude Code: the reply the Stop hook interrupted to ask for evidence
 
 
+def _as_dict(value) -> dict:
+    return value if isinstance(value, dict) else {}
+
+
 def parse(text: str) -> Transcript:
     t = Transcript()
     for line in text.splitlines():
@@ -31,35 +35,41 @@ def parse(text: str) -> Transcript:
             event = json.loads(line)
         except json.JSONDecodeError:
             continue
+        if not isinstance(event, dict):
+            continue
         kind = event.get("event")
         if kind == "init":
-            t.model = event["init"].get("model")
-            t.conversation_id = event.get("conversation_id")
-            t.cwd = event["init"].get("cwd")
+            init = _as_dict(event.get("init"))
+            if init:
+                t.model = init.get("model")
+                t.conversation_id = event.get("conversation_id")
+                t.cwd = init.get("cwd")
         elif kind == "step_update":
-            step = event["step_update"]
-            t.step_tokens += int((step.get("usage") or {}).get("total_tokens") or 0)
+            step = _as_dict(event.get("step_update"))
+            t.step_tokens += int(_as_dict(step.get("usage")).get("total_tokens") or 0)
             if step.get("step_type") != "tool" or step.get("state") != "DONE":
                 continue
-            info = step.get("tool_info") or {}
-            params = info.get("parameters") or {}
+            info = _as_dict(step.get("tool_info"))
+            params = _as_dict(info.get("parameters"))
             name = info.get("name") or "?"
-            if name == "read_file" and "Path" in params:
+            if name == "read_file" and isinstance(params.get("Path"), str):
                 t.steps.append(f"read_file: {params['Path']}")
-            elif name == "run_command" and "CommandLine" in params:
+            elif name == "run_command" and isinstance(params.get("CommandLine"), str):
                 code = re.search(r"exited with code (-?\d+)", str(info.get("output") or ""))
                 suffix = f" (exit {code.group(1)})" if code else ""
                 t.steps.append(f"run_command: {params['CommandLine']}{suffix}")
             else:
                 t.steps.append(f"{name}: {json.dumps(params)[:300]}")
-            if name == "read_file" and "Path" in params:
+            if name == "read_file" and isinstance(params.get("Path"), str):
                 t.reads.append(params["Path"])
-            elif name == "run_command" and "CommandLine" in params:
+            elif name == "run_command" and isinstance(params.get("CommandLine"), str):
                 t.commands.append(params["CommandLine"])
         elif kind == "result":
-            result = event["result"]
+            result = _as_dict(event.get("result"))
+            if not result:
+                continue
             t.status = result.get("status") or "UNKNOWN"
-            t.total_tokens = int((result.get("usage") or {}).get("total_tokens") or 0)
+            t.total_tokens = int(_as_dict(result.get("usage")).get("total_tokens") or 0)
             t.duration_s = float(result.get("duration_seconds") or 0.0)
             t.response = result.get("response") or ""
             t.error = str(result.get("error") or "")
@@ -123,12 +133,12 @@ def parse_claude(text: str) -> Transcript:
         elif kind == "result":
             t.status = "SUCCESS" if event.get("subtype") == "success" and not event.get("is_error") \
                 else ("ERROR" if event.get("subtype") == "success" else str(event.get("subtype") or "error").upper())
-            per_model = event.get("modelUsage") or {}
+            per_model = _as_dict(event.get("modelUsage"))
             if per_model:
-                t.total_tokens = sum(int(m.get(k) or 0) for m in per_model.values() for k in
+                t.total_tokens = sum(int(_as_dict(m).get(k) or 0) for m in per_model.values() for k in
                                      ("inputTokens", "outputTokens", "cacheReadInputTokens", "cacheCreationInputTokens"))
             else:
-                t.total_tokens = _claude_tokens(event.get("usage") or {})
+                t.total_tokens = _claude_tokens(_as_dict(event.get("usage")))
             t.duration_s = float(event.get("duration_ms") or 0) / 1000
             t.cost_usd = float(event.get("total_cost_usd") or 0.0)
             t.response = event.get("result") or ""
@@ -137,10 +147,10 @@ def parse_claude(text: str) -> Transcript:
             t.conversation_id = event.get("session_id", t.conversation_id)
     for call_id, name, params, subagent in calls:
         t.steps.append(_claude_step(name, params, call_id in errors, subagent))
-        if name == "Read" and "file_path" in params:
+        if name == "Read" and isinstance(params.get("file_path"), str):
             t.reads.append(params["file_path"])
         elif name in ("Grep", "Glob") and isinstance(params.get("path"), str):
             t.reads.append(params["path"])  # a search under a forbidden root is a read of it
-        elif name == "Bash" and "command" in params:
+        elif name == "Bash" and isinstance(params.get("command"), str):
             t.commands.append(params["command"])
     return t

@@ -108,6 +108,38 @@ class TranscriptTest(unittest.TestCase):
         t = transcript.parse("not json\n\n")
         self.assertEqual(t.status, "UNFINISHED")
 
+    def test_parsers_survive_odd_event_shapes_and_non_string_tool_args(self):
+        # 2026-11-20 (ef8b83a): a string "message" on permission_denied crashed parse_claude and lost 13 runs.
+        # Both parsers must survive non-dict JSON lines, odd nested payloads, and non-string Read/Bash args.
+        agy_lines = "\n".join([
+            "null", "[1, 2]", '"str"',
+            json.dumps({"event": "init", "init": "oops"}),
+            json.dumps({"event": "init"}),
+            json.dumps({"event": "step_update", "step_update": "oops"}),
+            json.dumps({"event": "step_update", "step_update": {"step_type": "tool", "state": "DONE", "tool_info": "bad"}}),
+            json.dumps({"event": "step_update", "step_update": {"step_type": "tool", "state": "DONE",
+                                                                "tool_info": {"name": "read_file", "parameters": {"Path": None}}}}),
+            json.dumps({"event": "step_update", "step_update": {"step_type": "tool", "state": "DONE",
+                                                                "tool_info": {"name": "run_command", "parameters": {"CommandLine": 123}}}}),
+            json.dumps({"event": "result", "result": "oops"}),
+            json.dumps({"event": "result", "result": {"status": "SUCCESS", "response": "ok"}}),
+        ])
+        t = transcript.parse(agy_lines)
+        self.assertEqual(t.status, "SUCCESS")
+        self.assertEqual((t.reads, t.commands), ([], []))
+        cc_lines = "\n".join([
+            "null", "[]",
+            json.dumps({"type": "assistant", "message": {"content": [
+                {"type": "tool_use", "id": "1", "name": "Read", "input": {"file_path": None}},
+                {"type": "tool_use", "id": "2", "name": "Bash", "input": {"command": 42}},
+            ]}}),
+            json.dumps({"type": "result", "subtype": "success", "is_error": False,
+                        "modelUsage": {"m": "bad"}, "usage": "bad", "result": "ok"}),
+        ])
+        tc = transcript.parse_claude(cc_lines)
+        self.assertEqual(tc.status, "SUCCESS")
+        self.assertEqual((tc.reads, tc.commands), ([], []))
+
 
 class ArmsTest(unittest.TestCase):
     def test_arms_fixed_order_and_levers(self):
