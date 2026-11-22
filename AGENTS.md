@@ -28,13 +28,10 @@ This repo is an Antigravity plugin: Vex's working mode for agents, built on psta
 ## How to verify a change
 
 ```bash
-python3 -m unittest discover -s checks/tests \
-  && python3 -m unittest discover -s scripts/tests \
-  && python3 -m unittest discover -s hooks/tests \
-  && python3 -m unittest discover -s evals/tests \
-  && python3 checks/run.py \
-  && python3 scripts/validate_plugin.py
+./scripts/check
 ```
+
+`scripts/check` is the single entry point used locally, by `.agents/check_on_stop.py`, and in CI: it runs all four `unittest` suites (`checks/tests`, `scripts/tests`, `hooks/tests`, `evals/tests`), `checks/run.py`, `scripts/build_plugin.py --harness claude-code --check`, and `scripts/validate_plugin.py`.
 
 `scripts/validate_plugin.py` is `agy plugin validate --strict` with one documented exception: agy warns that this root `AGENTS.md` is never loaded by the plugin. That is intended; this file is for agents working in the repo, not for plugin users.
 

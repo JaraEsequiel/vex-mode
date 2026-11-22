@@ -518,6 +518,16 @@ class RunTest(unittest.TestCase):
         self.assertEqual([r.get("quality") for r in self.passing(after)], [r.get("quality") for r in self.passing(before)])
         self.assertTrue(after["quality"]["enabled"])
 
+    def test_rejudge_clears_stale_quality_when_disabled(self):
+        self.enable_quality()
+        path = self.run_eval()
+        (self.repo / "evals/x/cases/c1/case.json").write_text(json.dumps(dict(CASE, quality=False)))
+        git(self.repo, "commit", "-qam", "quality off")
+        self.assertEqual(run.main(["rejudge", str(path)]), 0)
+        after = json.loads(path.read_text())
+        self.assertFalse(after["quality"]["enabled"])
+        self.assertTrue(all("quality" not in r for a in "ABC" for r in after["arms"][a]["runs"]))
+
     def test_diff_keeps_trailing_context_and_ignores_user_prefixes(self):
         work = self.home / "w"
         write(work, {"a.py": "x = 1\ny = 2\n\n\n"})
