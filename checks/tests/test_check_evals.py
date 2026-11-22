@@ -135,6 +135,19 @@ class LayoutTest(unittest.TestCase):
         errors = self.errors(case_files(judge={"provider": "agy", "model": "gemini-4-argon-high", "effort": "high"}))
         self.assertTrue(any("family" in e for e in errors), errors)
 
+    def test_claude_code_models_and_harness_validated(self):
+        cc = {"candidate_model": "claude-sonnet-5-5", "upgrade_model": "claude-opus-5-5"}
+        self.assertEqual(self.errors(case_files(case_json={"claude_code": cc, "harness": "claude-code"})), [])
+        # Judge from claude family must be rejected against claude_code models too.
+        errors = self.errors(case_files(case_json={"claude_code": cc},
+                                        judge={"provider": "anthropic", "model": "claude-opus-5-5", "effort": "high"}))
+        self.assertTrue(any("family" in e for e in errors), errors)
+        # Non-claude or missing models under claude_code must fail.
+        for bad in ({"claude_code": "nope"}, {"claude_code": {"candidate_model": ""}},
+                    {"claude_code": {"candidate_model": "gemini-4-neon-medium", "upgrade_model": "claude-opus-5-5"}},
+                    {"harness": "unknown"}):
+            self.assertTrue(self.errors(case_files(case_json=bad)), bad)
+
     def test_judge_lives_in_judge_json_not_in_the_case(self):
         errors = self.errors(case_files(case_json={"judge_model": "claude-opus-5-5-high"}))
         self.assertTrue(any("judge_model" in e and "evals/judge.json" in e for e in errors), errors)

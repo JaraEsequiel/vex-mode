@@ -38,7 +38,8 @@ sys.path.insert(0, str(HERE.parent / "scripts"))
 sys.path.insert(0, str(HERE.parent / "checks"))
 
 import build_plugin  # noqa: E402
-from _util import QUALITY_ALL, model_family, plugin_tree_sha256, promote_blockers  # noqa: E402
+import check_evals  # noqa: E402
+from _util import PLUGIN_WIDE, QUALITY_ALL, model_family, plugin_tree_sha256, promote_blockers  # noqa: E402
 from harness import arms as arms_mod  # noqa: E402
 from harness import isolation, judge, judges, quality, quality_judge, stats, transcript  # noqa: E402
 
@@ -437,6 +438,23 @@ def restore() -> None:
     marker.unlink()
 
 
+def _dirty_variant_paths(repo: Path, skill: str) -> list[str]:
+    """Uncommitted files that belong to the evaluated plugin (skills/, plus PLUGIN_WIDE for vex-mode, minus tests)."""
+    scopes = ("skills/", *PLUGIN_WIDE) if skill == "vex-mode" else ("skills/",)
+    raw = subprocess.run(
+        ["git", "-C", str(repo), "status", "--porcelain", "--untracked-files=all", "--", *scopes],
+        check=True, capture_output=True, text=True,
+    ).stdout.splitlines()
+    dirty = []
+    for line in raw:
+        if len(line) < 4:
+            continue
+        rel = line[3:].split(" -> ")[-1].strip('"')
+        if "/tests/" not in rel:
+            dirty.append(rel)
+    return dirty
+
+
 def run_eval(repo: Path, skill: str, case: str, base: str | None = None,
              variant: str = "HEAD", runs: int | None = None, harness: str | None = None,
              calibrate: bool = False, jobs: int | None = None) -> Path:
@@ -461,8 +479,8 @@ def run_eval(repo: Path, skill: str, case: str, base: str | None = None,
             raise EvalError(f"case {case} has no Claude Code models; add \"claude_code\" to its case.json")
     if _marker().exists() and not claude:
         raise EvalError(f"a previous eval did not restore the plugin; run `python3 evals/run.py restore` first")
-    if _git(repo, "status", "--porcelain", "--", "skills/"):
-        raise EvalError("skills/ has uncommitted changes; the variant must be a commit")
+    if dirty := _dirty_variant_paths(repo, skill):
+        raise EvalError(f"uncommitted changes in {', '.join(dirty[:5])}; the variant must be a commit")
     if base is None and calibrate:
         base = "origin/main"
     if base is None:
@@ -470,6 +488,8 @@ def run_eval(repo: Path, skill: str, case: str, base: str | None = None,
         if not base:
             raise EvalError("no merge base with origin/main; pass --base")
     judge_cfg = _judge_config(repo)
+    if problems := check_evals.case_errors(case_dir, case, judge_model=judge_cfg["model"]):
+        raise EvalError("case failed validation:\n" + "\n".join(problems))
     if calibrate:
         arm_list = arms_mod.calibration_arms(cfg, _commit(repo, base), judge_cfg["model"])
     else:

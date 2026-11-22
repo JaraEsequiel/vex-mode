@@ -397,6 +397,41 @@ class RunTest(unittest.TestCase):
         with self.assertRaises(run.EvalError):
             self.run_eval()
 
+    def test_refuses_dirty_plugin_wide_files_for_vex_mode(self):
+        # 2026-11-20 (635bbe1): hooks/rules/agents/manifest are part of vex-mode's tree hash,
+        # so uncommitted edits there must be refused just like uncommitted skills/ edits.
+        write(self.repo, {
+            "skills/vex-mode/SKILL.md": "r1",
+            "hooks/stop_gate.py": "g1",
+            "hooks/tests/test_stop_gate.py": "t1",
+            "evals/vex-mode/cases/c1/prompt.md": "/vex-mode the total is wrong",
+            "evals/vex-mode/cases/c1/rubric.md": "1. Fixes it.",
+            "evals/vex-mode/cases/c1/check.py": CHECK,
+            "evals/vex-mode/cases/c1/case.json": json.dumps(CASE),
+            "evals/vex-mode/cases/c1/project/app.py": "broken\n",
+        })
+        git(self.repo, "add", "-A")
+        git(self.repo, "commit", "-qm", "add vex-mode")
+        (self.repo / "hooks/stop_gate.py").write_text("g2")
+        with self.assertRaisesRegex(run.EvalError, "uncommitted changes"):
+            run.run_eval(self.repo, "vex-mode", "c1", base="main", variant="HEAD")
+        self.assertFalse((self.home / "calls.log").exists())
+        # Hook tests are excluded from the plugin tree hash and must not block an eval.
+        (self.repo / "hooks/stop_gate.py").write_text("g1")
+        (self.repo / "hooks/tests/test_stop_gate.py").write_text("t2")
+        self.assertEqual(run._dirty_variant_paths(self.repo, "vex-mode"), [])
+
+    def test_refuses_unblinded_case_before_running(self):
+        # 2026-11-20 (35af8f3 / b6d3370): points-cleanup shipped project/test_points.py and burned two evals
+        # before check_evals caught the banned word "test".
+        (self.repo / "evals/x/cases/c1/project/test_points.py").write_text("assert True\n")
+        git(self.repo, "add", "-A")
+        git(self.repo, "commit", "-qm", "plant banned word")
+        with self.assertRaisesRegex(run.EvalError, "banned word"):
+            self.run_eval()
+        self.assertFalse((self.home / "calls.log").exists())
+        self.assertFalse((self.repo / "evals/x/results").exists())
+
     def enable_quality(self):
         case = dict(CASE, quality=True)
         (self.repo / "evals/x/cases/c1/case.json").write_text(json.dumps(case))

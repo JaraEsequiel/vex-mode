@@ -13,6 +13,7 @@ from _util import PLUGIN_WIDE, QUALITY_ALL, banned_hits, model_family, plugin_tr
 NOT_SKILLS = {"harness", "tests", "__pycache__"}
 CASE_FILES = ("prompt.md", "rubric.md", "check.py", "case.json")
 ARMS = ("A", "B", "C")
+HARNESSES = ("agy", "claude-code")
 METRICS = ("compliance", "outcome", "tokens", "duration_s")
 VERDICTS = ("promote", "reject", "inconclusive")
 SHA = re.compile(r"^[0-9a-f]{64}$")
@@ -29,7 +30,7 @@ def _skill_dirs(root: Path) -> list[Path]:
     return sorted(d for d in evals.iterdir() if d.is_dir() and d.name not in NOT_SKILLS)
 
 
-def _case_errors(case: Path, rel: str) -> list[str]:
+def case_errors(case: Path, rel: str, *, judge_model: str | None = None) -> list[str]:
     errors = [f"{rel}: missing {name}" for name in CASE_FILES if not (case / name).is_file()]
     if not (case / "project").is_dir():
         errors.append(f"{rel}: missing project/")
@@ -54,6 +55,8 @@ def _case_errors(case: Path, rel: str) -> list[str]:
             errors.append(f"{rel}/case.json: runs must be an integer >= 1")
         if not (isinstance(cfg.get("timeout_s"), int) and cfg["timeout_s"] > 0):
             errors.append(f"{rel}/case.json: timeout_s must be a positive integer")
+        if "harness" in cfg and cfg["harness"] not in HARNESSES:
+            errors.append(f"{rel}/case.json: harness must be one of {', '.join(HARNESSES)}")
         for key in ("candidate_model", "upgrade_model"):
             if not (isinstance(cfg.get(key), str) and cfg[key]):
                 errors.append(f"{rel}/case.json: {key} is required")
@@ -66,13 +69,30 @@ def _case_errors(case: Path, rel: str) -> list[str]:
             errors.append(f"{rel}/case.json: workdir must match {SLUG.pattern}")
         elif hits := banned_hits(workdir):
             errors.append(f"{rel}/case.json: workdir has banned words {hits}")
-        models = [cfg.get(k) for k in ("candidate_model", "upgrade_model")]
-        judge_model = (judge_config(case.parents[3]) or {}).get("model")
-        if judge_model and all(isinstance(m, str) and m for m in models):
+        models = [cfg.get(k) for k in ("candidate_model", "upgrade_model") if isinstance(cfg.get(k), str) and cfg.get(k)]
+        if "claude_code" in cfg:
+            cc = cfg["claude_code"]
+            if not isinstance(cc, dict):
+                errors.append(f"{rel}/case.json: claude_code must be an object")
+            else:
+                for key in ("candidate_model", "upgrade_model"):
+                    val = cc.get(key)
+                    if not (isinstance(val, str) and val):
+                        errors.append(f"{rel}/case.json: claude_code.{key} is required")
+                    else:
+                        models.append(val)
+                        if model_family(val) != "claude":
+                            errors.append(f"{rel}/case.json: claude_code.{key} '{val}' must be a claude model")
+        if judge_model is None:
+            judge_model = (judge_config(case.parents[3]) or {}).get("model")
+        if judge_model and models:
             judge = model_family(judge_model)
             if judge in {model_family(m) for m in models}:
                 errors.append(f"{rel}/case.json: judge family '{judge}' (evals/judge.json) must differ from every candidate's family")
     return errors
+
+
+_case_errors = case_errors
 
 
 JUDGE_PROVIDERS = ("openai", "anthropic", "agy")
