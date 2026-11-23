@@ -1,0 +1,7 @@
+{
+  "kind": "waiver",
+  "skill": "grill-me",
+  "tree_sha256": "5f5131613a9823b5e2a257a566cd217735a2778c587d08369f7a0544188d7ed9",
+  "date": "2026-11-23",
+  "reason": "Interactive multi-round user interview invoked only via /grill-me (disable-model-invocation: true). Single-turn headless evals (agy -p / claude -p) cannot simulate multi-round user answers to a frontier design tree."
+}

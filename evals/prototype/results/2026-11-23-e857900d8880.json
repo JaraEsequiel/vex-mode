@@ -1,0 +1,7 @@
+{
+  "kind": "waiver",
+  "skill": "prototype",
+  "tree_sha256": "e857900d88807c6303b239d2b3d920f4a59929b20b6c579aba03f80c077bab17",
+  "date": "2026-11-23",
+  "reason": "Initial addition of /prototype (disable-model-invocation: true), adapted from mattpocock/skills. Produces throwaway HTML/UI exploration variants judged interactively by the user rather than fixed pass/fail unit assertions."
+}
