@@ -1,0 +1,7 @@
+{
+  "kind": "waiver",
+  "skill": "frontend-ui",
+  "tree_sha256": "55620b9b3b4449d06db73bee6ee8c31d81a79fa4a47ee06051a0f80928374fb6",
+  "date": "2026-11-23",
+  "reason": "Initial addition of /frontend-ui (disable-model-invocation: true). Visual hierarchy, responsive layout, and live browser verification require a running app surface and visual inspection not covered by single-file headless eval cases."
+}

@@ -377,6 +377,11 @@
     "skills/agent-ready/templates/check.yml",
     "skills/agent-ready/templates/check_on_stop.py",
     "skills/agent-ready/templates/claude-settings.json",
-    "skills/agent-ready/templates/hooks.json"
+    "skills/agent-ready/templates/hooks.json",
+    "skills/frontend-ui/SKILL.md",
+    "skills/grill-me/SKILL.md",
+    "skills/prototype/LOGIC.md",
+    "skills/prototype/SKILL.md",
+    "skills/prototype/UI.md"
   ]
 }
