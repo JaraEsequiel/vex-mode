@@ -14,6 +14,7 @@ Cuando escribes `/vex-mode <tarea>`:
    - Repite el objetivo y el cambio mínimo en el primer mensaje.
    - Si una duda se resuelve corriendo algo, hace un prototipo en vez de preguntar.
    - Antes de escribir código, nombra la forma de los datos. Si el cambio cruza una función, usa `architect`.
+   - Si el cambio toca UI, frontend o diseño, carga `frontend-ui` (y aprovecha `impeccable` si está instalado).
    - Pasa todo texto por `unslop`, y la documentación, los PRs y los commits también por `technical-writing`.
    - Juzga cada comentario de un bot de revisión por su contenido, sin aceptarlo de forma automática.
 4. Elige el playbook que corresponde y copia sus pasos a la lista de tareas. Los playbooks son bug fix, feature, abrir un PR y eval. Una tarea que no encaja en ninguno, como una limpieza de código, sigue el núcleo y las skills de principios.
@@ -126,6 +127,9 @@ El agente lee cada una entera cuando la aplica. Esta tabla dice cuándo entra ca
 | Skill | Para qué sirve |
 | --- | --- |
 | `architect` | Diseña tipos, firmas y módulos antes del código. Propone dos formas y elige una. |
+| `grill-me` | Entrevista al usuario por rondas antes de construir para cerrar decisiones técnicas, de producto y de UI. |
+| `prototype` | Construye prototipos descartables de lógica (`LOGIC.md`) o 3 variantes de interfaz (`UI.md`) con piso anti-slop. |
+| `frontend-ui` | Aplica modos de superficie, `craft floor` anti-slop y la compuerta final de Mesa de diseño (Estética, UX, Manejo) en navegador real. |
 | `why` | Explica por qué algo es como es, desde commits y PRs. |
 | `tdd` | Escribe el test que falla antes del fix, solo cuando el test es barato. |
 | `agent-ready` | Prepara un repo para agentes con reglas, un check, un hook de Stop y una skill de verificación. |

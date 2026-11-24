@@ -35,6 +35,26 @@ Al activarlo pasan tres cosas:
 
 El modo dura toda la conversación. No hace falta repetir el comando en cada mensaje.
 
+## Diagrama de flujo
+
+```mermaid
+flowchart TD
+  U["Pedido del usuario"] --> N["Núcleo siempre activo (AGENTS.md + irreversible.py)"]
+  N --> M{"Activaste /vex-mode"}
+  M -- "No" --> T1["Tarea simple o pregunta con verificación real"]
+  M -- "Sí" --> R["activate.py inyecta worker.md y opening-a-pr"]
+  R --> K{"Tipo de trabajo"}
+  K -- "Bug" --> B["Reproducir -> Dividir hipótesis -> Fix -> Verificar"]
+  K -- "Feature backend" --> F["architect -> Plan paralelo -> vex-agent -> Verificar"]
+  K -- "UI o diseño" --> UI1["grill-me (modo y estados) -> prototype (3 variantes)"]
+  UI1 --> UI2["frontend-ui (craft floor + impeccable si existe)"]
+  UI2 --> MD["Mesa de diseño en browser (Estética, UX, Manejo)"]
+  B --> SG["stop_gate.py exige evidencia real"]
+  F --> SG
+  MD --> SG
+  SG --> PR["opening-a-pr listo para revisión (merge humano)"]
+```
+
 ## Un día común
 
 Este ejemplo muestra un día con tres tareas en un mismo repo.
@@ -124,6 +144,15 @@ Cuando corriges al agente por el mismo error por segunda vez, ejecuta `/correct`
 4. Documentación, solo para decisiones de criterio.
 
 Cada check nuevo se prueba contra un error real del pasado.
+
+### Trabajo de UI, frontend y diseño
+
+Cuando una tarea toca interfaz o diseño bajo `/vex-mode`, el agente carga `frontend-ui` (y usa `impeccable` si está instalado en tu máquina):
+
+1. Si usas `/grill-me` antes de construir, la entrevista incluye modo de superficie (`Persuade`, `Operate`, `Read`, `Experience`), dirección visual, acción primaria y estados borde.
+2. Si la dirección visual está abierta, `/prototype` genera 3 variantes en `?variant=A|B|C` aplicando el piso visual anti-slop.
+3. Durante la implementación, `frontend-ui` exige contraste legible, tipografía consistente, superficies del navegador tematizadas y los cinco estados (`loading`, `empty`, `error`, `disabled`, `overflow`).
+4. Antes de cerrar, pasa por la **Mesa de diseño** sobre el navegador real (`browser` y `impeccable detect` si existe) validando Estética, UX y Manejo.
 
 ### Trabajo largo o desatendido
 
