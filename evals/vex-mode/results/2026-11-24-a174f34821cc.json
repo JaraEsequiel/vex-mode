@@ -1,0 +1,7 @@
+{
+  "kind": "waiver",
+  "skill": "vex-mode",
+  "tree_sha256": "a174f34821cc91f13246840f551225abcd45e2f688a06c75b33a74ed27569c14",
+  "date": "2026-11-24",
+  "reason": "Wired adversarial-review skill into skills/vex-mode/SKILL.md and skills/vex-mode/playbooks/feature.md. Existing vex-mode eval cases test isolated backend refactoring and do not measure multi-lens feature verification routing."
+}

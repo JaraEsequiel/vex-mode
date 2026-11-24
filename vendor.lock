@@ -373,6 +373,7 @@
   "original": [
     "agents/vex-agent.md",
     "rules/AGENTS.md",
+    "skills/adversarial-review/SKILL.md",
     "skills/agent-ready/SKILL.md",
     "skills/agent-ready/templates/check.yml",
     "skills/agent-ready/templates/check_on_stop.py",

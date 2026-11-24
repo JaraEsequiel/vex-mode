@@ -1,0 +1,7 @@
+{
+  "kind": "waiver",
+  "skill": "adversarial-review",
+  "tree_sha256": "4282209544491400a6998dc2c6cfcc151eade70c3088ba63196dd3eb41026dd1",
+  "date": "2026-11-24",
+  "reason": "Initial addition of adversarial-review skill defining feature-type test matrix and functionality, browser, and real-user adversarial lenses. No eval cases exist yet for adversarial-review."
+}

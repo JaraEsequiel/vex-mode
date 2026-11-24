@@ -1,6 +1,6 @@
 ### Feature
 
-**Read first:** `skills/principle-model-the-domain/SKILL.md`, `skills/principle-separate-before-serializing-shared-state/SKILL.md`, `skills/principle-prove-it-works/SKILL.md`, `skills/principle-sequence-verifiable-units/SKILL.md`.
+**Read first:** `skills/principle-model-the-domain/SKILL.md`, `skills/principle-separate-before-serializing-shared-state/SKILL.md`, `skills/principle-prove-it-works/SKILL.md`, `skills/principle-sequence-verifiable-units/SKILL.md`, `skills/adversarial-review/SKILL.md`.
 
 **You own the design. Plan, review, verify.** Delegate implementation. Stay in the lead.
 
@@ -12,7 +12,7 @@
    - **Shared mutable state.** Default to splitting the target (the **separate-before-serializing-shared-state** principle skill). Serialize only for real invariants.
    - **Smallest safe decomposition.** If one worker is best, name why.
 4. Delegate code-writing to a subagent with a specific scope (file paths, named data shape and its organizing structure per **principle-model-the-domain**, a state machine over scattered booleans, a table/registry over branching, a typed model over repeated shape assumptions, chosen before the delegate writes logic, and success criteria). Pick each subagent's reasoning level for the job, per the Subagents section. A subagent forbidden to spawn satisfies this by owning the diff directly with the same review separation. No "standing by" reply that waits on a nested agent. Surgical edits, re-ground against the source for upstream-derived files. Port shared-primitive improvements to all consumers and verify each. Commit liberally.
-5. Verify on the matching surface. "Inconclusive" or wrong-surface is not a pass. Flag it.
+5. Verify on the matching surface with **adversarial-review** skill. Classify the functionality to pick the required test types, run them, and dispatch fresh adversarial and real-user checks (plus `browser` via **frontend-ui** skill when UI is involved). "Inconclusive" or wrong-surface is not a pass. Flag it.
 6. Rebase into small, ordered commits. Stack follow-ups.
    Use the **sequence-verifiable-units** principle skill, building, verifying, and committing each small unit before the next.
 7. Run **Opening a PR**.
