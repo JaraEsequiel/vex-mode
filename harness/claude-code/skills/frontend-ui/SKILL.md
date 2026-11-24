@@ -13,7 +13,7 @@ Build interfaces that respect the project's design system, enforce a visual craf
 ## Before writing UI code
 
 1. **Pick the surface mode:** `Persuade` (landing, marketing, pricing), `Operate` (app UI, dashboards, settings, tools), `Read` (docs, articles, guides), or `Experience` (portfolios, showcases). Match ambition and restraint to the mode.
-2. **Reuse before inventing.** Inspect existing components, design tokens, CSS variables, and layout patterns in the repo first. If `PRODUCT.md` or `DESIGN.md` exists, read them. If `impeccable` is installed in the environment, run `impeccable context` for project context; never block if unavailable.
+2. **Reuse before inventing.** Inspect existing components, design tokens, CSS variables, and layout patterns in the repo first. If `PRODUCT.md` or `DESIGN.md` exists, read them; for greenfield projects without `DESIGN.md`, you can pull an on-demand reference from `VoltAgent/awesome-design-md` (`design-md/<brand>/DESIGN.md`). If `impeccable` is installed in the environment, run `impeccable context` for project context; never block if unavailable.
 3. **Explore variants when direction is open.** If layout or interaction is undecided, use the **prototype** skill (`UI.md`) on a throwaway branch before writing production components.
 
 ## Craft floor and anti-slop
@@ -28,14 +28,18 @@ Build interfaces that respect the project's design system, enforce a visual craf
 
 - **Code changes:** delegate component implementation to `vex-agent` with exact file paths, surface mode, token/component references, and state requirements.
 
-## Design Desk review (Mesa de diseño)
+## Design Desk automated loop (Mesa de diseño)
 
-Run this gate before finishing any UI change. `vex-agent` has no browser tools: from the main session, start the app's dev server and use the `browser` subagent to inspect the live rendered page (and run `impeccable detect` / `shot` if `impeccable` is installed).
+Run this closed loop automatically before finishing any UI change, without pausing to ask between rounds. `vex-agent` has no browser tools, so orchestrate from the main session:
 
-Check all three axes and fix any defect before marking done:
+1. **Start the surface:** launch the app's dev server in the background (or reuse the running port).
+2. **Inspect in parallel/sequence (max 3 rounds):**
+   - Run the bundled **impeccable** skill CLI (`skills/impeccable/scripts/impeccable detect <url-or-files> --json`, plus `shot <url>` when helpful).
+   - Run the `browser` subagent on the live URL checking all three axes:
+     1. **Aesthetics (Estética):** hierarchy holds at a glance, contrast passes, typography rhythm is clean, and zero anti-slop tells remain.
+     2. **UX:** primary flow is self-evident, copy is specific to the product, and all five states (`loading`, `empty`, `error`, `disabled`, `overflow`) behave cleanly.
+     3. **Handling (Manejo):** semantic HTML (`button`, `a`, `nav`, `label`), keyboard navigation and visible focus rings, accessible names for icon-only controls, comfortable touch targets (`>=24x24` CSS px, `44x44` preferred), mobile and desktop viewports with zero horizontal overflow or clipped controls, and zero console or network errors.
+3. **Fix and re-verify:** if `impeccable detect` or `browser` reports any defect, delegate the exact fix list to `vex-agent` and rerun step 2. Stop as soon as both pass, or after **3 rounds** (report any remaining defects directly instead of looping further).
+4. **Clean up:** stop the background dev server unless the user asked to keep the preview open.
 
-1. **Aesthetics (Estética):** hierarchy holds at a glance, contrast passes, typography rhythm is clean, and zero anti-slop tells remain.
-2. **UX:** primary flow is self-evident, copy is specific to the product, and all five states (`loading`, `empty`, `error`, `disabled`, `overflow`) behave cleanly.
-3. **Handling (Manejo):** semantic HTML (`button`, `a`, `nav`, `label`), keyboard navigation and visible focus rings, accessible names for icon-only controls, comfortable touch targets (`>=24x24` CSS px, `44x44` preferred), mobile and desktop viewports with zero horizontal overflow or clipped controls, and zero console or network errors.
-
-If the environment has no browser tool (such as headless runs), run the project's build, typecheck, and UI/e2e test suite and state explicitly that live visual inspection was skipped.
+If the environment has no browser tool (such as headless runs), run `impeccable detect <files> --json`, the project's build, typecheck, and UI/e2e test suite, and state explicitly that live visual inspection was skipped.

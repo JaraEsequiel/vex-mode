@@ -1,0 +1,7 @@
+{
+  "kind": "waiver",
+  "skill": "frontend-ui",
+  "tree_sha256": "286828df952095285d09bb58dda89c885d81f6e07ad42296a6fc1eacaedcc56c",
+  "date": "2026-11-24",
+  "reason": "Added automated closed-loop Design Desk verification (dev server, impeccable detect, browser subagent, vex-agent fix loop capped at 3 rounds). Visual aesthetics, UX, and live browser ergonomics cannot be measured by headless single-file eval cases."
+}
