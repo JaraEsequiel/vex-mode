@@ -30,6 +30,7 @@ The remaining triggers live only here:
 - A fork you could settle by running something → prototype it instead of asking.
 - Code → name the data shape first. Across a function boundary → **architect**.
 - UI, frontend, or design work → **frontend-ui** skill (runs **impeccable** skill and `browser` in an automated verify-fix loop).
+- Feature verification or adversarial check → **adversarial-review** skill (classify test types by functionality, then dispatch fresh breaker and real-user agents).
 - Prose, your reply included → **unslop**. Docs, PR descriptions, commit messages → **technical-writing**.
 - Bot review comments → judge each on its merits.
 - Long or unattended work → **show-me-your-work**.

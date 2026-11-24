@@ -45,13 +45,14 @@ flowchart TD
   M -- "Sí" --> R["activate.py inyecta worker.md y opening-a-pr"]
   R --> K{"Tipo de trabajo"}
   K -- "Bug" --> B["Reproducir -> Dividir hipótesis -> Fix -> Verificar"]
-  K -- "Feature backend" --> F["architect -> Plan paralelo -> vex-agent -> Verificar"]
+  K -- "Feature backend" --> F["architect -> Plan paralelo -> vex-agent"]
   K -- "UI o diseño" --> UI1["grill-me (modo y estados) -> prototype (3 variantes)"]
   UI1 --> UI2["frontend-ui (craft floor + impeccable si existe)"]
   UI2 --> MD["Mesa de diseño en browser (Estética, UX, Manejo)"]
+  F --> AR["adversarial-review (matriz de pruebas + funcionalidad + usuario real)"]
+  MD --> AR
   B --> SG["stop_gate.py exige evidencia real"]
-  F --> SG
-  MD --> SG
+  AR --> SG
   SG --> PR["opening-a-pr listo para revisión (merge humano)"]
 ```
 
@@ -99,7 +100,7 @@ Tú revisas el PR y lo mergeas. El agente no puede mergear: el hook lo frena.
 2. Ejecuta `architect`, que propone dos formas de tipos y módulos y elige una.
 3. Escribe el plan de paralelismo en cuatro puntos: qué bloquea, qué es independiente, qué estado se comparte y la división más chica que es segura.
 4. Delega el código a subagentes `vex-agent` con alcance concreto.
-5. Verifica la feature en la app real.
+5. Clasifica la feature con `adversarial-review`, corre las pruebas que corresponden a su tipo y lanza subagentes frescos que intenten romper la funcionalidad y recorrerla como usuario real.
 6. Ordena los commits en unidades chicas y abre el PR.
 
 Si quieres opinar sobre el diseño antes del código, ejecuta `/architect` primero y pasa a `/vex-mode` cuando el diseño te convenza.
@@ -153,6 +154,14 @@ Cuando una tarea toca interfaz o diseño bajo `/vex-mode`, el agente carga `fron
 2. Si la dirección visual está abierta, `/prototype` genera 3 variantes en `?variant=A|B|C` aplicando el piso visual anti-slop.
 3. Durante la implementación, `frontend-ui` exige contraste legible, tipografía consistente, superficies del navegador tematizadas y los cinco estados (`loading`, `empty`, `error`, `disabled`, `overflow`).
 4. Antes de cerrar, pasa por la **Mesa de diseño** sobre el navegador real (`browser` y `impeccable detect` si existe) validando Estética, UX y Manejo.
+
+### Revisión adversarial al terminar una feature
+
+Cuando cierras una feature bajo `/vex-mode` (o invocas `/adversarial-review`), el agente no se conforma con tests TDD unitarios:
+
+1. Clasifica la feature según su tipo (`Backend`, `Frontend`, `Full-stack`, `CLI`, `Datos` o `Skills`) para correr los tipos de prueba que corresponden.
+2. Despacha subagentes frescos que no escribieron el código: un **functionality breaker** (`vex-agent`) que intenta romper bordes, contratos y requisitos, un **browser breaker** (`browser`) si hay UI web, y un **real-user simulator** que recorre el flujo desde la entrada pública sin leer el código interno.
+3. Cada defecto encontrado se delega a un `vex-agent` fresco y se vuelve a probar hasta quedar limpio (tope de tres rondas).
 
 ### Trabajo largo o desatendido
 
