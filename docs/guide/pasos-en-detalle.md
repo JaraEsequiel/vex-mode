@@ -46,7 +46,7 @@ El agente es dueño del diseño y delega la implementación.
    - Estado compartido. Por defecto se divide el objetivo para que nadie comparta; se serializa solo si hay una invariante real.
    - La división más chica que es segura. Si un solo trabajador es lo mejor, dice por qué.
 4. **Delegar el código.** El subagente recibe rutas de archivos, la forma de los datos ya elegida y los criterios de éxito. Por ejemplo, una máquina de estados en lugar de booleanos sueltos, o una tabla en lugar de muchos `if`.
-5. **Verificar en el lugar real.** Igual que en bug fix, "inconcluso" no es un pase.
+5. **Verificar con `adversarial-review`.** Clasifica la funcionalidad según su tipo (backend, UI, full-stack, CLI, datos o skills) para correr las pruebas que corresponden, y lanza subagentes frescos que intenten romperla en funcionalidad, navegador (cuando hay UI) y recorrido de usuario real. Igual que en bug fix, "inconcluso" no es un pase.
 6. **Ordenar en commits chicos.** Cada unidad se construye, se verifica y se commitea antes de la siguiente.
 7. **Abrir el PR.**
 
@@ -130,6 +130,7 @@ El agente lee cada una entera cuando la aplica. Esta tabla dice cuándo entra ca
 | `grill-me` | Entrevista al usuario por rondas antes de construir para cerrar decisiones técnicas, de producto y de UI. |
 | `prototype` | Construye prototipos descartables de lógica (`LOGIC.md`) o 3 variantes de interfaz (`UI.md`) con piso anti-slop. |
 | `frontend-ui` | Aplica modos de superficie, `craft floor` anti-slop y la compuerta final de Mesa de diseño (Estética, UX, Manejo) en navegador real. |
+| `adversarial-review` | Clasifica la feature por tipo de funcionalidad para elegir pruebas y lanza subagentes frescos (funcionalidad, navegador y usuario real) que buscan romperla. |
 | `why` | Explica por qué algo es como es, desde commits y PRs. |
 | `tdd` | Escribe el test que falla antes del fix, solo cuando el test es barato. |
 | `agent-ready` | Prepara un repo para agentes con reglas, un check, un hook de Stop y una skill de verificación. |

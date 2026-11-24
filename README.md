@@ -34,7 +34,7 @@ Actualizar, desinstalar y comprobar que funciona: [`docs/guide/instalar.md`](doc
 
 - Siempre activo: un núcleo mínimo (`rules/AGENTS.md`) y la pausa ante acciones irreversibles.
 - Modo completo: escribe `/vex-mode <tarea>` en agy o `/vex-mode:vex-mode <tarea>` en Claude Code.
-- Las demás skills se llaman igual: `/architect`, `/why`, `/grill-me`, `/prototype`, `/frontend-ui`, `/agent-ready`, `/correct`, `/reflect`. En Claude Code llevan el prefijo `vex-mode:`.
+- Las demás skills se llaman igual: `/architect`, `/why`, `/grill-me`, `/prototype`, `/frontend-ui`, `/adversarial-review`, `/agent-ready`, `/correct`, `/reflect`. En Claude Code llevan el prefijo `vex-mode:`.
 
 Cuándo usar cada una y qué hace el agente en cada caso: [`docs/guide/flujo-de-trabajo.md`](docs/guide/flujo-de-trabajo.md).
 
