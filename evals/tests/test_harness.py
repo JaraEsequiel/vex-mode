@@ -108,6 +108,38 @@ class TranscriptTest(unittest.TestCase):
         t = transcript.parse("not json\n\n")
         self.assertEqual(t.status, "UNFINISHED")
 
+    def test_parsers_survive_odd_event_shapes_and_non_string_tool_args(self):
+        # 2026-11-20 (ef8b83a): a string "message" on permission_denied crashed parse_claude and lost 13 runs.
+        # Both parsers must survive non-dict JSON lines, odd nested payloads, and non-string Read/Bash args.
+        agy_lines = "\n".join([
+            "null", "[1, 2]", '"str"',
+            json.dumps({"event": "init", "init": "oops"}),
+            json.dumps({"event": "init"}),
+            json.dumps({"event": "step_update", "step_update": "oops"}),
+            json.dumps({"event": "step_update", "step_update": {"step_type": "tool", "state": "DONE", "tool_info": "bad"}}),
+            json.dumps({"event": "step_update", "step_update": {"step_type": "tool", "state": "DONE",
+                                                                "tool_info": {"name": "read_file", "parameters": {"Path": None}}}}),
+            json.dumps({"event": "step_update", "step_update": {"step_type": "tool", "state": "DONE",
+                                                                "tool_info": {"name": "run_command", "parameters": {"CommandLine": 123}}}}),
+            json.dumps({"event": "result", "result": "oops"}),
+            json.dumps({"event": "result", "result": {"status": "SUCCESS", "response": "ok"}}),
+        ])
+        t = transcript.parse(agy_lines)
+        self.assertEqual(t.status, "SUCCESS")
+        self.assertEqual((t.reads, t.commands), ([], []))
+        cc_lines = "\n".join([
+            "null", "[]",
+            json.dumps({"type": "assistant", "message": {"content": [
+                {"type": "tool_use", "id": "1", "name": "Read", "input": {"file_path": None}},
+                {"type": "tool_use", "id": "2", "name": "Bash", "input": {"command": 42}},
+            ]}}),
+            json.dumps({"type": "result", "subtype": "success", "is_error": False,
+                        "modelUsage": {"m": "bad"}, "usage": "bad", "result": "ok"}),
+        ])
+        tc = transcript.parse_claude(cc_lines)
+        self.assertEqual(tc.status, "SUCCESS")
+        self.assertEqual((tc.reads, tc.commands), ([], []))
+
 
 class ArmsTest(unittest.TestCase):
     def test_arms_fixed_order_and_levers(self):
@@ -249,6 +281,35 @@ class IsolationFalsePositiveTest(unittest.TestCase):
     def test_other_workdir_and_markers_still_flagged(self):
         for cmd in ("cat /cache/vex-work/cd34/habit-tracker/habits.py", "ls ../../", "cat ~/.cache/vex-mode/runs/x"):
             self.assertTrue(self.check(cmd), cmd)
+
+    def test_shell_wrappers_eval_and_assignments_cannot_bypass_isolation(self):
+        # Repeated bypass class (413ec9c, cd850ee, 244b4fc, M3 dry run): shell wrappers, eval, export,
+        # inline assignments, and assignment RHS paths must not hide a forbidden path.
+        bypasses = [
+            'bash -c "cat /repo/README.md"',
+            "sh -lc 'cat /elsewhere/skills/vex-mode/SKILL.md'",
+            'env FOO=1 bash -c "cat /repo/AGENTS.md"',
+            'sudo -u deploy sh -c "cat /repo/README.md"',
+            'command bash -c "cat /repo/README.md"',
+            'eval "cat /repo/README.md"',
+            'X=/repo/README.md cat "$X"',
+            "export X=/repo/README.md; cat $X",
+            "X=/repo/README.md python3 -c \"import os; print(open(os.environ['X']).read())\"",
+            'X=/repo bash -c \'cat "$X/README.md"\'',
+            'bash -c \'bash -c "bash -c \\"bash -c \\\\\\"bash -c \\\\\\\\\\\\\\"bash -c ls\\\\\\\\\\\\\\"\\\\\\"\\""\'',
+        ]
+        for cmd in bypasses:
+            with self.subTest(cmd=cmd):
+                self.assertTrue(self.check(cmd), cmd)
+        allowed = [
+            'bash -c "python3 habits.py"',
+            "env FOO=1 python3 habits.py",
+            "export B=/plug/vex-mode; cd $B && cat skills/vex-mode/worker.md",
+            "C=/plug/vex-mode bash -c 'cat \"$C/skills/vex-mode/worker.md\"'",
+        ]
+        for cmd in allowed:
+            with self.subTest(allowed=cmd):
+                self.assertEqual(self.check(cmd), [], cmd)
 
 
 class StatsTest(unittest.TestCase):

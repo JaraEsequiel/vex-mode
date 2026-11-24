@@ -38,7 +38,8 @@ sys.path.insert(0, str(HERE.parent / "scripts"))
 sys.path.insert(0, str(HERE.parent / "checks"))
 
 import build_plugin  # noqa: E402
-from _util import QUALITY_ALL, model_family, plugin_tree_sha256, promote_blockers  # noqa: E402
+import check_evals  # noqa: E402
+from _util import PLUGIN_WIDE, QUALITY_ALL, model_family, plugin_tree_sha256, promote_blockers  # noqa: E402
 from harness import arms as arms_mod  # noqa: E402
 from harness import isolation, judge, judges, quality, quality_judge, stats, transcript  # noqa: E402
 
@@ -250,13 +251,15 @@ def _touched(diff: str) -> set[str]:
 def _quality(records: dict, case_dir: Path, cfg: dict, prompt: str, judge_cfg: dict, run_dir: Path,
              rng: random.Random) -> dict:
     """Code quality of every valid passing run (design §8.2.1): deterministic measures, then the quality judge."""
+    for rec in records.values():
+        for r in rec["runs"]:
+            r.pop("quality", None)
+            r.pop("quality_errors", None)
     if not cfg.get("quality"):
         return {"enabled": False, "errors": [], "judge_usage": {}}
     errors, patches, runs = [], {}, {}
     for rec in records.values():
         for r in rec["runs"]:
-            r.pop("quality", None)
-            r.pop("quality_errors", None)
             if r["invalid"] or r["outcome"] != 1:
                 continue
             diff = (run_dir / "diffs" / f"{r['slot']}.diff").read_text()
@@ -329,6 +332,22 @@ def _score(records: dict, with_quality: bool = False, pairs: dict = PAIRS) -> tu
     return metrics, signals
 
 
+def _grade_and_score(records: dict, materials: dict[int, str], case_dir: Path, cfg: dict, judge_cfg: dict,
+                     run_dir: Path, rng: random.Random, calibrate: bool) -> tuple[dict, dict, dict, dict]:
+    """Single owner for post-run grading, quality measurement, and scoring (shared by run_eval and rejudge)."""
+    if empty := [label for label, rec in records.items() if not any(r["invalid"] is None for r in rec["runs"])]:
+        raise EvalError(f"arm {empty[0]} has no valid run, so nothing can be compared; run dir: {run_dir}")
+    families = {model_family(rec["model"]) for rec in records.values()}
+    if model_family(judge_cfg["model"]) in families:
+        raise EvalError(f"judge {judge_cfg['model']} shares a model family with a candidate ({sorted(families)})")
+    rubric = (case_dir / "rubric.md").read_text()
+    prompt = (case_dir / "prompt.md").read_text().strip()
+    judge_error, judge_usage = _judge(records, materials, rubric, judge_cfg, run_dir, rng)
+    quality_record = _quality(records, case_dir, cfg, prompt, judge_cfg, run_dir, rng)
+    metrics, signals = _score(records, quality_record["enabled"], CALIBRATION_PAIRS if calibrate else PAIRS)
+    return _judge_record(judge_cfg, judge_error, judge_usage), quality_record, metrics, signals
+
+
 def rejudge(path: Path) -> None:
     """Judge an existing result again from its run dir (transcripts and saved diffs), without new runs."""
     result = json.loads(path.read_text())
@@ -358,21 +377,12 @@ def rejudge(path: Path) -> None:
             r["outcome"] = 1 if check.read_text().startswith("exit 0\n") else 0
             materials[r["slot"]] = _material(t, diff.read_text())
             r["compliance"] = None
-    if empty := [label for label, rec in result["arms"].items() if not any(r["invalid"] is None for r in rec["runs"])]:
-        raise EvalError(f"arm {empty[0]} has no valid run, so nothing can be compared; result left as it was")
     judge_cfg = _judge_config(repo)
-    families = {model_family(rec["model"]) for rec in result["arms"].values()}
-    if model_family(judge_cfg["model"]) in families:
-        raise EvalError(f"judge {judge_cfg['model']} shares a model family with a candidate ({sorted(families)})")
     rng = random.Random()
     with _locked():
-        error, usage = _judge(result["arms"], materials, (case_dir / "rubric.md").read_text(), judge_cfg,
-                              run_dir, rng)
-        result["quality"] = _quality(result["arms"], case_dir, cfg, (case_dir / "prompt.md").read_text().strip(),
-                                     judge_cfg, run_dir, rng)
-    result["judge"] = _judge_record(judge_cfg, error, usage)
-    pairs = CALIBRATION_PAIRS if result.get("kind") == "calibration" else PAIRS
-    result["metrics"], result["signals"] = _score(result["arms"], result["quality"]["enabled"], pairs)
+        result["judge"], result["quality"], result["metrics"], result["signals"] = _grade_and_score(
+            result["arms"], materials, case_dir, cfg, judge_cfg, run_dir, rng, result.get("kind") == "calibration"
+        )
     result["verdict"], result["synthesis"] = None, None
     path.write_text(json.dumps(result, indent=2) + "\n")
     print(f"result: {path}")
@@ -437,6 +447,23 @@ def restore() -> None:
     marker.unlink()
 
 
+def _dirty_variant_paths(repo: Path, skill: str) -> list[str]:
+    """Uncommitted files that belong to the evaluated plugin (skills/, plus PLUGIN_WIDE for vex-mode, minus tests)."""
+    scopes = ("skills/", *PLUGIN_WIDE) if skill == "vex-mode" else ("skills/",)
+    raw = subprocess.run(
+        ["git", "-C", str(repo), "status", "--porcelain", "--untracked-files=all", "--", *scopes],
+        check=True, capture_output=True, text=True,
+    ).stdout.splitlines()
+    dirty = []
+    for line in raw:
+        if len(line) < 4:
+            continue
+        rel = line[3:].split(" -> ")[-1].strip('"')
+        if "/tests/" not in rel:
+            dirty.append(rel)
+    return dirty
+
+
 def run_eval(repo: Path, skill: str, case: str, base: str | None = None,
              variant: str = "HEAD", runs: int | None = None, harness: str | None = None,
              calibrate: bool = False, jobs: int | None = None) -> Path:
@@ -461,8 +488,8 @@ def run_eval(repo: Path, skill: str, case: str, base: str | None = None,
             raise EvalError(f"case {case} has no Claude Code models; add \"claude_code\" to its case.json")
     if _marker().exists() and not claude:
         raise EvalError(f"a previous eval did not restore the plugin; run `python3 evals/run.py restore` first")
-    if _git(repo, "status", "--porcelain", "--", "skills/"):
-        raise EvalError("skills/ has uncommitted changes; the variant must be a commit")
+    if dirty := _dirty_variant_paths(repo, skill):
+        raise EvalError(f"uncommitted changes in {', '.join(dirty[:5])}; the variant must be a commit")
     if base is None and calibrate:
         base = "origin/main"
     if base is None:
@@ -470,6 +497,8 @@ def run_eval(repo: Path, skill: str, case: str, base: str | None = None,
         if not base:
             raise EvalError("no merge base with origin/main; pass --base")
     judge_cfg = _judge_config(repo)
+    if problems := check_evals.case_errors(case_dir, case, judge_model=judge_cfg["model"]):
+        raise EvalError("case failed validation:\n" + "\n".join(problems))
     if calibrate:
         arm_list = arms_mod.calibration_arms(cfg, _commit(repo, base), judge_cfg["model"])
     else:
@@ -483,7 +512,6 @@ def run_eval(repo: Path, skill: str, case: str, base: str | None = None,
     shutil.copytree(case_dir, run_dir / "case", ignore=shutil.ignore_patterns("__pycache__"))
     case_dir = run_dir / "case"
     prompt = (case_dir / "prompt.md").read_text().strip()
-    rubric = (case_dir / "rubric.md").read_text()
     builds = {arm.label: build_plugin.build(repo, run_dir / "build" / arm.label, ref=arm.plugin_ref)
               for arm in arm_list if arm.plugin_ref}
     trees = {arm.label: plugin_tree_sha256(builds[arm.label], skill) if arm.plugin_ref else None
@@ -575,18 +603,14 @@ def run_eval(repo: Path, skill: str, case: str, base: str | None = None,
             if not claude:
                 restore()
 
-        empty = [label for label, rec in records.items() if not any(r["invalid"] is None for r in rec["runs"])]
-        if empty:
-            raise EvalError(f"arm {empty[0]} has no valid run, so nothing can be compared; no result written; "
-                            f"run dir: {run_dir}")
-        judge_error, judge_usage = _judge(records, materials, rubric, judge_cfg, run_dir, rng)
-        quality_record = _quality(records, case_dir, cfg, prompt, judge_cfg, run_dir, rng)
-    metrics, signals = _score(records, quality_record["enabled"], CALIBRATION_PAIRS if calibrate else PAIRS)
+        judge_record, quality_record, metrics, signals = _grade_and_score(
+            records, materials, case_dir, cfg, judge_cfg, run_dir, rng, calibrate
+        )
     result = {
         "kind": "calibration" if calibrate else "eval", "skill": skill, "tree_sha256": tree,
         "date": dt.date.today().isoformat(),
         "case": case, "harness": harness, "jobs": jobs, "run_dir": str(run_dir), "arms": records,
-        "judge": _judge_record(judge_cfg, judge_error, judge_usage), "quality": quality_record,
+        "judge": judge_record, "quality": quality_record,
         "metrics": metrics, "signals": signals, "verdict": None, "synthesis": None,
     }
     path.parent.mkdir(parents=True, exist_ok=True)

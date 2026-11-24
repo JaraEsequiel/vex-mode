@@ -100,32 +100,105 @@ def _segments(cmd: str) -> list[list[str]]:
 
 CODE_PUNCTUATION = "[]{}<>,'\""  # around a path in code (a heredoc, `python -c`), not part of it
 ASSIGN = re.compile(r"^([A-Za-z_][A-Za-z0-9_]*)=(.*)$")
+SHELLS = {"bash", "sh", "zsh", "dash"}
+WRAPPERS = {"command", "nohup", "time", "exec", "builtin"}
+WRAPPER_ARGS = {
+    "sudo": {"-u", "-g", "-C", "-h", "-p", "-U"},
+    "env": {"-u", "-C", "-S"},
+    "xargs": {"-I", "-n", "-P", "-d", "-L", "-s", "-E", "-a"},
+}
+MAX_SHELL_DEPTH = 5
 
 
 def _expand(token: str, env: dict[str, str]) -> str:
     return re.sub(r"\$\{?([A-Za-z_][A-Za-z0-9_]*)\}?", lambda m: env.get(m.group(1), m.group(0)), token)
 
 
-def _command_problem(cmd: str, workdir: Path | None, home: Path | None, ctx: dict) -> str | None:
+def _check_path_token(raw: str, cwd: Path | None, home: Path | None, env: dict[str, str], ctx: dict) -> str | None:
+    token = _expand(raw, env).strip(CODE_PUNCTUATION)
+    if "$" in token or "`" in token:  # a shell expansion is not a path we can resolve
+        return None
+    if "/" not in token and token not in ("..", "~"):
+        return None
+    if cwd is None and not token.startswith(("/", "~")):
+        return None
+    return _path_problem(_norm(token, cwd, home), **ctx)
+
+
+def _record_assign(tok: str, env: dict[str, str]) -> bool:
+    m = ASSIGN.match(tok)
+    if not m:
+        return False
+    val = _expand(m.group(2), env)
+    if "$" not in val and "`" not in val:
+        env[m.group(1)] = val
+    return True
+
+
+def _unwrap(seg: list[str], env: dict[str, str]) -> tuple[list[str], dict[str, str]]:
+    """Strip inline assignments and wrapper commands so nested shell / eval invocations surface."""
+    seg_env = dict(env)
+    rest = seg
+    while rest:
+        head = os.path.basename(rest[0])
+        if _record_assign(rest[0], seg_env):
+            rest = rest[1:]
+        elif head in WRAPPERS:
+            rest = rest[1:]
+        elif head in WRAPPER_ARGS:
+            takes_arg = WRAPPER_ARGS[head]
+            rest = rest[1:]
+            while rest and (rest[0].startswith("-") or (head == "env" and ASSIGN.match(rest[0]))):
+                if head == "env" and _record_assign(rest[0], seg_env):
+                    rest = rest[1:]
+                else:
+                    rest = rest[2:] if rest[0] in takes_arg else rest[1:]
+        else:
+            break
+    return rest, seg_env
+
+
+def _command_problem(cmd: str, workdir: Path | None, home: Path | None, ctx: dict,
+                     *, env: dict[str, str] | None = None, depth: int = 0) -> str | None:
     """Resolve path-like tokens against the directory a simple `cd X &&` chain leaves the shell in.
-    Plain `NAME=value` assignments are expanded; after a `cd` to a place that cannot be resolved, relative
-    paths are not judged (absolute ones still are)."""
-    cwd, env = workdir, {}
+    `NAME=value` assignments (standalone, `export`, or inline) are expanded and their values checked;
+    wrapped `bash/sh -c` and `eval` strings are inspected recursively up to MAX_SHELL_DEPTH; after a `cd`
+    to a place that cannot be resolved, relative paths are not judged (absolute ones still are)."""
+    if depth > MAX_SHELL_DEPTH:
+        return "a deeply nested shell command"
+    cwd, cur_env = workdir, dict(env or {})
     for seg in _segments(cmd):
-        if len(seg) == 1 and (m := ASSIGN.match(seg[0])) and "$" not in m.group(2) and "`" not in m.group(2):
-            env[m.group(1)] = m.group(2)
+        if not seg:
+            continue
+        if seg[0] == "export":
+            for tok in seg[1:]:
+                _record_assign(tok, cur_env)
+            rest, seg_env = seg, cur_env
+        elif all(ASSIGN.match(tok) for tok in seg):
+            for tok in seg:
+                _record_assign(tok, cur_env)
+            rest, seg_env = [], cur_env
+        else:
+            rest, seg_env = _unwrap(seg, cur_env)
         for raw in seg:
-            token = _expand(raw, env).strip(CODE_PUNCTUATION)
-            if "$" in token or "`" in token:  # a shell expansion is not a path we can resolve
-                continue
-            if "/" not in token and token not in ("..", "~"):
-                continue
-            if cwd is None and not token.startswith(("/", "~")):
-                continue
-            if problem := _path_problem(_norm(token, cwd, home), **ctx):
+            if m := ASSIGN.match(raw):
+                if problem := _check_path_token(m.group(2), cwd, home, seg_env, ctx):
+                    return problem
+            if problem := _check_path_token(raw, cwd, home, seg_env, ctx):
                 return problem
-        if len(seg) == 2 and seg[0] == "cd":
-            target = _expand(seg[1], env)
-            cwd = None if "$" in target or "`" in target or (cwd is None and not target.startswith(("/", "~"))) \
-                else Path(str(_norm(target, cwd, home)))
+        if rest:
+            head, args = os.path.basename(rest[0]), rest[1:]
+            if head in SHELLS:
+                for i, a in enumerate(args[:-1]):
+                    if re.fullmatch(r"-[a-zA-Z]*c[a-zA-Z]*", a):
+                        if problem := _command_problem(args[i + 1], cwd, home, ctx, env=seg_env, depth=depth + 1):
+                            return problem
+                        break
+            elif head == "eval" and args:
+                if problem := _command_problem(" ".join(args), cwd, home, ctx, env=seg_env, depth=depth + 1):
+                    return problem
+            elif len(rest) == 2 and rest[0] == "cd":
+                target = _expand(rest[1], seg_env)
+                cwd = None if "$" in target or "`" in target or (cwd is None and not target.startswith(("/", "~"))) \
+                    else Path(str(_norm(target, cwd, home)))
     return None

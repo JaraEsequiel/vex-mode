@@ -28,13 +28,10 @@ This repo is an Antigravity plugin: Vex's working mode for agents, built on psta
 ## How to verify a change
 
 ```bash
-python3 -m unittest discover -s checks/tests \
-  && python3 -m unittest discover -s scripts/tests \
-  && python3 -m unittest discover -s hooks/tests \
-  && python3 -m unittest discover -s evals/tests \
-  && python3 checks/run.py \
-  && python3 scripts/validate_plugin.py
+./scripts/check
 ```
+
+`scripts/check` is the single entry point used locally, by `.agents/check_on_stop.py`, and in CI: it runs all four `unittest` suites (`checks/tests`, `scripts/tests`, `hooks/tests`, `evals/tests`), `checks/run.py`, `scripts/build_plugin.py --harness claude-code --check`, and `scripts/validate_plugin.py`.
 
 `scripts/validate_plugin.py` is `agy plugin validate --strict` with one documented exception: agy warns that this root `AGENTS.md` is never loaded by the plugin. That is intended; this file is for agents working in the repo, not for plugin users.
 
@@ -83,20 +80,20 @@ If an eval was killed before it restored the user's plugin, the next eval refuse
 | In Claude Code the Stop gate skips the ask when the turn's last main-agent tool call ran a command (read from `transcript_path`, keyed by `promptId`); a turn without tools or an unreadable transcript is asked | `hooks/stop_gate.py` `hooks/tests/test_claude_code.py` |
 | A PR that changes a skill carries an eval result or waiver for that skill's tree hash | `checks/check_evals.py` `checks/tests/test_check_evals.py` |
 | The vex-mode tree hash also covers `hooks/`, `hooks.json`, `rules/`, `agents/` and `plugin.json` (not tests), so a hook change can be evaluated and an old result does not cover it | `checks/_util.py` `checks/check_evals.py` `evals/run.py` `checks/tests/test_check_evals.py` |
-| Nothing a candidate sees contains a banned word | `checks/check_evals.py` `checks/tests/test_check_evals.py` |
-| The judge is set once in `evals/judge.json` and is from another model family than every candidate | `checks/check_evals.py` `evals/harness/arms.py` |
+| Nothing a candidate sees contains a banned word, and an eval validates the case and refuses uncommitted skill or plugin-wide changes before any candidate runs | `checks/check_evals.py` `evals/run.py` `checks/tests/test_check_evals.py` `evals/tests/test_run.py` |
+| The judge is set once in `evals/judge.json` and is from another model family than every candidate (agy and `claude_code`) | `checks/check_evals.py` `evals/harness/arms.py` `checks/tests/test_check_evals.py` |
 | The judge's API key and API root (`VEX_OPENAI_BASE_URL`, `VEX_ANTHROPIC_BASE_URL`) come from the environment, else the secrets file; a secrets file the judge cannot read fails before any run; API calls send an explicit `User-Agent` and fall back to `certifi` when the SSL default context has an empty CA store | `evals/harness/judges.py` `evals/run.py` `evals/tests/test_judges.py` `evals/tests/test_run.py` |
 | The judge's API key never reaches the repo, a result or the run dir | `evals/harness/judges.py` `evals/tests/test_run.py` |
 | Every eval measures compliance, outcome and cost on three fixed arms | `evals/harness/arms.py` `evals/tests/test_run.py` |
 | A calibration runs the base plugin against no plugin on the same model, gives the no-plugin arm the prompt without the command, and never counts as evidence for a skill | `evals/run.py` `evals/harness/arms.py` `evals/tests/test_run.py` |
 | An eval stops at the first quota error (runs in flight are killed, none new starts) and writes no result when an arm has no valid run | `evals/run.py` `evals/tests/test_run.py` |
 | On Claude Code candidates run `--jobs` at once (default 4) with slots fixed up front; agy refuses more than one; a signal kills every run in flight | `evals/run.py` `evals/tests/test_run.py` `evals/tests/fake_claude.py` |
-| On Claude Code the judge grades the reply the Stop gate interrupted, with the gate's follow-up shown apart | `evals/harness/transcript.py` `evals/run.py` `evals/tests/test_run.py` `evals/tests/test_harness.py` |
+| On Claude Code the judge grades the reply the Stop gate interrupted, with the gate's follow-up shown apart; both transcript parsers survive non-dict events and non-string tool args | `evals/harness/transcript.py` `evals/run.py` `evals/tests/test_run.py` `evals/tests/test_harness.py` |
 | An eval refuses a base and variant with the same skill tree (nothing to measure) | `evals/run.py` `evals/tests/test_run.py` |
 | An eval reads its case (prompt, rubric, check, project) from a snapshot in its run dir, so a branch change during the eval cannot reach its runs; `rejudge` reads the current rubric on purpose | `evals/run.py` `evals/tests/test_run.py` |
 | An eval never leaves a variant installed; on Claude Code it installs nothing (each arm loads its own build with `--plugin-dir`, and `--setting-sources project` keeps the user's plugins, skills, CLAUDE.md and MCP servers out) | `evals/run.py` `evals/tests/test_run.py` |
 | `rejudge` checks every run's isolation again with the current rules (keeping the stored reason when the transcript has no working directory) and takes outcome from the saved check | `evals/run.py` `evals/harness/transcript.py` `evals/tests/test_run.py` `evals/tests/test_harness.py` |
-| A run that read (by file or shell) the eval cache, the repo, another project copy, an `evals/` folder or another skill copy is invalid; on Claude Code this covers subagents and `Grep`/`Glob` paths too. The run's whole private folder (`vex-work/<token>/`, where a `git worktree add ../x` lands) is its own | `evals/harness/isolation.py` `evals/harness/transcript.py` `evals/tests/test_run.py` `evals/tests/test_harness.py` |
+| A run that read (by file or shell, including wrapped `bash/sh -c`, `eval`, `export`, and inline assignments) the eval cache, the repo, another project copy, an `evals/` folder or another skill copy is invalid; on Claude Code this covers subagents and `Grep`/`Glob` paths too. The run's whole private folder (`vex-work/<token>/`, where a `git worktree add ../x` lands) is its own | `evals/harness/isolation.py` `evals/harness/transcript.py` `evals/tests/test_run.py` `evals/tests/test_harness.py` |
 | No AI PR merges itself: `gh pr merge` (any flags), `gh api` merges and main ref updates, a push to `main`/`master` (any refspec form, `--all`, `-c` push overrides) and tracking main pause (headless `agy -p`: blocked). A bare `git push` while on main is not caught | `hooks/irreversible.py` `hooks/tests/test_irreversible.py` |
 | Scheduled runs never overlap, refuse unless the installed plugin has `correct` and the merge guard and no eval holds it, keep any unfinished work, notify on every failure, and never leave an empty worktree. The agent only commits; the script pushes the branch and opens the PR | `scripts/scheduled_correct.py` `scripts/tests/test_scheduled_correct.py` |
 | `agy -p` is written last in skills and rules (it takes the next word as the prompt) | `checks/check_skills.py` `checks/tests/test_check_skills.py` |
