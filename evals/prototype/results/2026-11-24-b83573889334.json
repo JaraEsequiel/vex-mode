@@ -1,0 +1,7 @@
+{
+  "kind": "waiver",
+  "skill": "prototype",
+  "tree_sha256": "b83573889334bb443464107146e9d72af8695109638bd71536fb2e5744f16598",
+  "date": "2026-11-24",
+  "reason": "Added automated 3-round browser + impeccable detect verify-fix loop to UI.md for both standalone /prototype and frontend-ui flows. Live browser variant switching and visual checks cannot be measured by headless single-file eval cases."
+}

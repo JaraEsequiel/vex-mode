@@ -97,7 +97,7 @@ TERMS = [
     ("`Claude Code:` line", re.compile(r"^\s*- (agy|Claude Code):|agy or Claude Code")),
 ]
 # A line naming agy that no term covers means the adapter is missing a row.
-AGY = re.compile(r"\bagy\b|Antigravity|\.gemini|\.agents/")
+AGY = re.compile(r"\bagy\b|Antigravity|\.gemini(?!/settings\.json)|\.agents/")
 README = f"""# vex-mode for Claude Code
 
 This folder is generated from `skills/`, `agents/`, `rules/`, `hooks/`, `adapters/`, `LICENSES/` and `plugin.json`

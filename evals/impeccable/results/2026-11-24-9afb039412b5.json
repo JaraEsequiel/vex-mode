@@ -1,0 +1,7 @@
+{
+  "kind": "waiver",
+  "skill": "impeccable",
+  "tree_sha256": "9afb039412b5f4469c6ef2367e8316bfadc5616ae0e4ceeffd6c3d949e3c96fc",
+  "date": "2026-11-24",
+  "reason": "Bundled external Impeccable v4.10.0 frontend design skill and reference playbooks into vex-mode; visual design craft and live browser tooling cannot be measured by headless single-file eval cases."
+}
