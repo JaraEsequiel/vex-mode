@@ -29,6 +29,7 @@ The remaining triggers live only here:
 - Starting any subagent → the first line of its kickoff is `Read <path>/worker.md before anything else.`, with `<path>` the absolute path of this skill's folder. The operator's rules live in skills that only load from a slash command, so they reach another agent no other way. Keep the rest of the kickoff to the goal and the task, plus this file's absolute path for a `vex-agent`.
 - A fork you could settle by running something → prototype it instead of asking.
 - Code → name the data shape first. Across a function boundary → **architect**.
+- UI, frontend, or design work → **frontend-ui** skill (and `impeccable` when installed).
 - Prose, your reply included → **unslop**. Docs, PR descriptions, commit messages → **technical-writing**.
 - Bot review comments → judge each on its merits.
 - Long or unattended work → **show-me-your-work**.

@@ -1,0 +1,7 @@
+{
+  "kind": "waiver",
+  "skill": "prototype",
+  "tree_sha256": "f5f5446df4e1d0328c2876a852dec18124fa412114771264d7259bd69847ca1c",
+  "date": "2026-11-24",
+  "reason": "Updated UI.md to apply the frontend-ui craft floor and a quick Design Desk pass across UI variants. Live multi-variant browser rendering is not covered by existing headless eval cases."
+}

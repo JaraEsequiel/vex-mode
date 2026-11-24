@@ -6,6 +6,8 @@ disable-model-invocation: true
 
 # Prototype
 
+In Claude Code, read [the Claude Code adapter](../../adapters/claude-code.md) once per session before you follow this skill. It maps the agy names in vex-mode skills to Claude Code.
+
 Source: adapted from `mattpocock/skills` (`skills/engineering/prototype`).
 
 A prototype is **throwaway code that answers one question**. The question decides the shape.

@@ -1,0 +1,7 @@
+{
+  "kind": "waiver",
+  "skill": "grill-me",
+  "tree_sha256": "74114da605fa050797592724fc7c695183f2bd3dea47776a3261b0b4a05517bc",
+  "date": "2026-11-24",
+  "reason": "Added UI/design frontier questions (surface mode, visual direction, primary action and states) for interactive user interviews. Multi-round interactive interview behavior cannot be measured by existing headless eval cases."
+}

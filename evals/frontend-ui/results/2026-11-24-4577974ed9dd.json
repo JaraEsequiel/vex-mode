@@ -1,0 +1,7 @@
+{
+  "kind": "waiver",
+  "skill": "frontend-ui",
+  "tree_sha256": "4577974ed9dd38a46fab2c81527f5da52bbf5d38e9ee077932b4cb8d2321f0e4",
+  "date": "2026-11-24",
+  "reason": "Added surface mode selection, craft floor anti-slop rules, optional impeccable acceleration, and the Design Desk review gate. Visual aesthetics, UX, and live browser ergonomics cannot be measured by headless single-file eval cases."
+}
