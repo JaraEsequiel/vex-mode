@@ -36,6 +36,14 @@ Finding **facts** is your job, never the user's. When a frontier question needs 
 
 Do not stall on exploration: a running lookup is an unsettled prerequisite, so only the questions downstream of it wait for the subagent to report. Ask the rest of the frontier now.
 
+## UI and design decisions
+
+When the plan includes user-facing UI or design, include these in the design tree frontier before building:
+
+- **Surface mode:** `Persuade` (landing/marketing), `Operate` (app/dashboard), `Read` (docs/articles), or `Experience` (showcase/portfolio).
+- **Visual direction:** existing `DESIGN.md` / `PRODUCT.md` or project tokens, or the intended aesthetic direction if greenfield. If `impeccable` is installed, inspect its context as a fact lookup instead of asking.
+- **Primary action and states:** the one primary action per view and required edge states (`loading`, `empty`, `error`, `disabled`, `overflow`).
+
 ## Finishing
 
 The interview ends when the frontier is empty: every branch of the design tree is settled and nothing is silently assumed. Summarize the settled decisions and wait for the user to confirm shared understanding before acting or starting `/vex-mode`.

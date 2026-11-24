@@ -1,0 +1,7 @@
+{
+  "kind": "waiver",
+  "skill": "vex-mode",
+  "tree_sha256": "f90670e3f39ce59ed14b2ce0d9bbe57284cf7f4b476bc44ce6747b44b561e885",
+  "date": "2026-11-24",
+  "reason": "Added a single non-negotiable routing line in skills/vex-mode/SKILL.md pointing UI, frontend, and design work to frontend-ui (and impeccable when installed). Existing vex-mode eval cases (points-cleanup, shipping-cleanup, tax-rounding) test backend refactoring only and cannot measure UI routing."
+}
