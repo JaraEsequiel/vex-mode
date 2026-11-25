@@ -1,0 +1,7 @@
+{
+  "kind": "waiver",
+  "skill": "vex-mode",
+  "tree_sha256": "451ef0310a56945a9467cfad11ac1a2f9897d829c636ec15c087e0f20ea1bf78",
+  "date": "2026-11-25",
+  "reason": "Release v0.3.0 version bump in plugin.json and regenerated harness/claude-code/.claude-plugin/plugin.json; no behavioral change."
+}
