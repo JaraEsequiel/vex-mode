@@ -1,0 +1,7 @@
+{
+  "kind": "waiver",
+  "skill": "handoff",
+  "tree_sha256": "7da699f3aae3321f2970fca48fc03599e814268771577799ba7ea0839fe49744",
+  "date": "2026-11-27",
+  "reason": "Conversation-compaction prompt invoked only via /handoff (disable-model-invocation: true). Single-turn headless evals (agy -p / claude -p) have no multi-turn conversation history to summarize into a handoff document."
+}
